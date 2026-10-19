@@ -31,6 +31,7 @@
 
 	const venueId = $derived(Number(page.params.venueid));
 	let venueName = $state('Selected venue');
+	/** @type {ReturnType<typeof setInterval> | null} */
 	let syncInterval = null;
 	let savingTournament = false;
 	let lastSavedSnapshot = '';
@@ -2845,11 +2846,7 @@
 		max-height: calc(100dvh - 190px);
 	}
 
-	.setup-layout .redtooth-venue-search input::placeholder {
-		color: #858b90;
-	}
-
-	/* On smaller screens, stack the two columns */
+/* On smaller screens, stack the two columns */
 	@media (max-width: 1100px) {
 		.setup-layout {
 			grid-template-columns: 1fr;
@@ -2875,14 +2872,7 @@
 			gap: 18px;
 		}
 	}
-	/* Keep the venue selector from inheriting light-card styling */
-	.setup-layout .redtooth-venue-search input {
-		background: #222528;
-		border-color: #3a3f43;
-		color: #f2f3f4;
-	}
-
-	.players-card {
+.players-card {
 		padding: 18px;
 		flex: 1 1 auto;
 		min-height: 0;
@@ -3900,126 +3890,7 @@
 
 	.venue-id-note, .cast-status { color: #9aa1a8; font-size: 0.72rem; margin-top: 8px; }
 
-	.redtooth-venue-selector {
-		position: relative;
-		flex: 0 0 auto;
-		margin-bottom: 12px;
-	}
-
-	.redtooth-venue-search {
-		position: relative;
-	}
-
-	.redtooth-venue-search input {
-		width: 100%;
-		padding: 9px 11px;
-		border: 1px solid #c7cbd0;
-		border-radius: 8px;
-		background: #f5f6f7;
-		color: #202428;
-		font-size: 0.78rem;
-		outline: none;
-		box-sizing: border-box;
-	}
-
-	.redtooth-venue-search input:focus {
-		border-color: #71363b;
-		box-shadow: 0 0 0 2px rgba(113, 54, 59, 0.12);
-	}
-
-	.redtooth-venue-search-status {
-		position: absolute;
-		right: 10px;
-		top: 50%;
-		transform: translateY(-50%);
-		color: #777d82;
-		font-size: 0.58rem;
-		font-weight: 800;
-		letter-spacing: 0.08em;
-	}
-
-	.redtooth-venue-results {
-		position: absolute;
-		z-index: 20;
-		top: calc(100% + 4px);
-		left: 0;
-		right: 0;
-		max-height: 260px;
-		overflow-y: auto;
-		border: 1px solid #c9cdd1;
-		border-radius: 9px;
-		background: #ffffff;
-		box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
-	}
-
-	.redtooth-venue-result {
-		width: 100%;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 12px;
-		padding: 9px 10px;
-		border: 0;
-		border-bottom: 1px solid #e6e8ea;
-		background: #ffffff;
-		color: #202428;
-		text-align: left;
-		cursor: pointer;
-	}
-
-	.redtooth-venue-result:last-child {
-		border-bottom: 0;
-	}
-
-	.redtooth-venue-result:hover {
-		background: #f1f2f3;
-	}
-
-	.redtooth-venue-result-main {
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-
-	.redtooth-venue-result-main strong {
-		font-size: 0.75rem;
-		font-weight: 800;
-	}
-
-	.redtooth-venue-result-main small {
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-		color: #777d82;
-		font-size: 0.61rem;
-	}
-
-	.redtooth-venue-result-meta {
-		flex: 0 0 auto;
-		display: flex;
-		flex-direction: column;
-		align-items: flex-end;
-		gap: 2px;
-		color: #596168;
-		font-size: 0.62rem;
-		font-weight: 700;
-	}
-
-	.redtooth-venue-result-meta small {
-		color: #7d848a;
-		font-size: 0.57rem;
-		font-weight: 600;
-	}
-
-	.redtooth-venue-error {
-		margin-top: 5px;
-		color: #b45c62;
-		font-size: 0.62rem;
-		font-weight: 700;
-	}
-
-	.level-actions {
+.level-actions {
 		display: flex;
 		justify-content: center;
 		align-items: center;
