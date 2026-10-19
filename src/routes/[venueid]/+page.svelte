@@ -4250,4 +4250,40 @@ function startCasting() {
 		}
 	}
 
+
+	/* Keep the settings control aligned with the other header actions. */
+	.settings-button {
+		width: 40px !important;
+		min-width: 40px !important;
+		height: 40px !important;
+		min-height: 40px !important;
+		padding: 0 !important;
+		font-size: 23px !important;
+		border-radius: 9px !important;
+		line-height: 1 !important;
+	}
+
+	/* Give paused and break states distinct full-page colours. */
+	.app.mode-paused {
+		background: radial-gradient(circle at top, rgba(255,255,255,.055), transparent 36rem), #421d20 !important;
+	}
+
+	.app.mode-break {
+		background: radial-gradient(circle at top, rgba(255,255,255,.06), transparent 36rem), #142b46 !important;
+	}
+
+	.app.mode-play {
+		background: radial-gradient(circle at top, rgba(255,255,255,.07), transparent 36rem), #101f1d !important;
+	}
+
+	@media (max-width: 700px) {
+		.settings-button {
+			width: 40px !important;
+			min-width: 40px !important;
+			height: 40px !important;
+			min-height: 40px !important;
+			font-size: 23px !important;
+		}
+	}
+
 </style>
