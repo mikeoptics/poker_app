@@ -2076,7 +2076,7 @@ function startCasting() {
 				<!-- RIGHT: TOURNAMENT SETTINGS -->
 				<div class="setup-sidebar">
 					<section class="location-card">
-						<div class="section-heading"><div><span class="label">VENUE</span><h2>{venueName}</h2></div><a class="sound" href="/">Change venue</a></div>
+						<div class="section-heading"><div><span class="label">VENUE</span><h2>{venueName}</h2></div></div>
 						<p class="venue-id-note">Venue ID: {venueId}</p>
 					</section>
 
@@ -2383,6 +2383,11 @@ function startCasting() {
 						<h2 id="settings-title">Tournament settings</h2>
 					</div>
 					<button class="modal-close" type="button" aria-label="Close settings" onclick={() => (showSettings = false)}>×</button>
+				</div>
+
+				<div class="settings-option">
+					<div><strong>Venue</strong><span>{venueName}</span></div>
+					<a class="settings-venue-link" href="/">Change venue</a>
 				</div>
 
 				<div class="settings-option">
@@ -4111,6 +4116,8 @@ function startCasting() {
 	.settings-switch > span { display:block; width:20px; height:20px; border-radius:50%; background:#f4f4f1; transition:transform .15s ease; }
 	.settings-switch.enabled { background:#8b754e; }
 	.settings-switch.enabled > span { transform:translateX(18px); }
+	.settings-venue-link { color:#d5d9dc; background:#292e34; border-radius:7px; padding:9px 12px; text-decoration:none; font-size:12px; font-weight:800; white-space:nowrap; }
+
 	.settings-danger { margin-top:4px; }
 	.settings-reset { flex:0 0 auto; padding:9px 13px; border:0; border-radius:7px; background:rgba(190,80,75,.16); color:#e1a09b; font-size:12px; font-weight:750; cursor:pointer; }
 	.settings-reset:hover { background:rgba(190,80,75,.26); }
