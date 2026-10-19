@@ -22,7 +22,6 @@
 	 */
 
 	/** @type {{
-	 * tableView: string;
 	 * activePlayerCount: number;
 	 * eliminatedPlayers: TablePlayer[];
 	 * balanceMessage: string;
@@ -37,7 +36,6 @@
 	 * applyBalance: (suggestion: BalanceMove) => void;
 	 * }} */
 	let {
-		tableView = $bindable(),
 		activePlayerCount,
 		eliminatedPlayers,
 		balanceMessage,
@@ -72,16 +70,6 @@
 			</span>
 		</div>
 
-		<div class="table-view-toggle">
-			<button class:active={tableView === 'visual'} onclick={() => (tableView = 'visual')}>
-				Visual
-			</button>
-
-			<button class:active={tableView === 'list'} onclick={() => (tableView = 'list')}>
-				List
-			</button>
-		</div>
-
 		{#if balanceMessage}
 			<div class="balance-alert">
 				<strong>
@@ -114,74 +102,6 @@
 			</div>
 		{/if}
 
-		{#if tableView === 'visual'}
-			<div class="tables">
-				{#each Array(tableCount) as _, ti}
-					{@const tableNumber = ti + 1}
-					{@const tablePlayers = activePlayers.filter((p) => p.table === tableNumber)}
-
-					<article class="poker-table-card">
-						<div class="table-title">
-							<div>
-								<span class="label">
-									TABLE
-									{tableNumber}
-								</span>
-
-								<strong>
-									{tablePlayers.length} / 8
-								</strong>
-							</div>
-						</div>
-
-						<div
-							class:final-layout={isFinalTable}
-							class="table-layout"
-							style="background-image:url('/poker-table.svg')"
-						>
-							{#each isFinalTable ? finalSeats : seats as seat}
-								{@const p = activePlayers.find((x) => x.table === tableNumber && x.seat === seat)}
-
-								<div class={`seat seat-${seat}`}>
-									{#if p}
-										<button
-											class="seat-box occupied seat-eliminate-box"
-											onclick={() => removePlayer(p.id)}
-										>
-											<div
-												class="seat-number"
-												class:small-blind={seat === 2}
-												class:big-blind={seat === 3}
-											>
-												{seatRole(seat)}
-											</div>
-
-											<strong class="seat-name">
-												{p.name}
-											</strong>
-
-											<span class="seat-eliminate-label"> ELIMINATE? </span>
-										</button>
-									{:else}
-										<div class="seat-box">
-											<div
-												class="seat-number"
-												class:small-blind={seat === 2}
-												class:big-blind={seat === 3}
-											>
-												{seatRole(seat)}
-											</div>
-
-											<span class="empty-seat">EMPTY</span>
-										</div>
-									{/if}
-								</div>
-							{/each}
-						</div>
-					</article>
-				{/each}
-			</div>
-		{:else}
 			<div class="table-list-view">
 				{#each Array(tableCount) as _, ti}
 					{@const tableNumber = ti + 1}
@@ -207,9 +127,6 @@
 								<span>{seatRole(player.seat)}</span>
 								<b>{player.name}</b>
 
-								<button class="eliminate-button" onclick={() => removePlayer(player.id)}>
-									Eliminate
-								</button>
 							</div>
 						{/each}
 					</section>
@@ -241,6 +158,5 @@
 					</section>
 				{/if}
 			</div>
-		{/if}
 	</div>
 </section>
