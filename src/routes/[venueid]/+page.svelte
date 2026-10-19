@@ -3829,7 +3829,6 @@ function startCasting() {
 		color: #c4a36a !important;
 	}
 
-</style>
 
 
 	/* Refined receiver-led palette: gold is an accent, never a dominant surface */
@@ -3878,3 +3877,5 @@ function startCasting() {
 		color: #cbd0d4 !important;
 		border-color: #343a40 !important;
 	}
+
+</style>
