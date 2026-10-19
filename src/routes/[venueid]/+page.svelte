@@ -3830,3 +3830,51 @@ function startCasting() {
 	}
 
 </style>
+
+
+	/* Refined receiver-led palette: gold is an accent, never a dominant surface */
+	.sound, .add, .clock-button, .tabs button, .secondary, .mixed-toggle,
+	.primary, .director-add-button, .level-arrow, .order-button, .redtooth-control {
+		background: #181b1f !important;
+		color: #d5d9dc !important;
+		border: 1px solid #343a40 !important;
+		box-shadow: none !important;
+	}
+	.clock-button:hover, .sound:hover, .add:hover, .secondary:hover,
+	.tabs button:hover, .primary:hover, .director-add-button:hover,
+	.level-arrow:hover:not(:disabled), .order-button:hover:not(:disabled) {
+		background: #24282d !important;
+		color: #f4f4f1 !important;
+		border-color: #4a5158 !important;
+	}
+	.tabs button.active {
+		background: #24282d !important;
+		color: #c4a36a !important;
+		border-color: #343a40 !important;
+		box-shadow: inset 0 -2px 0 #c4a36a !important;
+	}
+	.level-main {
+		background: #181b1f !important;
+		border-color: #343a40 !important;
+		box-shadow: none !important;
+	}
+	.director-eyebrow, .director-blinds {
+		color: #f4f4f1 !important;
+	}
+	.director-hint, .director-level-context, .director-player-count {
+		color: #8e969d !important;
+	}
+	.director-player-count strong {
+		color: #f4f4f1 !important;
+	}
+	.director-eliminated-heading, .header h2 {
+		color: #c4a36a !important;
+	}
+	.director-progress div {
+		background: #c4a36a !important;
+	}
+	.order-button {
+		background: #181b1f !important;
+		color: #cbd0d4 !important;
+		border-color: #343a40 !important;
+	}
