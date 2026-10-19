@@ -200,6 +200,8 @@
 
 	let showClock = $state(false);
 	let showSettings = $state(false);
+	let maxRebuys = $state(0);
+	let maxTopUps = $state(0);
 	let clockRemaining = $state(30);
 	let clockRunning = $state(false);
 
@@ -913,7 +915,9 @@
 	function changeEntry(id, field) {
 		const p = players.find((x) => x.id === id);
 
-		if (p) p[field] += 1;
+		if (!p || p.eliminated) return;
+		const limit = field === 'rebuys' ? maxRebuys : maxTopUps;
+		if (limit > 0 && p[field] < limit) p[field] += 1;
 	}
 
 	/** @param {number} id @param {'rebuys'|'topUps'} field */
@@ -1604,6 +1608,7 @@
 		return {
 			levels, players, nextPlayerId, currentLevel, remainingMs, levelDurationMs, running,
 			soundEnabled, announcementEnabled, buyInAmount, mixedGames, activeTab, redtoothPlayers,
+			maxRebuys, maxTopUps,
 			eliminationEvent, announcementEvent, venueName, updatedAt: Date.now()
 		};
 	}
@@ -1622,6 +1627,8 @@
 		running = Boolean(state.running);
 		soundEnabled = state.soundEnabled ?? true;
 		announcementEnabled = state.announcementEnabled ?? true;
+		maxRebuys = Math.max(0, Number(state.maxRebuys ?? 0));
+		maxTopUps = Math.max(0, Number(state.maxTopUps ?? 0));
 		buyInAmount = state.buyInAmount ?? 20;
 		mixedGames = Boolean(state.mixedGames);
 		activeTab = state.activeTab ?? 'timer';
@@ -2248,37 +2255,18 @@ function startCasting() {
 										{player.paid ? '✓ Paid' : 'Unpaid'}
 									</button>
 
-									<button
-										class="tiny"
-										disabled={player.eliminated}
-										onclick={() => changeEntry(player.id, 'rebuys')}
-									>
-										+ Rebuy ({player.rebuys})
-									</button>
-
-									<button
-										class="tiny"
-										disabled={player.eliminated}
-										onclick={() => removeEntry(player.id, 'rebuys')}
-									>
-										−
-									</button>
-
-									<button
-										class="tiny"
-										disabled={player.eliminated}
-										onclick={() => changeEntry(player.id, 'topUps')}
-									>
-										+ Top-up ({player.topUps})
-									</button>
-
-									<button
-										class="tiny"
-										disabled={player.eliminated}
-										onclick={() => removeEntry(player.id, 'topUps')}
-									>
-										−
-									</button>
+									{#if maxRebuys > 0}
+										<button class="tiny" disabled={player.eliminated || player.rebuys >= maxRebuys} onclick={() => changeEntry(player.id, 'rebuys')}>
+											+ Rebuy ({player.rebuys})
+										</button>
+										<button class="tiny" disabled={player.eliminated || player.rebuys === 0} onclick={() => removeEntry(player.id, 'rebuys')}>−</button>
+									{/if}
+									{#if maxTopUps > 0}
+										<button class="tiny" disabled={player.eliminated || player.topUps >= maxTopUps} onclick={() => changeEntry(player.id, 'topUps')}>
+											+ Top-up ({player.topUps})
+										</button>
+										<button class="tiny" disabled={player.eliminated || player.topUps === 0} onclick={() => removeEntry(player.id, 'topUps')}>−</button>
+									{/if}
 								</div>
 							{:else}
 								<p class="empty">No players added yet.</p>
@@ -2386,6 +2374,15 @@ function startCasting() {
 				<div class="settings-option">
 					<div><strong>Venue</strong><span>{venueName}</span></div>
 					<a class="settings-venue-link" href="/">Change venue</a>
+				</div>
+
+				<div class="settings-option settings-number-option">
+					<div><strong>Maximum rebuys</strong><span>Maximum rebuys allowed per player. Set to 0 to hide rebuys.</span></div>
+					<input class="settings-number" type="number" min="0" step="1" aria-label="Maximum rebuys per player" bind:value={maxRebuys} />
+				</div>
+				<div class="settings-option settings-number-option">
+					<div><strong>Maximum top-ups</strong><span>Maximum top-ups allowed per player. Set to 0 to hide top-ups.</span></div>
+					<input class="settings-number" type="number" min="0" step="1" aria-label="Maximum top-ups per player" bind:value={maxTopUps} />
 				</div>
 
 				<div class="settings-option">
@@ -4118,6 +4115,8 @@ function startCasting() {
 	.settings-heading h2 { margin:4px 0 0; color:#f4f4f1; font-size:20px; }
 	.settings-eyebrow { color:#8e969d; font-size:9px; font-weight:800; letter-spacing:.16em; }
 	.settings-option, .settings-danger { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 0; border-top:1px solid rgba(255,255,255,.08); }
+	.settings-number-option > div { min-width:0; }
+	.settings-number { flex:0 0 76px; width:76px; min-height:40px; padding:7px 9px; text-align:center; font-size:16px; font-weight:800; }
 	.settings-option strong, .settings-danger strong { display:block; font-size:14px; font-weight:650; }
 	.settings-option span:not(.settings-switch span), .settings-danger span { display:block; margin-top:4px; color:#8e969d; font-size:11px; line-height:1.4; }
 	.settings-switch { flex:0 0 auto; width:44px; height:26px; padding:3px; border:0; border-radius:20px; background:#454c53; cursor:pointer; transition:background .15s ease; }
