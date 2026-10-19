@@ -260,7 +260,6 @@
 	const formattedTime = $derived(formatTime(displaySeconds));
 
 	const isFinalTable = $derived(activePlayerCount > 0 && activePlayerCount <= 8);
-	let tableView = $state('visual');
 	const standardTableCount = $derived(activePlayerCount > 0 ? Math.ceil(activePlayerCount / 8) : 0);
 
 	const tableCount = $derived(standardTableCount);
@@ -1810,7 +1809,7 @@ function startCasting() {
 </script>
 
 <svelte:head>
-	<title>{venueName} · Mike's Poker App</title>
+	<title>Poker - {venueName}</title>
 	<meta name="description" content="Mixed poker tournament timer, table manager and payouts" />
 </svelte:head>
 
@@ -1882,8 +1881,8 @@ function startCasting() {
 				</div>
 				<section class="director-players">
 					<div class="director-section-heading">
-						<div><span class="director-eyebrow">TOURNAMENT DIRECTOR</span><h1>Players</h1></div>
-						<div class="director-player-count"><strong>{activePlayerCount}</strong><span>ACTIVE</span></div>
+						<div><h1>Players</h1></div>
+						<div class="director-player-count"><strong>{activePlayerCount}</strong><span>REMAINING</span></div>
 					</div>
 
 					{#if activePlayers.length === 0 && eliminatedPlayers.length === 0}
@@ -1901,7 +1900,7 @@ function startCasting() {
 								>
 									<div class="swipe-trash-reveal"><icon name="trash-2" size="18" /><span>ELIMINATED</span></div>
 									<div class="director-player-row" style:transform={`translateX(${swipedPlayerId === player.id ? playerSwipeOffset : 0}px)`}>
-										<div class="director-player-identity"><strong>{player.name}</strong><span>{player.guest ? 'GUEST' : player.redtoothId !== null ? 'REDTOOTH' : 'UNLINKED'}</span></div>
+										<div class="director-player-identity"><strong>{player.name}</strong>{#if player.guest}<span>GUEST</span>{:else if player.redtoothId === null}<span>UNLINKED</span>{/if}</div>
 									</div>
 								</div>
 							{/each}
@@ -1928,7 +1927,6 @@ function startCasting() {
 			</section>
 		{:else if activeTab === 'tables'}
 			<Tables
-				bind:tableView
 				{activePlayerCount}
 				{eliminatedPlayers}
 				{balanceMessage}
@@ -1942,7 +1940,6 @@ function startCasting() {
 				{removePlayer}
 				{applyBalance}
 			/>
-			```svelte
 		{:else if activeTab === 'setup'}
 			<div class="setup-layout">
 				<!-- LEFT: BLIND STRUCTURE -->
