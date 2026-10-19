@@ -199,6 +199,7 @@
 	let balanceSuggestions = $state([]);
 
 	let showClock = $state(false);
+	let showSettings = $state(false);
 	let clockRemaining = $state(30);
 	let clockRunning = $state(false);
 
@@ -1792,18 +1793,17 @@ function startCasting() {
 
 		<div class="header-actions">
 			<button class="sound" onclick={startCasting}>Cast to TV</button>
-			<button class="sound" onclick={resetTournament}>Reset Tournament</button>
-			<button class="sound" onclick={() => (soundEnabled = !soundEnabled)}>
-				{soundEnabled ? '🔊 Alarm' : '🔇 Alarm off'}
-			</button>
-
-			<button class="sound" onclick={() => (announcementEnabled = !announcementEnabled)}>
-				{announcementEnabled ? '🗣️ Announce' : '🔇 Announce off'}
-			</button>
-
 			<button class="clock-button" onclick={() => (showClock ? closeClock() : startClock())}>
 				⏱ Call the Clock
 			</button>
+			<button
+				class="settings-button"
+				type="button"
+				onclick={() => (showSettings = true)}
+				aria-label="Tournament settings"
+				aria-haspopup="dialog"
+				aria-expanded={showSettings}
+			>⚙</button>
 			{#if castStatus}<span class="cast-status">{castStatus}</span>{/if}
 		</div>
 	</header>
@@ -2338,6 +2338,38 @@ function startCasting() {
 			</section>
 		{/if}
 	</main>
+	{#if showSettings}
+		<div
+			class="modal-backdrop settings-backdrop"
+			role="presentation"
+			onclick={(e) => e.target === e.currentTarget && (showSettings = false)}
+		>
+			<section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+				<div class="settings-heading">
+					<div>
+						<span class="settings-eyebrow">PREFERENCES</span>
+						<h2 id="settings-title">Tournament settings</h2>
+					</div>
+					<button class="modal-close" type="button" aria-label="Close settings" onclick={() => (showSettings = false)}>×</button>
+				</div>
+
+				<div class="settings-option">
+					<div><strong>Alarm sound</strong><span>Play an alarm when a blind level ends</span></div>
+					<button class:enabled={soundEnabled} class="settings-switch" type="button" role="switch" aria-checked={soundEnabled} onclick={() => (soundEnabled = !soundEnabled)}><span></span></button>
+				</div>
+				<div class="settings-option">
+					<div><strong>Voice announcements</strong><span>Announce the next level when blinds change</span></div>
+					<button class:enabled={announcementEnabled} class="settings-switch" type="button" role="switch" aria-checked={announcementEnabled} onclick={() => (announcementEnabled = !announcementEnabled)}><span></span></button>
+				</div>
+
+				<div class="settings-danger">
+					<div><strong>Reset tournament</strong><span>Clear players and results and return to level 1</span></div>
+					<button class="settings-reset" type="button" onclick={() => { showSettings = false; resetTournament(); }}>Reset</button>
+				</div>
+			</section>
+		</div>
+	{/if}
+
 	{#if showClock}
 		<div
 			class="modal-backdrop"
@@ -3997,6 +4029,59 @@ function startCasting() {
 	.restore-button {
 		background: rgba(105,165,120,.14) !important;
 		color: #a9c9ad !important;
+	}
+
+
+	/* Header settings control and compact preferences modal */
+	.header-actions {
+		flex: 1 1 auto !important;
+		min-width: 0;
+		display: flex !important;
+		align-items: center;
+		justify-content: flex-end;
+		flex-wrap: wrap;
+		gap: 8px !important;
+	}
+	.header-actions > button { flex: 0 0 auto; }
+	.settings-button {
+		width: 40px;
+		height: 40px;
+		border: 0;
+		border-radius: 9px;
+		background: #24282d;
+		color: #d5d9dc;
+		font-size: 22px;
+		cursor: pointer;
+	}
+	.settings-button:hover { background: #30363c; color: #fff; }
+	.settings-backdrop { z-index: 110; padding: 16px; }
+	.settings-modal {
+		width: min(440px, 100%);
+		padding: 22px;
+		border: 1px solid #343a40;
+		border-radius: 16px;
+		background: #181b1f;
+		color: #f4f4f1;
+		box-shadow: 0 22px 70px rgba(0,0,0,.5);
+	}
+	.settings-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; }
+	.settings-heading h2 { margin:4px 0 0; color:#f4f4f1; font-size:20px; }
+	.settings-eyebrow { color:#8e969d; font-size:9px; font-weight:800; letter-spacing:.16em; }
+	.settings-option, .settings-danger { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 0; border-top:1px solid rgba(255,255,255,.08); }
+	.settings-option strong, .settings-danger strong { display:block; font-size:14px; font-weight:650; }
+	.settings-option span:not(.settings-switch span), .settings-danger span { display:block; margin-top:4px; color:#8e969d; font-size:11px; line-height:1.4; }
+	.settings-switch { flex:0 0 auto; width:44px; height:26px; padding:3px; border:0; border-radius:20px; background:#454c53; cursor:pointer; transition:background .15s ease; }
+	.settings-switch > span { display:block; width:20px; height:20px; border-radius:50%; background:#f4f4f1; transition:transform .15s ease; }
+	.settings-switch.enabled { background:#8b754e; }
+	.settings-switch.enabled > span { transform:translateX(18px); }
+	.settings-danger { margin-top:4px; }
+	.settings-reset { flex:0 0 auto; padding:9px 13px; border:0; border-radius:7px; background:rgba(190,80,75,.16); color:#e1a09b; font-size:12px; font-weight:750; cursor:pointer; }
+	.settings-reset:hover { background:rgba(190,80,75,.26); }
+	@media (max-width:700px) {
+		.header-actions { flex:1 1 100% !important; display:flex !important; flex-wrap:nowrap; justify-content:flex-start; }
+		.header-actions > button { min-height:40px; }
+		.settings-button { width:40px; min-width:40px; }
+		.settings-modal { padding:18px; }
 	}
 
 </style>
