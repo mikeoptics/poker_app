@@ -5,3 +5,6 @@ build
 .env.*
 !.env.example
 .DS_Store
+
+# Per-venue live tournament data
+.data/venues/
