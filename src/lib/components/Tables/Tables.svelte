@@ -28,11 +28,7 @@
 	 * balanceSuggestions: BalanceMove[];
 	 * activePlayers: TablePlayer[];
 	 * tableCount: number;
-	 * isFinalTable: boolean;
-	 * finalSeats: number[];
-	 * seats: number[];
 	 * seatRole: (seat: number) => string;
-	 * removePlayer: (id: number) => void;
 	 * applyBalance: (suggestion: BalanceMove) => void;
 	 * }} */
 	let {
@@ -42,11 +38,7 @@
 		balanceSuggestions,
 		activePlayers,
 		tableCount,
-		isFinalTable,
-		finalSeats,
-		seats,
 		seatRole,
-		removePlayer,
 		applyBalance
 	} = $props();
 </script>
