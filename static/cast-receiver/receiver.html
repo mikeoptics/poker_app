@@ -70,6 +70,105 @@
       color: #aeb5bb;
       font-size: 2vw;
     }
+
+    .elimination-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.82);
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .elimination-overlay.show {
+      animation:
+        eliminationFadeIn 0.18s ease-out,
+        eliminationFadeOut 0.5s ease-in 4.5s forwards;
+    }
+
+    .elimination-card {
+      position: relative;
+      z-index: 1;
+      padding: 45px 5vw;
+      text-align: center;
+      transform: scale(0.65);
+      animation: eliminationSlam 0.55s cubic-bezier(0.16, 1.35, 0.3, 1) forwards;
+    }
+
+    .elimination-top {
+      margin-bottom: 12px;
+      color: #d9d9d9;
+      font-size: clamp(1rem, 2vw, 2rem);
+      font-weight: 800;
+      letter-spacing: 0.3em;
+      animation: eliminationTop 0.4s ease-out 0.15s both;
+    }
+
+    .elimination-name {
+      max-width: 90vw;
+      overflow-wrap: anywhere;
+      color: #ffffff;
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 950;
+      line-height: 0.95;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(255, 40, 40, 0.8), 0 0 30px rgba(255, 0, 0, 0.6), 0 5px 0 #550000;
+      animation: eliminationName 0.5s cubic-bezier(0.16, 1.35, 0.3, 1) 0.12s both;
+    }
+
+    .elimination-word {
+      margin-top: 18px;
+      color: #ff3030;
+      font-size: clamp(1.8rem, 4vw, 3.5rem);
+      font-weight: 950;
+      letter-spacing: 0.18em;
+      text-shadow: 0 0 8px #ff0000, 0 0 25px rgba(255, 0, 0, 0.8);
+      animation: eliminationWord 0.4s ease-out 0.45s both, eliminationPulse 0.75s ease-in-out 0.9s infinite;
+    }
+
+    .elimination-impact {
+      position: absolute;
+      width: 20vw;
+      height: 20vw;
+      max-width: 350px;
+      max-height: 350px;
+      border-radius: 50%;
+      background: rgba(255, 0, 0, 0.25);
+      transform: scale(0);
+      animation: eliminationShockwave 0.8s ease-out;
+    }
+
+    @keyframes eliminationFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes eliminationFadeOut { from { opacity: 1; } to { opacity: 0; } }
+    @keyframes eliminationSlam {
+      0% { transform: scale(0.65); opacity: 0; }
+      55% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes eliminationTop {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes eliminationName {
+      0% { opacity: 0; transform: scale(1.5); }
+      65% { opacity: 1; transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes eliminationWord {
+      from { opacity: 0; transform: translateY(25px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes eliminationPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    @keyframes eliminationShockwave {
+      0% { transform: scale(0); opacity: 0.8; }
+      100% { transform: scale(5); opacity: 0; }
+    }
   </style>
 </head>
 
@@ -87,6 +186,15 @@
     <div class="next" id="next"></div>
   </div>
 
+  <div class="elimination-overlay" id="elimination-overlay" aria-hidden="true">
+    <div class="elimination-impact"></div>
+    <div class="elimination-card">
+      <div class="elimination-top">PLAYER ELIMINATED</div>
+      <div class="elimination-name" id="elimination-name"></div>
+      <div class="elimination-word">ELIMINATED</div>
+    </div>
+  </div>
+
   <script>
     (function () {
       const NAMESPACE = 'urn:x-cast:com.miiiike.poker';
@@ -98,8 +206,31 @@
       let updatedAt = 0;
       let running = false;
       let refreshInterval = null;
+      let lastEliminationEventId = null;
+      let eliminationHideTimer = null;
 
       const el = id => document.getElementById(id);
+
+      function showElimination(event) {
+        if (!event || typeof event.id !== 'string' || event.id === lastEliminationEventId) return;
+
+        lastEliminationEventId = event.id;
+        const createdAt = Number(event.createdAt);
+        const age = Date.now() - createdAt;
+        if (!Number.isFinite(createdAt) || age < 0 || age > 7000) return;
+
+        el('elimination-name').textContent = event.playerName || 'PLAYER';
+        const overlay = el('elimination-overlay');
+        overlay.classList.remove('show');
+        void overlay.offsetWidth;
+        overlay.classList.add('show');
+
+        if (eliminationHideTimer !== null) clearTimeout(eliminationHideTimer);
+        eliminationHideTimer = setTimeout(() => {
+          overlay.classList.remove('show');
+          eliminationHideTimer = null;
+        }, 7000);
+      }
 
       function draw(d) {
         if (!d) return;
@@ -118,6 +249,7 @@
         remaining = d.remainingMs || 0;
         updatedAt = d.updatedAt || Date.now();
         running = Boolean(d.running);
+        showElimination(d.eliminationEvent);
       }
 
       async function refresh() {
