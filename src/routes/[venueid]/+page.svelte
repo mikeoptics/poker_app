@@ -1177,8 +1177,36 @@
 			});
 		}
 
+		const restoredPosition = p.eliminationPosition;
 		p.eliminated = false;
 		p.eliminationPosition = null;
+
+		// Close the finishing-position gap left by restoring this player.
+		for (const remainingPlayer of players) {
+			if (
+				remainingPlayer.eliminated &&
+				restoredPosition !== null &&
+				remainingPlayer.eliminationPosition !== null &&
+				remainingPlayer.eliminationPosition > restoredPosition
+			) {
+				remainingPlayer.eliminationPosition -= 1;
+			}
+		}
+
+		// Recalculate unpublished league points against the corrected positions.
+		for (const remainingPlayer of players) {
+			if (!remainingPlayer.eliminated || remainingPlayer.guest || remainingPlayer.redtoothId === null) continue;
+			const previousPending = remainingPlayer.redtoothPendingPoints ?? 0;
+			const confirmedPoints = (remainingPlayer.redtoothPoints ?? 0) - previousPending;
+			const newPoints = pointsForPlace(remainingPlayer.eliminationPosition ?? 1);
+			remainingPlayer.redtoothPendingPoints = newPoints;
+			remainingPlayer.redtoothPoints = confirmedPoints + newPoints;
+			redtoothPlayers = redtoothPlayers.map((row) =>
+				row.redtoothId === remainingPlayer.redtoothId
+					? { ...row, localGames: 1, localPoints: newPoints, pendingPoints: newPoints }
+					: row
+			);
+		}
 
 		distributeAcrossTables();
 		rebalanceTables();
@@ -1800,219 +1828,72 @@ function startCasting() {
 
 	<main>
 		{#if activeTab === 'timer'}
-			<div class="timer-page-layout">
-				<div class="timer-display">
-					<div class="game-display" class:game-display-empty={!mixedGames}>
-						<span class="display-label">CURRENT GAME</span>
-						<h1>{currentGame}</h1>
-					</div>
-					<div class="clock-display">
-						<div class="clock">{formattedTime}</div>
-
-						<div class="blinds-display">
-							{#if currentBlinds?.break}
-								<span class="break-text">BREAK</span>
-							{:else}
-								<span>{currentBlinds?.sb}</span>
-								<span class="blind-divider">/</span>
-								<span>{currentBlinds?.bb}</span>
-							{/if}
-						</div>
-					</div>
-
-					<div class="progress-display">
-						<div class="progress-display-fill" style={`width:${progress}%`}></div>
-					</div>
-
-					<div class="display-info">
-						<div class="info-block previous-level">
-							<span class="display-label">PREVIOUS</span>
-
-							{#if previousBlinds?.break}
-								<strong>BREAK</strong>
-								<small>{previousBlinds.minutes} minutes</small>
-							{:else if previousBlinds}
-								<strong>{previousBlinds.sb} / {previousBlinds.bb}</strong>
-							{:else}
-								<strong>—</strong>
-							{/if}
-						</div>
-
-						<div class="info-divider"></div>
-
-						<div class="info-block next-level">
-							<span class="display-label">NEXT</span>
-
-							{#if nextBlinds?.break}
-								<strong>BREAK</strong>
-								<small>{nextBlinds.minutes} minutes</small>
-							{:else if mixedGames}
-								<strong>{nextGame}</strong>
-								<small>{nextBlinds?.sb} / {nextBlinds?.bb}</small>
-							{:else}
-								<strong>{nextBlinds?.sb} / {nextBlinds?.bb}</strong>
-							{/if}
-						</div>
-					</div>
+			<section class="director-dashboard">
+				<div class="director-level-bar">
+					<button class="level-arrow" aria-label="Previous blind level" onclick={previousLevel} disabled={currentLevel === 0}>◀</button>
+					<button class="level-main" onclick={toggleTimer} aria-label={running ? 'Pause tournament timer' : 'Resume tournament timer'}>
+						<span class="director-eyebrow">LEVEL {currentLevel + 1} OF {levels.length} · {running ? 'RUNNING' : 'PAUSED'}</span>
+						<strong>{currentBlinds?.break ? 'BREAK' : currentGame}</strong>
+						<span class="director-blinds">{#if currentBlinds?.break}{currentBlinds.minutes} MINUTES{:else}{currentBlinds?.sb} / {currentBlinds?.bb}{/if}</span>
+						<span class="director-clock">{formattedTime}</span>
+						<span class="director-hint">TAP TO {running ? 'PAUSE' : 'START'}</span>
+					</button>
+					<button class="level-arrow" aria-label="Next blind level" onclick={nextLevel} disabled={currentLevel >= levels.length - 1}>▶</button>
 				</div>
-
-				<!-- Redtooth league -->
-				<aside
-					class="redtooth-panel"
-					class:today-view={redtoothShowTournament}
-					class:league-view={!redtoothShowTournament}
-				>
-					<div class="redtooth-header">
-						<div>
-							<span class="display-label">
-								{redtoothShowTournament ? 'TODAY' : 'REDTOOTH'}
-							</span>
-
-							<h2>
-								{redtoothShowTournament ? 'Tournament' : 'League Table'}
-							</h2>
-							<p class="redtooth-mode-description">
-								{redtoothShowTournament ? 'Current tournament' : 'Current league standings'}
-							</p>
-						</div>
-
-						<div class="redtooth-controls">
-							<button
-								class="redtooth-control"
-								onclick={toggleRedtoothPause}
-								aria-label={redtoothTransitionPaused
-									? 'Resume table rotation'
-									: 'Pause table rotation'}
-								title={redtoothTransitionPaused ? 'Resume rotation' : 'Pause rotation'}
-							>
-								{redtoothTransitionPaused ? '▶' : 'Ⅱ'}
-							</button>
-
-							<button
-								class="redtooth-control"
-								onclick={skipRedtoothView}
-								aria-label="Skip to next table"
-								title="Skip"
-							>
-								›
-							</button>
-						</div>
+				<div class="director-progress"><div style={`width:${progress}%`}></div></div>
+				<div class="director-level-context">
+					<span>PREVIOUS: {#if previousBlinds}{previousBlinds.break ? 'BREAK' : `${previousBlinds.sb} / ${previousBlinds.bb}`}{:else}—{/if}</span>
+					<span>NEXT: {#if nextBlinds}{nextBlinds.break ? 'BREAK' : `${nextBlinds.sb} / ${nextBlinds.bb}`}{:else}—{/if}</span>
+				</div>
+				<section class="director-players">
+					<div class="director-section-heading">
+						<div><span class="director-eyebrow">TOURNAMENT DIRECTOR</span><h1>Players</h1></div>
+						<div class="director-player-count"><strong>{activePlayerCount}</strong><span>ACTIVE</span></div>
 					</div>
-
-					<div class="redtooth-content" class:show-tournament={redtoothShowTournament}>
-						{#if redtoothShowTournament}
-							<div class="redtooth-column-head">
-								<span>#</span>
-								<span>PLAYER</span>
-								<span>GP</span>
-								<span>PTS</span>
-							</div>
-
-							<div class="redtooth-list tournament-player-list">
-								{#each tournamentRedtoothRows as item}
-									{@const player = item.player}
-									{@const row = item.row}
-
-									<div class="redtooth-row" class:eliminated={player.eliminated}>
-										<div class="redtooth-position">
-											{item.displayPosition}
-										</div>
-
-										<div class="redtooth-player-name">
-											<span>{player.name}</span>
-
-											{#if player.eliminated}
-												<small>ELIMINATED</small>
-											{/if}
-										</div>
-
-										<div class="redtooth-games">
-											{row?.games ?? player.redtoothGames ?? '—'}
-										</div>
-
-										<div class="redtooth-points">
-											{row?.points ?? player.redtoothPoints ?? '—'}
-										</div>
-									</div>
-								{/each}
-							</div>
-						{:else if redtoothError}
-							<div class="redtooth-error">
-								{redtoothError}
-							</div>
-						{:else if redtoothLeague.length === 0}
-							<div class="redtooth-empty">
-								{#if redtoothLoading}
-									Loading league table…
-								{:else}
-									No league data available.
-								{/if}
-							</div>
-						{:else}
-							<div class="redtooth-column-head">
-								<span>#</span>
-								<span>PLAYER</span>
-								<span>GP</span>
-								<span>PTS</span>
-							</div>
-
-							<div class="redtooth-list">
-								{#each redtoothLeague as row}
-									{#if row.projectedPosition === 1 || (row.projectedPosition > 1 && redtoothLeague.find((r) => r.projectedPosition === row.projectedPosition - 1)?.projectedQualification !== row.projectedQualification)}
-										{#if row.projectedPosition > 1 && row.projectedQualification === 'regional'}
-											<div class="redtooth-boundary regional-boundary">
-												<span>REGIONAL QUALIFICATION</span>
-											</div>
-										{:else if row.projectedPosition > 1 && row.projectedQualification === 'playoff'}
-											<div class="redtooth-boundary playoff-boundary">
-												<span>PLAYOFF</span>
-											</div>
-										{/if}
-									{/if}
-
-									<div
-										class:regional={row.projectedQualification === 'regional'}
-										class:playoff={row.projectedQualification === 'playoff'}
-										class="redtooth-row"
-									>
-										<div class="redtooth-position">
-											{row.projectedPosition}
-										</div>
-
-										<div class="redtooth-player-name">
-											<span>{row.name}</span>
-
-											{#if (row.pendingPoints ?? 0) > 0}
-												<small>+{row.pendingPoints} pending</small>
-											{/if}
-										</div>
-
-										<div class="redtooth-games">
-											{row.games}
-										</div>
-
-										<div
-											class:pending-points={(row.pendingPoints ?? 0) > 0}
-											class="redtooth-points"
-										>
-											{row.points}
-										</div>
-									</div>
-								{/each}
-							</div>
-
-							{#if redtoothFetchedAt}
-								<div class="redtooth-updated">
-									Updated {new Date(redtoothFetchedAt).toLocaleTimeString([], {
-										hour: '2-digit',
-										minute: '2-digit'
-									})}
+					<form class="director-add-player" onsubmit={(e) => { e.preventDefault(); addPlayerFromForm(); }}>
+						<div class="redtooth-autocomplete">
+							<input value={newPlayerName} placeholder="Add player…" autocomplete="off" oninput={(e) => { newPlayerName = e.currentTarget.value; redtoothSelectedPlayer = null; searchRedtooth(e.currentTarget.value); }} />
+							{#if redtoothSearchResults.length > 0}
+								<div class="redtooth-search-results">
+									{#each redtoothSearchResults as result}
+										<button type="button" class="redtooth-search-result" onclick={() => selectRedtoothPlayer(result)}><span><strong>{result.name}</strong><small>{result.games} games · {result.points} pts</small></span><span class="redtooth-search-position">#{result.position}</span></button>
+									{/each}
 								</div>
 							{/if}
+						</div>
+						<button class="director-add-button" type="submit">+ ADD</button>
+					</form>
+					{#if activePlayers.length === 0 && eliminatedPlayers.length === 0}
+						<div class="director-empty">Add players above to start managing the tournament.</div>
+					{:else}
+						<div class="director-player-list">
+							{#each activePlayers as player (player.id)}
+								<div class="director-player-row">
+									<div class="director-player-identity"><strong>{player.name}</strong><span>{player.guest ? 'GUEST' : player.redtoothId !== null ? 'REDTOOTH' : 'UNLINKED'} · TABLE {player.table} / SEAT {player.seat}</span></div>
+									<button class="eliminate-button" onclick={() => removePlayer(player.id)}>ELIMINATE</button>
+								</div>
+							{/each}
+						</div>
+						{#if eliminatedPlayers.length > 0}
+							<div class="director-eliminated-heading">ELIMINATED · {eliminatedPlayers.length}</div>
+							<div class="director-player-list eliminated-list">
+								{#each [...eliminatedPlayers].sort((a, b) => (b.eliminationPosition ?? 0) - (a.eliminationPosition ?? 0)) as player (player.id)}
+									<div class="director-player-row is-eliminated">
+										<div class="director-player-identity"><strong>{player.name}</strong><span>{player.eliminationPosition}{player.eliminationPosition === 1 ? 'ST' : player.eliminationPosition === 2 ? 'ND' : player.eliminationPosition === 3 ? 'RD' : 'TH'} PLACE</span></div>
+										<div class="director-eliminated-actions">
+											<button class="restore-button" onclick={() => restorePlayer(player.id)}>UNDO ELIMINATION</button>
+											<div class="elimination-order-controls">
+												<button class="order-button" title="Improve finishing position" onclick={() => moveEliminatedPlayer(player.id, -1)}>▲</button>
+												<button class="order-button" title="Lower finishing position" onclick={() => moveEliminatedPlayer(player.id, 1)}>▼</button>
+											</div>
+										</div>
+									</div>
+								{/each}
+							</div>
 						{/if}
-					</div>
-				</aside>
-			</div>
+					{/if}
+				</section>
+			</section>
 		{:else if activeTab === 'tables'}
 			<Tables
 				bind:tableView
@@ -3814,4 +3695,83 @@ function startCasting() {
 		opacity: 0.25;
 		cursor: default;
 	}
+
+	/* Tournament Director: black and gold control surface */
+	.app, .mode-play, .mode-break, .mode-paused {
+		background: radial-gradient(circle at 50% -20%, rgba(196,163,106,.12), transparent 38rem), #0b0c0e !important;
+		color: #f4f0e7;
+	}
+	.header h2 { color: #c4a36a; letter-spacing: .04em; }
+	.header { border-bottom: 1px solid rgba(196,163,106,.2); padding-bottom: 12px; }
+	.sound, .add, .clock-button, .tabs button, .secondary, .mixed-toggle {
+		background: #171717; color: #d8c49c; border: 1px solid #5a482b; border-radius: 8px;
+	}
+	.clock-button, .tabs button.active { background: #c4a36a; color: #111; border-color: #c4a36a; }
+	.tabs { border-color: rgba(196,163,106,.25); }
+	.tabs button.active { border-bottom-color: #c4a36a; }
+	.levels-card, .setup-card, .payout-card, .location-card, .table-card, .director-players {
+		background: #141414; border: 1px solid #403522; border-radius: 14px; color: #f4f0e7;
+	}
+	.primary { background: #c4a36a; color: #111; border-radius: 8px; }
+	input, select { background: #0c0d0e; color: #f4f0e7; border: 1px solid #51432c; border-radius: 7px; }
+	.director-dashboard { height:100%; min-height:0; overflow:auto; padding: 0 0 22px; }
+	.director-level-bar { display:grid; grid-template-columns:56px minmax(0,1fr) 56px; gap:10px; align-items:stretch; max-width:900px; margin:0 auto; }
+	.level-arrow { border:1px solid #6b5732; border-radius:12px; background:#171512; color:#c4a36a; font-size:22px; font-weight:900; min-height:150px; touch-action:manipulation; }
+	.level-arrow:disabled { opacity:.25; }
+	.level-main { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:5px; min-height:150px; padding:14px; border:1px solid #80683b; border-radius:12px; background:linear-gradient(145deg,#211d15,#111); color:#f4f0e7; touch-action:manipulation; }
+	.director-eyebrow { color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.18em; }
+	.level-main strong { color:#f3e5c5; font-size:clamp(20px,3vw,30px); letter-spacing:.08em; }
+	.director-blinds { color:#c4a36a; font-size:clamp(21px,4vw,34px); font-weight:900; font-variant-numeric:tabular-nums; }
+	.director-clock { color:#fff; font-size:clamp(34px,7vw,58px); line-height:1; font-weight:900; font-variant-numeric:tabular-nums; }
+	.director-hint { color:#95876e; font-size:9px; letter-spacing:.16em; font-weight:800; }
+	.director-progress { height:4px; max-width:850px; margin:9px auto 0; background:#29251e; border-radius:9px; overflow:hidden; }
+	.director-progress div { height:100%; background:#c4a36a; transition:width .25s linear; }
+	.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }
+	.director-players { max-width:900px; margin:0 auto; padding:16px; }
+	.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+	.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }
+	.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }
+	.director-player-count strong { font-size:26px; }
+	.director-add-player { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:8px; margin-bottom:12px; }
+	.director-add-player input { width:100%; min-height:44px; padding:10px 12px; font-size:16px; }
+	.director-add-button { min-width:86px; border-radius:8px; background:#c4a36a; color:#111; font-size:12px; font-weight:900; padding:0 14px; }
+	.director-player-list { display:flex; flex-direction:column; gap:6px; }
+	.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }
+	.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }
+	.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }
+	.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }
+	.eliminate-button, .restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }
+	.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }
+	.is-eliminated { opacity:.7; }
+	.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }
+	.director-eliminated-actions { display:flex; align-items:center; gap:8px; }
+	.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }
+	.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }
+	.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {
+		.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }
+		.header { align-items:flex-start; gap:8px; margin-bottom:8px; }
+		.header h2 { font-size:16px; }
+		.header-actions { justify-content:flex-end; gap:5px; }
+		.header-actions .sound { display:none; }
+		.clock-button { padding:7px 9px; font-size:11px; }
+		.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }
+		.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }
+		main { overflow:hidden; }
+		.director-dashboard { padding-bottom:12px; }
+		.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }
+		.level-arrow { min-height:136px; font-size:17px; }
+		.level-main { min-height:136px; padding:9px 5px; }
+		.director-clock { font-size:clamp(38px,12vw,54px); }
+		.director-level-context { font-size:9px; margin-bottom:12px; }
+		.director-players { padding:11px; }
+		.director-player-row { min-height:60px; padding:8px; gap:7px; }
+		.director-player-identity strong { font-size:13px; }
+		.eliminate-button, .restore-button { min-height:42px; padding:0 9px; font-size:9px; }
+		.director-eliminated-actions { gap:5px; }
+		.director-eliminated-actions .order-button { width:27px; height:30px; }
+		.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }
+		.setup-layout .table { max-height:none; }
+	}
+
 </style>
