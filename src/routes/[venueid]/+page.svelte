@@ -1787,10 +1787,6 @@ function startCasting() {
 	class:mode-paused={!running}
 >
 	<header class="header">
-		<div>
-			<h2>Mike's Poker App</h2>
-		</div>
-
 		<div class="header-actions">
 			<button class="sound" onclick={startCasting}>Cast to TV</button>
 			<button class="clock-button" onclick={() => (showClock ? closeClock() : startClock())}>
@@ -1833,9 +1829,14 @@ function startCasting() {
 					<button class="level-arrow" aria-label="Previous blind level" onclick={previousLevel} disabled={currentLevel === 0}>◀</button>
 					<button class="level-main" onclick={toggleTimer} aria-label={running ? 'Pause tournament timer' : 'Resume tournament timer'}>
 						<span class="director-eyebrow">LEVEL {currentLevel + 1} OF {levels.length} · {running ? 'RUNNING' : 'PAUSED'}</span>
-						<strong>{currentBlinds?.break ? 'BREAK' : currentGame}</strong>
-						<span class="director-blinds">{#if currentBlinds?.break}{currentBlinds.minutes} MINUTES{:else}{currentBlinds?.sb} / {currentBlinds?.bb}{/if}</span>
 						<span class="director-clock">{formattedTime}</span>
+						{#if currentBlinds?.break}
+							<strong>BREAK</strong>
+							<span class="director-blinds">{currentBlinds.minutes} MINUTES</span>
+						{:else}
+							{#if mixedGames}<strong>{currentBlinds?.game}</strong>{/if}
+							<span class="director-blinds">{currentBlinds?.sb} / {currentBlinds?.bb}</span>
+						{/if}
 						<span class="director-hint">TAP TO {running ? 'PAUSE' : 'START'}</span>
 					</button>
 					<button class="level-arrow" aria-label="Next blind level" onclick={nextLevel} disabled={currentLevel >= levels.length - 1}>▶</button>
@@ -1869,7 +1870,7 @@ function startCasting() {
 						<div class="director-player-list">
 							{#each activePlayers as player (player.id)}
 								<div class="director-player-row">
-									<div class="director-player-identity"><strong>{player.name}</strong><span>{player.guest ? 'GUEST' : player.redtoothId !== null ? 'REDTOOTH' : 'UNLINKED'} · TABLE {player.table} / SEAT {player.seat}</span></div>
+									<div class="director-player-identity"><strong>{player.name}</strong><span>{player.guest ? 'GUEST' : player.redtoothId !== null ? 'REDTOOTH' : 'UNLINKED'}</span></div>
 									<button class="eliminate-button" onclick={() => removePlayer(player.id)}>ELIMINATE</button>
 								</div>
 							{/each}
@@ -4082,6 +4083,24 @@ function startCasting() {
 		.header-actions > button { min-height:40px; }
 		.settings-button { width:40px; min-width:40px; }
 		.settings-modal { padding:18px; }
+	}
+
+
+	/* Timer hierarchy: prominent countdown, quieter blind information */
+	.level-main { gap: 7px !important; }
+	.director-clock {
+		order: 2;
+		font-size: clamp(58px, 9vw, 88px) !important;
+		line-height: .98 !important;
+		letter-spacing: -.045em;
+	}
+	.level-main strong { order: 3; font-size: 13px !important; letter-spacing: .12em !important; color: #aeb5bb !important; }
+	.director-blinds { order: 4; font-size: clamp(17px, 2.4vw, 23px) !important; font-weight: 650 !important; color: #aeb5bb !important; }
+	.director-hint { order: 5; }
+	.director-eyebrow { order: 1; }
+	@media (max-width:700px) {
+		.director-clock { font-size: clamp(56px, 16vw, 76px) !important; }
+		.director-blinds { font-size: 17px !important; }
 	}
 
 </style>
