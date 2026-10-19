@@ -1911,7 +1911,7 @@ function startCasting() {
 									onpointerup={() => endPlayerSwipe(player.id)}
 									onpointercancel={cancelPlayerSwipe}
 								>
-									<div class="swipe-trash-reveal"><icon name="trash-2" size="20" /></div>
+									<div class="swipe-trash-reveal"><icon name="trash-2" size="18" /><span>ELIMINATED</span></div>
 									<div class="director-player-row" style:transform={`translateX(${swipedPlayerId === player.id ? playerSwipeOffset : 0}px)`}>
 										<div class="director-player-identity"><strong>{player.name}</strong><span>{player.guest ? 'GUEST' : player.redtoothId !== null ? 'REDTOOTH' : 'UNLINKED'}</span></div>
 									</div>
@@ -3815,7 +3815,7 @@ function startCasting() {
 	.director-player-swipe { position:relative; overflow:hidden; border-radius:9px; touch-action:pan-y; user-select:none; }
 	.director-player-swipe .director-player-row { position:relative; z-index:1; transition:transform .2s ease; }
 	.director-player-swipe.dragging .director-player-row { transition:none; }
-	.swipe-trash-reveal { position:absolute; inset:0 0 0 auto; width:112px; display:flex; align-items:center; justify-content:flex-end; padding-right:24px; background:#b83c3c; color:#fff; }
+	.swipe-trash-reveal { position:absolute; inset:0 0 0 auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; background:#b83c3c; color:#fff; }\n\t.swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }
 	.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }
 	.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }
 	.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }
