@@ -1,9 +1,19 @@
 <script>
-import{onMount}from'svelte';import{page}from'$app/state';const venueId=$derived(page.params.venueid);let tournamentState=$state(/** @type {any} */ (null)),error=$state('');/** @type {ReturnType<typeof setInterval> | null} */let interval=null;let remainingMs=$state(0);
+import{onMount}from'svelte';import{page}from'$app/state';const venueId=$derived(page.params.venueid);
+let tournamentState=$state(/** @type {any} */ (null)),error=$state('');
+/** @type {ReturnType<typeof setInterval> | null} */
+let interval = null;
+let remainingMs=$state(0);
 async function refresh(){try{const r=await fetch('/api/tournament/'+venueId+'?public=1',{cache:'no-store'});if(!r.ok)throw new Error('Unable to load the tournament display.');const d=await r.json();tournamentState=d.state;remainingMs=tournamentState?.remainingMs??0;error='';}catch(e){error=e instanceof Error?e.message:'Connection lost.';}}
 /** @param {number} ms */
 function clock(ms){const s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
-onMount(()=>{refresh();interval=setInterval(refresh,1000);return()=>clearInterval(interval);});
+onMount(() => {
+	refresh();
+	interval = setInterval(refresh, 1000);
+	return () => {
+		if (interval !== null) clearInterval(interval);
+	};
+});
 </script>
 <svelte:head><title>Tournament TV display</title><meta name="viewport" content="width=device-width,initial-scale=1"/></svelte:head>
 <div class="display">{#if error}<div class="connection-error">{error}</div>{/if}{#if tournamentState}<header><span>LIVE TOURNAMENT</span><h1>{tournamentState.venueName||'Venue '+venueId}</h1></header><section class="hero"><div class="game">{tournamentState.currentGame}</div><div class="timer">{clock(remainingMs)}</div><div class="blinds">{tournamentState.blinds}</div><div class="progress">{tournamentState.running?'IN PLAY':'PAUSED'}</div></section><section class="next"><div><small>NEXT LEVEL</small><strong>{tournamentState.nextGame}</strong><span>{tournamentState.nextBlinds}</span></div><div><small>PLAYERS</small><strong>{tournamentState.activePlayerCount}</strong></div></section>{#if tournamentState.players?.length}<section class="players"><h2>Players</h2><div class="player-grid">{#each tournamentState.players as player,index (player.name+index)}<div class:out={player.eliminated}><span>{index+1}</span><strong>{player.name}</strong>{#if player.eliminated}<small>OUT · {player.position??''}</small>{/if}</div>{/each}</div></section>{/if}{:else}<div class="waiting"><h1>Waiting for tournament</h1><p>Open the admin app and start the tournament.</p></div>{/if}</div>
