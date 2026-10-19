@@ -2,7 +2,7 @@ import { json } from '@sveltejs/kit';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 const DATA_DIR=path.resolve('.data','venues');
-const valid=id=>/^\\d{1,12}$/.test(String(id??''));
+const valid=id=>/^\d{1,12}$/.test(String(id??''));
 const file=id=>path.join(DATA_DIR,id+'.json');
 async function read(id){try{return JSON.parse(await fs.readFile(file(id),'utf8'));}catch(e){if(e?.code==='ENOENT')return null;throw e;}}
 function publicState(s){if(!s)return null;const i=s.currentLevel??0,l=s.levels?.[i]??null,n=s.levels?.[Math.min(i+1,(s.levels?.length??1)-1)]??null,elapsed=s.running?Math.max(0,Date.now()-(s.updatedAt??Date.now())):0;return{venueName:s.venueName??'',currentLevel:i,currentGame:l?.break?'BREAK':s.mixedGames?(l?.game??'POKER'):'POKER',blinds:l?.break?'BREAK':(l?l.sb+' / '+l.bb:'—'),nextGame:n?.break?'BREAK':s.mixedGames?(n?.game??''):'BLINDS',nextBlinds:n?.break?'BREAK':(n?n.sb+' / '+n.bb:'—'),remainingMs:Math.max(0,(s.remainingMs??0)-elapsed),running:Boolean(s.running),updatedAt:Date.now(),players:(s.players??[]).map(p=>({name:p.name,eliminated:Boolean(p.eliminated),position:p.eliminationPosition??null})),activePlayerCount:(s.players??[]).filter(p=>!p.eliminated).length};}
