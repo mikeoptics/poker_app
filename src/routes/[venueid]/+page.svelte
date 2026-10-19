@@ -1607,7 +1607,7 @@
 			const media = new window.chrome.cast.media.MediaInfo('urn:x-cast:poker-app', 'application/x-poker-app');
 			media.customData = { venueId };
 			return session.loadMedia(new window.chrome.cast.media.LoadRequest(media));
-		}).then(() => castStatus = 'Connected to TV.').catch((error) => {
+		}).then(() => castStatus = 'Connected to TV.').catch(/** @param {unknown} error */ (error) => {
 			console.error('Chromecast connection failed:', error);
 			castStatus = 'Unable to connect to Chromecast.';
 		});
