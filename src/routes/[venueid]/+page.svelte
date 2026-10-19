@@ -400,19 +400,35 @@
 	let eliminationSound = null;
 	let swipedPlayerId = $state(null);
 	let playerSwipeStartX = 0;
+	let playerSwipeOffset = $state(0);
 
 	function startPlayerSwipe(event, playerId) {
+		swipedPlayerId = playerId;
 		playerSwipeStartX = event.clientX;
+		playerSwipeOffset = 0;
 		event.currentTarget.setPointerCapture(event.pointerId);
 	}
 
-	function endPlayerSwipe(event, playerId) {
-		const distance = event.clientX - playerSwipeStartX;
-		if (distance < -45) {
-			swipedPlayerId = playerId;
-		} else if (distance > 45) {
+	function movePlayerSwipe(event, playerId) {
+		if (swipedPlayerId !== playerId) return;
+		playerSwipeOffset = Math.max(-112, Math.min(0, event.clientX - playerSwipeStartX));
+	}
+
+	function endPlayerSwipe(playerId) {
+		if (swipedPlayerId !== playerId) return;
+		if (playerSwipeOffset <= -82) {
 			swipedPlayerId = null;
+			playerSwipeOffset = 0;
+			removePlayer(playerId);
+			return;
 		}
+		swipedPlayerId = null;
+		playerSwipeOffset = 0;
+	}
+
+	function cancelPlayerSwipe() {
+		swipedPlayerId = null;
+		playerSwipeOffset = 0;
 	}
 
 
@@ -1889,15 +1905,16 @@ function startCasting() {
 							{#each activePlayers as player (player.id)}
 								<div
 									class="director-player-swipe"
-									class:swiped={swipedPlayerId === player.id}
+									class:dragging={swipedPlayerId === player.id}
 									onpointerdown={(event) => startPlayerSwipe(event, player.id)}
-									onpointerup={(event) => endPlayerSwipe(event, player.id)}
-									onpointercancel={() => (swipedPlayerId = null)}
+									onpointermove={(event) => movePlayerSwipe(event, player.id)}
+									onpointerup={() => endPlayerSwipe(player.id)}
+									onpointercancel={cancelPlayerSwipe}
 								>
-									<div class="director-player-row">
+									<div class="swipe-trash-reveal"><icon name="trash-2" size="20" /></div>
+									<div class="director-player-row" style:transform={`translateX(${swipedPlayerId === player.id ? playerSwipeOffset : 0}px)`}>
 										<div class="director-player-identity"><strong>{player.name}</strong><span>{player.guest ? 'GUEST' : player.redtoothId !== null ? 'REDTOOTH' : 'UNLINKED'}</span></div>
 									</div>
-									<button class="swipe-eliminate" aria-label={`Eliminate ${player.name}`} onclick={() => { swipedPlayerId = null; removePlayer(player.id); }}>ELIMINATE</button>
 								</div>
 							{/each}
 						</div>
@@ -3795,10 +3812,10 @@ function startCasting() {
 	.director-add-player input { width:100%; min-height:44px; padding:10px 12px; font-size:16px; }
 	.director-add-button { min-width:86px; border-radius:8px; background:#c4a36a; color:#111; font-size:12px; font-weight:900; padding:0 14px; }
 	.director-player-list { display:flex; flex-direction:column; gap:6px; }
-	.director-player-swipe { position:relative; overflow:hidden; border-radius:9px; touch-action:pan-y; }
+	.director-player-swipe { position:relative; overflow:hidden; border-radius:9px; touch-action:pan-y; user-select:none; }
 	.director-player-swipe .director-player-row { position:relative; z-index:1; transition:transform .2s ease; }
-	.director-player-swipe.swiped .director-player-row { transform:translateX(-104px); }
-	.swipe-eliminate { position:absolute; inset:0 0 0 auto; width:104px; display:flex; align-items:center; justify-content:center; background:rgba(190,80,75,.18); color:#e1a09b; font-size:10px; font-weight:900; letter-spacing:.06em; }
+	.director-player-swipe.dragging .director-player-row { transition:none; }
+	.swipe-trash-reveal { position:absolute; inset:0 0 0 auto; width:112px; display:flex; align-items:center; justify-content:flex-end; padding-right:24px; background:#b83c3c; color:#fff; }
 	.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }
 	.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }
 	.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }
