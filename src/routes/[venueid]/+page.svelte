@@ -2793,7 +2793,6 @@ function startCasting() {
 		padding: 15px;
 	}
 
-	.setup-card,
 	.payout-buyin-field { max-width:220px; margin:0 0 16px; }
 	.payout-buyin-field label { display:flex; flex-direction:column; gap:7px; color:#8e969d; font-size:12px; font-weight:700; }
 	.payout-buyin-field input { width:100%; min-height:42px; padding:9px 12px; font-size:16px; }
