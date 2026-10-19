@@ -3878,4 +3878,125 @@ function startCasting() {
 		border-color: #343a40 !important;
 	}
 
+
+
+	/* Responsive header: keep every tournament action available at every width */
+	.header {
+		flex-wrap: wrap !important;
+		align-items: center !important;
+		column-gap: 20px !important;
+		row-gap: 12px !important;
+	}
+	.header > div:first-child {
+		flex: 0 0 auto;
+	}
+	.header-actions {
+		flex: 1 1 560px;
+		min-width: 0;
+		display: grid !important;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		align-items: center;
+		gap: 6px !important;
+	}
+	.header-actions > button {
+		min-width: 0;
+		min-height: 38px;
+		padding: 8px 10px;
+		white-space: nowrap;
+		font-size: 12px;
+	}
+	.header-actions .sound {
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+	}
+	.header-actions .cast-status {
+		grid-column: 1 / -1;
+	}
+	/* At tablet widths, let the toolbar occupy its own row rather than clipping. */
+	@media (max-width: 1050px) {
+		.header > div:first-child { flex-basis: 100%; }
+		.header-actions {
+			flex-basis: 100%;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+	@media (max-width: 700px) {
+		.header {
+			align-items: stretch !important;
+			margin-bottom: 8px !important;
+		}
+		.header > div:first-child { flex-basis: 100%; }
+		.header-actions {
+			width: 100%;
+			flex-basis: 100%;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 6px !important;
+		}
+		.header-actions > button {
+			min-height: 40px;
+			padding: 8px 6px;
+			font-size: 11px;
+		}
+	}
+	/* Cleaner timer controls: use spacing and contrast, not outlined boxes. */
+	.level-arrow {
+		border: 0 !important;
+		border-radius: 8px !important;
+		background: transparent !important;
+		color: #aeb5bb !important;
+		font-size: 30px !important;
+		box-shadow: none !important;
+		transition: color .15s ease, background .15s ease !important;
+	}
+	.level-arrow:hover:not(:disabled) {
+		background: rgba(255,255,255,.05) !important;
+		color: #f4f4f1 !important;
+	}
+	.level-arrow:disabled {
+		background: transparent !important;
+		color: #51585e !important;
+		opacity: 1 !important;
+	}
+	.level-main {
+		border: 0 !important;
+		border-radius: 14px !important;
+		background: #181b1f !important;
+		box-shadow: none !important;
+	}
+	.director-level-bar { gap: 4px !important; }
+	.director-progress { height: 3px !important; }
+	/* Replace individual player boxes with quiet separators. */
+	.director-players {
+		border: 0 !important;
+		background: #181b1f !important;
+		box-shadow: none !important;
+	}
+	.director-player-row {
+		border: 0 !important;
+		border-bottom: 1px solid rgba(255,255,255,.07) !important;
+		border-radius: 0 !important;
+		background: transparent !important;
+	}
+	.director-player-row:last-child { border-bottom: 0 !important; }
+	.order-button {
+		border: 0 !important;
+		background: transparent !important;
+		color: #aeb5bb !important;
+		font-size: 16px !important;
+	}
+	.order-button:hover:not(:disabled) {
+		background: rgba(255,255,255,.06) !important;
+		color: #f4f4f1 !important;
+	}
+	.eliminate-button, .restore-button {
+		border: 0 !important;
+		background: rgba(190,80,75,.14) !important;
+		color: #e1a09b !important;
+	}
+	.restore-button {
+		background: rgba(105,165,120,.14) !important;
+		color: #a9c9ad !important;
+	}
+
 </style>
