@@ -33,3 +33,37 @@ npm run preview
 ```
 
 The dependency ranges are intentionally kept on current major versions so `npm install` resolves current compatible Svelte/SvelteKit releases.
+
+
+## Venue-specific tournaments
+
+- `/` opens the venue selector.
+- `/<venueid>` opens that venue's tournament admin.
+- `/<venueid>/display` opens the read-only TV display.
+- Tournament data is stored independently in `.data/venues/<venueid>.json`.
+
+The development server is already configured to listen on the local network. Run:
+
+```bash
+npm run dev
+```
+
+Use the Mac's LAN IP address (for example, `http://192.168.1.20:5173`) on a phone or other device on the same Wi-Fi. The Mac's firewall must allow incoming connections on port 5173.
+
+## Chromecast receiver setup
+
+1. Register a **Custom Receiver** in the Google Cast SDK Developer Console.
+2. Host `static/cast-receiver/receiver.html` at a publicly reachable HTTPS URL and use that URL as the receiver application URL.
+3. Copy the receiver application ID into `.env`:
+
+```bash
+VITE_CAST_RECEIVER_APP_ID=YOUR_GOOGLE_CAST_RECEIVER_APP_ID
+```
+
+4. Restart the Vite development server after changing `.env`.
+
+The receiver must be reachable by the Chromecast over HTTPS. A local `localhost` URL is not reachable from a Chromecast; for local testing, use a secure public tunnel or a deployed HTTPS environment. The admin page and TV display should use the same app origin so the receiver can read the venue's public display data.
+
+## Persistence
+
+The current venue store writes JSON files under `.data/venues`, suitable for a single persistent Node server during local development. Before deploying to serverless or multi-instance hosting, replace this file store with a shared persistent database.
