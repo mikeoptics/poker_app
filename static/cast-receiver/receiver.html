@@ -213,6 +213,54 @@
       0% { transform: scale(0); opacity: 0.8; }
       100% { transform: scale(5); opacity: 0; }
     }
+
+    /* Match the Tournament Director Controls black-and-gold palette */
+    body {
+      background: #0b0c0e;
+      color: #f4f0e7;
+    }
+
+    .screen {
+      background: radial-gradient(circle at 50% -20%, rgba(196,163,106,.12), transparent 38rem), #0b0c0e;
+    }
+
+    header,
+    .game,
+    .standings-heading,
+    .standing-position {
+      color: #c4a36a;
+    }
+
+    .hero,
+    .standings-panel {
+      background: #141414;
+      border: 1px solid #403522;
+    }
+
+    .standings-subheading,
+    .standings-empty,
+    .next {
+      color: #8f8779;
+    }
+
+    .standings-columns {
+      color: #8f8779;
+      border-bottom-color: rgba(196,163,106,.25);
+    }
+
+    .standing-row {
+      border-bottom-color: rgba(196,163,106,.12);
+    }
+
+    .standing-stat {
+      color: #d8c49c;
+    }
+
+    .standing-row.regional .standing-position,
+    .standing-row.playoff .standing-position {
+      color: #c4a36a;
+    }
+
   </style>
 </head>
 
