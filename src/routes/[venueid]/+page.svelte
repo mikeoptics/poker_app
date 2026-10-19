@@ -185,6 +185,8 @@
 	let activeTab = $state('timer');
 	/** @type {{ id:string; playerName:string; createdAt:number } | null} */
 	let eliminationEvent = $state(null);
+	/** @type {{ id:string; text:string; createdAt:number } | null} */
+	let announcementEvent = $state(null);
 	let balanceMessage = $state('');
 	let redtoothShowTournament = $state(false);
 	let redtoothTransitionPaused = $state(false);
@@ -1295,6 +1297,8 @@
 
 		if (!text) return;
 
+		announcementEvent = { id: `${Date.now()}-${i}`, text, createdAt: Date.now() };
+
 		const url = await generateSpeech(text);
 
 		if (!url) return;
@@ -1534,7 +1538,7 @@
 		return {
 			levels, players, nextPlayerId, currentLevel, remainingMs, levelDurationMs, running,
 			soundEnabled, announcementEnabled, buyInAmount, mixedGames, activeTab, redtoothPlayers,
-			eliminationEvent, venueName, updatedAt: Date.now()
+			eliminationEvent, announcementEvent, venueName, updatedAt: Date.now()
 		};
 	}
 
@@ -1557,6 +1561,7 @@
 		activeTab = state.activeTab ?? 'timer';
 		if (Array.isArray(state.redtoothPlayers)) redtoothPlayers = state.redtoothPlayers;
 		eliminationEvent = state.eliminationEvent ?? null;
+		announcementEvent = state.announcementEvent ?? null;
 		venueName = state.venueName || venueName;
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
