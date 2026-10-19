@@ -1885,21 +1885,9 @@ function startCasting() {
 						<div><span class="director-eyebrow">TOURNAMENT DIRECTOR</span><h1>Players</h1></div>
 						<div class="director-player-count"><strong>{activePlayerCount}</strong><span>ACTIVE</span></div>
 					</div>
-					<form class="director-add-player" onsubmit={(e) => { e.preventDefault(); addPlayerFromForm(); }}>
-						<div class="redtooth-autocomplete">
-							<input value={newPlayerName} placeholder="Add player…" autocomplete="off" oninput={(e) => { newPlayerName = e.currentTarget.value; redtoothSelectedPlayer = null; searchRedtooth(e.currentTarget.value); }} />
-							{#if redtoothSearchResults.length > 0}
-								<div class="redtooth-search-results">
-									{#each redtoothSearchResults as result}
-										<button type="button" class="redtooth-search-result" onclick={() => selectRedtoothPlayer(result)}><span><strong>{result.name}</strong><small>{result.games} games · {result.points} pts</small></span><span class="redtooth-search-position">#{result.position}</span></button>
-									{/each}
-								</div>
-							{/if}
-						</div>
-						<button class="director-add-button" type="submit">+ ADD</button>
-					</form>
+
 					{#if activePlayers.length === 0 && eliminatedPlayers.length === 0}
-						<div class="director-empty">Add players above to start managing the tournament.</div>
+						<div class="director-empty">No players have been added to this tournament yet.</div>
 					{:else}
 						<div class="director-player-list">
 							{#each activePlayers as player (player.id)}
