@@ -1874,7 +1874,12 @@ function startCasting() {
 					</button>
 					<button class="level-arrow" aria-label="Next blind level" onclick={nextLevel} disabled={currentLevel >= levels.length - 1}>▶</button>
 				</div>
-				<div class="director-progress"><div style={`width:${progress}%`}></div></div>
+				<div class="director-progress"><div
+					class:progress-paused={!running}
+					class:progress-break={running && currentBlinds?.break}
+					class:progress-ending={running && displaySeconds <= 10}
+					style={`width:${progress}%`}
+				></div></div>
 				<div class="director-level-context">
 					<span>PREVIOUS: {#if previousBlinds}{previousBlinds.break ? 'BREAK' : `${previousBlinds.sb} / ${previousBlinds.bb}`}{:else}—{/if}</span>
 					<span>NEXT: {#if nextBlinds}{nextBlinds.break ? 'BREAK' : `${nextBlinds.sb} / ${nextBlinds.bb}`}{:else}—{/if}</span>
@@ -3788,6 +3793,16 @@ function startCasting() {
 	.director-hint { color:#95876e; font-size:9px; letter-spacing:.16em; font-weight:800; }
 	.director-progress { height:4px; max-width:850px; margin:9px auto 0; background:#29251e; border-radius:9px; overflow:hidden; }
 	.director-progress div { height:100%; background:#c4a36a; transition:width .25s linear; }
+	.director-progress div.progress-paused { background:#b94a4a; }
+	.director-progress div.progress-break { background:#315f91; }
+	.director-progress div.progress-ending { animation: progress-ending-glow 1s ease-in-out infinite; }
+	@keyframes progress-ending-glow {
+		0%, 100% { filter:brightness(1); box-shadow:0 0 2px rgba(196,163,106,.35); }
+		50% { filter:brightness(1.55); box-shadow:0 0 12px 3px rgba(196,163,106,.9); }
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.director-progress div.progress-ending { animation:none; filter:brightness(1.35); box-shadow:0 0 8px 2px rgba(196,163,106,.65); }
+	}
 	.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }
 	.director-players { max-width:900px; margin:0 auto; padding:16px; }
 	.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
@@ -4261,15 +4276,6 @@ function startCasting() {
 		font-size: 23px !important;
 		border-radius: 9px !important;
 		line-height: 1 !important;
-	}
-
-	/* Give paused and break states distinct full-page colours. */
-	.app.mode-paused {
-		background: radial-gradient(circle at top, rgba(255,255,255,.055), transparent 36rem), #421d20 !important;
-	}
-
-	.app.mode-break {
-		background: radial-gradient(circle at top, rgba(255,255,255,.06), transparent 36rem), #142b46 !important;
 	}
 
 	@media (max-width: 700px) {
