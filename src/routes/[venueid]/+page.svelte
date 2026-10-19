@@ -3774,4 +3774,59 @@ function startCasting() {
 		.setup-layout .table { max-height:none; }
 	}
 
+
+	/* Match the original Chromecast receiver colourway throughout the TDC */
+	.app, .mode-play, .mode-break, .mode-paused {
+		background: radial-gradient(circle at top, rgba(255,255,255,.07), transparent 36rem), #101214 !important;
+		color: #f4f4f1 !important;
+	}
+	.levels-card, .setup-card, .payout-card, .location-card, .table-card, .director-players,
+	.redtooth-panel, .clock-modal {
+		background: #181b1f !important;
+		border-color: #343a40 !important;
+		color: #f4f4f1 !important;
+	}
+	.header h2, .director-eyebrow, .director-blinds, .director-player-count,
+	.director-eliminated-heading {
+		color: #c4a36a !important;
+	}
+	.header { border-bottom-color: rgba(196,163,106,.2) !important; }
+	.tabs { border-color: rgba(196,163,106,.25) !important; }
+	.tabs button, .sound, .add, .secondary, .mixed-toggle,
+	.level-arrow, .order-button, .redtooth-control {
+		background: #181b1f !important;
+		color: #d8c49c !important;
+		border-color: #343a40 !important;
+	}
+	.clock-button, .tabs button.active, .primary, .director-add-button {
+		background: #c4a36a !important;
+		color: #101214 !important;
+		border-color: #c4a36a !important;
+	}
+	.level-main {
+		background: linear-gradient(145deg, #24282d, #181b1f) !important;
+		border-color: #5b4b32 !important;
+	}
+	.director-player-row {
+		background: #181b1f !important;
+		border-color: #343a40 !important;
+	}
+	.director-player-identity strong, .director-section-heading h1 { color: #f4f4f1 !important; }
+	.director-player-identity span, .director-hint, .director-level-context,
+	.director-empty { color: #8e969d !important; }
+	.director-progress { background: #292e34 !important; }
+	input, select, textarea, .setup-fields input, .add-player-form input, .player-row input {
+		background: #101214 !important;
+		color: #f4f4f1 !important;
+		border-color: #343a40 !important;
+	}
+	.redtooth-row:hover { background: #24282d !important; }
+	.redtooth-position, .redtooth-player-name span, .redtooth-games,
+	.redtooth-column-head, .redtooth-header { color: #d8dde1 !important; }
+	.redtooth-points { color: #c4a36a !important; }
+	.redtooth-boundary.regional-boundary, .redtooth-boundary.playoff-boundary {
+		background: #24282d !important;
+		color: #c4a36a !important;
+	}
+
 </style>
