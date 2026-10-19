@@ -1,7 +1,14 @@
 <script>
  import { goto } from '$app/navigation';
- let search=$state(''), venues=$state([]), loading=$state(false), error=$state(''), timer;
+ /** @typedef {{ venueid: number; venuename: string; address1?: string; town?: string; postcode?: string; gamenight?: string; distanceMiles?: number }} RedtoothVenue */
+ let search=$state(''), loading=$state(false), error=$state('');
+ /** @type {RedtoothVenue[]} */
+ let venues=$state([]);
+ /** @type {ReturnType<typeof setTimeout> | null} */
+ let timer=null;
+ /** @param {string} value */
  async function searchVenues(value){search=value;if(timer)clearTimeout(timer);if(!value.trim()){venues=[];error='';return;}timer=setTimeout(async()=>{loading=true;error='';try{const r=await fetch('/api/redtooth?mode=venues&query='+encodeURIComponent(value.trim()));const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||'Venue search failed.');venues=d.venues||[];if(!venues.length)error='No venues found. Try a nearby town or postcode.';}catch(e){error=e instanceof Error?e.message:'Venue search failed.';venues=[];}finally{loading=false;}},350);}
+ /** @param {RedtoothVenue} v */
  function chooseVenue(v){goto('/'+v.venueid+'?name='+encodeURIComponent(v.venuename));}
 </script>
 <svelte:head><title>Select venue · Mike's Poker App</title><meta name="description" content="Choose a Redtooth venue to open its poker tournament."/></svelte:head>
