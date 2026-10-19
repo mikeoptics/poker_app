@@ -125,6 +125,8 @@
 	// Redtooth league
 	/** @type {RedtoothRow[]} */
 	let redtoothPlayers = $state([]);
+	/** @type {RedtoothRow[]} */
+	let redtoothPlayerDirectory = $state([]);
 
 	/** @type {boolean} */
 	let redtoothLoading = $state(false);
@@ -816,7 +818,7 @@
 		}
 
 		redtoothSearchTimer = setTimeout(() => {
-			redtoothSearchResults = searchRedtoothPlayers(redtoothPlayers, value);
+			redtoothSearchResults = searchRedtoothPlayers(redtoothPlayerDirectory, value);
 		}, 120);
 	}
 	function startRedtoothViewTimer() {
@@ -1459,6 +1461,8 @@
 					};
 				}
 			);
+
+			redtoothPlayerDirectory = data.playerDirectory ?? redtoothPlayers;
 
 			redtoothFetchedAt = data.fetchedAt;
 
