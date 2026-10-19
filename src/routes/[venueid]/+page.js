@@ -1,1 +1,1 @@
-export function load({ params }) { if (!/^\\d{1,12}$/.test(params.venueid)) return { venueId: null }; return { venueId: params.venueid }; }
+export function load({ params }) { if (!/^\d{1,12}$/.test(params.venueid)) return { venueId: null }; return { venueId: params.venueid }; }
