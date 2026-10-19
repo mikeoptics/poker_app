@@ -1933,11 +1933,7 @@ function startCasting() {
 				{balanceSuggestions}
 				{activePlayers}
 				{tableCount}
-				{isFinalTable}
-				{finalSeats}
-				{seats}
 				{seatRole}
-				{removePlayer}
 				{applyBalance}
 			/>
 		{:else if activeTab === 'setup'}
