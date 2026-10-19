@@ -39,7 +39,16 @@
       font-size: 3vw;
     }
 
+    .display-layout {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(340px, .85fr);
+      gap: 2vw;
+    }
+
     .hero {
+      min-height: 0;
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -57,13 +66,45 @@
     }
 
     .timer {
-      font-size: 18vw;
+      font-size: 13vw;
       font-weight: bold;
       line-height: 1.1;
       font-variant-numeric: tabular-nums;
     }
 
-    .blinds { font-size: 5vw; }
+    .blinds { font-size: 4vw; }
+
+    .standings-panel {
+      min-height: 0;
+      overflow: hidden;
+      padding: 2vh 1.8vw;
+      background: #181b1f;
+      border: 1px solid #343a40;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .standings-heading { color: #c4a36a; font-size: 1.7vw; font-weight: 800; letter-spacing: .12em; }
+    .standings-subheading { color: #8e969d; font-size: 1vw; margin-top: .4vh; }
+    .standings-columns, .standing-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 3rem 3.5rem; gap: .5rem; align-items: center; }
+    .standings-columns { color: #899198; font-size: .9vw; padding: 1.4vh .4vw .8vh; border-bottom: 1px solid #343a40; }
+    .standings-list { overflow: hidden; flex: 1; padding-top: .5vh; }
+    .standing-row { min-height: 4.4vh; padding: .3vh .4vw; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 1.25vw; }
+    .standing-position { color: #c4a36a; font-weight: 800; }
+    .standing-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .standing-stat { text-align: right; color: #cbd0d4; font-variant-numeric: tabular-nums; }
+    .standing-row.regional .standing-position { color: #79c7a1; }
+    .standing-row.playoff .standing-position { color: #83aef0; }
+    .standings-empty { color: #92999f; text-align: center; padding: 3vh 1vw; font-size: 1.2vw; }
+
+    @media (max-aspect-ratio: 4/3) {
+      .screen { padding: 2vh 2vw; gap: 2vh; }
+      .display-layout { grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); }
+      .timer { font-size: 11vw; }
+      .standings-heading { font-size: 2.2vw; }
+      .standing-row { font-size: 1.6vw; }
+    }
 
     .next {
       text-align: center;
@@ -180,11 +221,19 @@
     <header>LIVE TOURNAMENT</header>
     <h1 id="venue">Connect from the Poker App</h1>
 
-    <main class="hero">
-      <div class="game" id="game">WAITING</div>
-      <div class="timer" id="timer">--:--</div>
-      <div class="blinds" id="blinds">—</div>
-    </main>
+    <div class="display-layout">
+      <main class="hero">
+        <div class="game" id="game">WAITING</div>
+        <div class="timer" id="timer">--:--</div>
+        <div class="blinds" id="blinds">—</div>
+      </main>
+      <aside class="standings-panel">
+        <div class="standings-heading">LEAGUE STANDINGS</div>
+        <div class="standings-subheading">Current season · live table</div>
+        <div class="standings-columns"><span>#</span><span>PLAYER</span><span style="text-align:right">GP</span><span style="text-align:right">PTS</span></div>
+        <div class="standings-list" id="standings-list"><div class="standings-empty">Waiting for league data…</div></div>
+      </aside>
+    </div>
 
     <div class="next" id="next"></div>
   </div>
@@ -215,6 +264,7 @@
       let lastCurrentLevel = null;
       let receiverSoundEnabled = true;
       let receiverAudioContext = null;
+      let lastAnnouncementEventId = null;
       const eliminationSound = new Audio('https://www.myinstants.com/media/sounds/fortnite-death-sound-not-knockout.mp3');
       eliminationSound.volume = 0.8;
 
@@ -244,6 +294,52 @@
         } catch (error) {
           console.warn('Blind alarm playback failed:', error);
         }
+      }
+
+      function speakAnnouncement(event) {
+        if (!event || typeof event.id !== 'string' || event.id === lastAnnouncementEventId) return;
+        lastAnnouncementEventId = event.id;
+        if (!receiverSoundEnabled || !('speechSynthesis' in window) || !event.text) return;
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(event.text);
+          utterance.lang = 'en-GB';
+          utterance.rate = 0.92;
+          utterance.pitch = 0.95;
+          const voices = window.speechSynthesis.getVoices();
+          const britishVoice = voices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith('en-gb'));
+          if (britishVoice) utterance.voice = britishVoice;
+          window.speechSynthesis.speak(utterance);
+        } catch (error) {
+          console.warn('Spoken announcement playback failed:', error);
+        }
+      }
+
+      function renderStandings(rows) {
+        const list = el('standings-list');
+        if (!Array.isArray(rows) || rows.length === 0) {
+          list.innerHTML = '<div class="standings-empty">No league standings available</div>';
+          return;
+        }
+        list.replaceChildren();
+        rows.slice(0, 14).forEach(row => {
+          const item = document.createElement('div');
+          item.className = 'standing-row' + (row.qualification === 'regional' ? ' regional' : row.qualification === 'playoff' ? ' playoff' : '');
+          const position = document.createElement('span');
+          position.className = 'standing-position';
+          position.textContent = String(row.position ?? '—');
+          const name = document.createElement('span');
+          name.className = 'standing-name';
+          name.textContent = row.name || '—';
+          const games = document.createElement('span');
+          games.className = 'standing-stat';
+          games.textContent = String(row.games ?? 0);
+          const points = document.createElement('span');
+          points.className = 'standing-stat';
+          points.textContent = String(row.points ?? 0);
+          item.append(position, name, games, points);
+          list.appendChild(item);
+        });
       }
 
       function playEliminationSound() {
@@ -303,7 +399,9 @@
         remaining = d.remainingMs || 0;
         updatedAt = d.updatedAt || Date.now();
         running = Boolean(d.running);
+        renderStandings(d.standings);
         showElimination(d.eliminationEvent);
+        speakAnnouncement(d.announcementEvent);
       }
 
       async function refresh() {
