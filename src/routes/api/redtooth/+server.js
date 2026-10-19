@@ -14,7 +14,7 @@ const SEASON_ANCHOR_NUMBER = 4;
 const YEAR_ANCHOR_ID = 20;
 const DAYS_PER_SEASON = 91;
 
-function getRedtoothSeason(now = new Date()) {
+function getRedtoothSeason(now = new Date(), seasonOffset = 0) {
 	const dateParts = new Intl.DateTimeFormat('en-GB', {
 		timeZone: 'Europe/London',
 		year: 'numeric',
@@ -29,7 +29,7 @@ function getRedtoothSeason(now = new Date()) {
 	);
 	const [anchorYear, anchorMonth, anchorDay] = SEASON_ANCHOR_DATE.split('-').map(Number);
 	const anchorUtc = Date.UTC(anchorYear, anchorMonth - 1, anchorDay);
-	const elapsedSeasons = Math.floor((todayUtc - anchorUtc) / (DAYS_PER_SEASON * 24 * 60 * 60 * 1000));
+	const elapsedSeasons = Math.floor((todayUtc - anchorUtc) / (DAYS_PER_SEASON * 24 * 60 * 60 * 1000)) + seasonOffset;
 	const cyclePosition = SEASON_ANCHOR_NUMBER - 1 + elapsedSeasons;
 
 	return {
@@ -227,8 +227,7 @@ async function findVenues(query) {
 /**
  * @param {number|string} venueId
  */
-async function getLeagueTable(venueId) {
-	const { season, yearId } = getRedtoothSeason();
+async function fetchSeasonTable(venueId, season, yearId) {
 	const response = await fetch(REDTOOTH_LEAGUE_URL, {
 		method: 'POST',
 		headers: {
@@ -246,14 +245,40 @@ async function getLeagueTable(venueId) {
 		throw new Error(`Redtooth returned HTTP ${response.status}`);
 	}
 
-	const html = await response.text();
-	const players = parseLeagueTable(html);
+	return parseLeagueTable(await response.text());
+}
+
+/**
+ * Load current-season standings and a player directory that also includes
+ * players from the previous season for start-of-season autocomplete.
+ * Previous-season records are identity-only: their old points are not carried
+ * into the new season.
+ * @param {number|string} venueId
+ */
+async function getLeagueTable(venueId) {
+	const current = getRedtoothSeason();
+	const previous = getRedtoothSeason(new Date(), -1);
+	const [players, previousPlayers] = await Promise.all([
+		fetchSeasonTable(venueId, current.season, current.yearId),
+		fetchSeasonTable(venueId, previous.season, previous.yearId)
+	]);
+
+	const directoryById = new Map();
+	for (const player of previousPlayers) {
+		if (player.redtoothId === null) continue;
+		directoryById.set(player.redtoothId, { ...player, games: 0, points: 0, position: 0, qualification: null, qualificationMarker: null });
+	}
+	for (const player of players) {
+		if (player.redtoothId !== null) directoryById.set(player.redtoothId, player);
+	}
 
 	return {
 		venueId: Number(venueId),
-		season,
-		yearId,
+		season: current.season,
+		yearId: current.yearId,
 		players,
+		playerDirectory: [...directoryById.values()],
+		previousSeason: previous,
 		fetchedAt: new Date().toISOString()
 	};
 }
