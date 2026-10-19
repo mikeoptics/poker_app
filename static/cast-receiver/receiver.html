@@ -1,3 +1,204 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Poker tournament TV</title><script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script><style>*{box-sizing:border-box}body{margin:0;background:#101214;color:#f4f4f1;font-family:Arial,sans-serif}.screen{min-height:100vh;padding:3vh 4vw;display:flex;flex-direction:column;gap:3vh;background:radial-gradient(circle at top,rgba(255,255,255,.07),transparent 36rem),#101214}header{text-align:center;color:#c4a36a;letter-spacing:.15em}h1{text-align:center;margin:.3em;font-size:3vw}.hero{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#181b1f;border:1px solid #343a40;border-radius:24px}.game{font-size:2.5vw;color:#c4a36a;font-weight:bold}.timer{font-size:18vw;font-weight:bold;line-height:1.1;font-variant-numeric:tabular-nums}.blinds{font-size:5vw}.next{text-align:center;color:#aeb5bb;font-size:2vw}</style></head><body><div class="screen"><header>LIVE TOURNAMENT</header><h1 id="venue">Connect from the Poker App</h1><main class="hero"><div class="game" id="game">WAITING</div><div class="timer" id="timer">--:--</div><div class="blinds" id="blinds">—</div></main><div class="next" id="next"></div></div><script>
-(function(){const context=cast.framework.CastReceiverContext.getInstance(),manager=context.getPlayerManager();let venueId=null,remaining=0,updatedAt=0,running=false;const el=id=>document.getElementById(id);function draw(d){if(!d)return;el('venue').textContent=d.venueName||('Venue '+venueId);el('game').textContent=d.currentGame||'POKER';el('blinds').textContent=d.blinds||'—';el('next').textContent='NEXT: '+(d.nextGame||'—')+' · '+(d.nextBlinds||'—')+' · PLAYERS: '+(d.activePlayerCount??0);remaining=d.remainingMs||0;updatedAt=d.updatedAt||Date.now();running=Boolean(d.running);}async function refresh(){if(!venueId)return;try{const r=await fetch('/api/tournament/'+venueId+'?public=1',{cache:'no-store'});if(r.ok)draw((await r.json()).state);}catch(e){}}function tick(){const ms=running?Math.max(0,remaining-(Date.now()-updatedAt)):remaining,s=Math.ceil(ms/1000);el('timer').textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}manager.setMessageInterceptor(cast.framework.messages.MessageType.LOAD,request=>{venueId=String(request.media?.customData?.venueId||'');if(!/^\d{1,12}$/.test(venueId))return null;refresh();setInterval(refresh,1000);return request;});context.start();setInterval(tick,250);})();
-</script></body></html>
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Poker Tournament TV</title>
+
+  <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #101214;
+      color: #f4f4f1;
+      font-family: Arial, sans-serif;
+    }
+
+    .screen {
+      min-height: 100vh;
+      padding: 3vh 4vw;
+      display: flex;
+      flex-direction: column;
+      gap: 3vh;
+      background: radial-gradient(circle at top, rgba(255,255,255,.07), transparent 36rem), #101214;
+    }
+
+    header {
+      text-align: center;
+      color: #c4a36a;
+      letter-spacing: .15em;
+    }
+
+    h1 {
+      text-align: center;
+      margin: .3em;
+      font-size: 3vw;
+    }
+
+    .hero {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #181b1f;
+      border: 1px solid #343a40;
+      border-radius: 24px;
+    }
+
+    .game {
+      font-size: 2.5vw;
+      color: #c4a36a;
+      font-weight: bold;
+    }
+
+    .timer {
+      font-size: 18vw;
+      font-weight: bold;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .blinds { font-size: 5vw; }
+
+    .next {
+      text-align: center;
+      color: #aeb5bb;
+      font-size: 2vw;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="screen">
+    <header>LIVE TOURNAMENT</header>
+    <h1 id="venue">Connect from the Poker App</h1>
+
+    <main class="hero">
+      <div class="game" id="game">WAITING</div>
+      <div class="timer" id="timer">--:--</div>
+      <div class="blinds" id="blinds">—</div>
+    </main>
+
+    <div class="next" id="next"></div>
+  </div>
+
+  <script>
+    (function () {
+      const NAMESPACE = 'urn:x-cast:com.miiiike.poker';
+
+      const context = cast.framework.CastReceiverContext.getInstance();
+
+      let venueId = null;
+      let remaining = 0;
+      let updatedAt = 0;
+      let running = false;
+      let refreshInterval = null;
+
+      const el = id => document.getElementById(id);
+
+      function draw(d) {
+        if (!d) return;
+
+        el('venue').textContent =
+          d.venueName || ('Venue ' + venueId);
+
+        el('game').textContent = d.currentGame || 'POKER';
+        el('blinds').textContent = d.blinds || '—';
+
+        el('next').textContent =
+          'NEXT: ' + (d.nextGame || '—') +
+          ' · ' + (d.nextBlinds || '—') +
+          ' · PLAYERS: ' + (d.activePlayerCount ?? 0);
+
+        remaining = d.remainingMs || 0;
+        updatedAt = d.updatedAt || Date.now();
+        running = Boolean(d.running);
+      }
+
+      async function refresh() {
+        if (!venueId) return;
+
+        try {
+          const response = await fetch(
+            '/api/tournament/' + venueId + '?public=1',
+            { cache: 'no-store' }
+          );
+
+          if (!response.ok) {
+            console.error('Tournament refresh failed:', response.status);
+            return;
+          }
+
+          const result = await response.json();
+          draw(result.state);
+        } catch (error) {
+          console.error('Tournament refresh error:', error);
+        }
+      }
+
+      function startPolling() {
+        if (refreshInterval !== null) return;
+
+        refresh();
+        refreshInterval = setInterval(refresh, 1000);
+      }
+
+      function tick() {
+        const ms = running
+          ? Math.max(0, remaining - (Date.now() - updatedAt))
+          : remaining;
+
+        const seconds = Math.ceil(ms / 1000);
+
+        el('timer').textContent =
+          String(Math.floor(seconds / 60)).padStart(2, '0') +
+          ':' +
+          String(seconds % 60).padStart(2, '0');
+      }
+
+      context.addCustomMessageListener(
+        NAMESPACE,
+        event => {
+          const incomingVenueId = String(
+            event.data?.venueId || ''
+          );
+
+          if (!/^\d{1,12}$/.test(incomingVenueId)) {
+            console.error('Invalid venue ID received:', incomingVenueId);
+            return;
+          }
+
+          console.log('Poker receiver connected to venue:', incomingVenueId);
+
+          venueId = incomingVenueId;
+          startPolling();
+        }
+      );
+
+      context.addEventListener(
+        cast.framework.system.EventType.READY,
+        () => console.log('Poker receiver ready')
+      );
+
+      context.addEventListener(
+        cast.framework.system.EventType.SHUTDOWN,
+        () => console.log('Poker receiver shutting down')
+      );
+
+      context.addEventListener(
+        cast.framework.system.EventType.ERROR,
+        event => console.error('Poker receiver error:', event)
+      );
+
+      context.start();
+
+      setInterval(tick, 250);
+    })();
+  </script>
+</body>
+</html>
