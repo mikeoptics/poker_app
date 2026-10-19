@@ -4282,4 +4282,121 @@ function startCasting() {
 		animation: progress-ending-glow 1s ease-in-out infinite;
 	}
 
+
+	/* Setup page responsive layout and independent player-list scrolling */
+	.setup-layout {
+		min-width: 0;
+	}
+
+	@media (max-width: 1100px) {
+		main:has(.setup-layout) {
+			min-height: 0;
+			overflow-x: hidden !important;
+			overflow-y: auto !important;
+			overscroll-behavior-y: contain;
+		}
+
+		.setup-layout {
+			display: flex !important;
+			flex-direction: column !important;
+			align-items: stretch;
+			height: auto !important;
+			min-height: 0;
+			gap: 14px;
+			overflow: visible;
+		}
+
+		.setup-layout > .levels-card {
+			flex: 0 0 auto;
+			width: 100%;
+			min-width: 0;
+			padding: 18px;
+			overflow: visible !important;
+		}
+
+		.setup-layout .table {
+			max-height: none !important;
+			overflow-x: auto;
+			overflow-y: visible;
+		}
+
+		.setup-layout .table-row {
+			min-width: 420px;
+		}
+
+		.setup-sidebar {
+			display: flex !important;
+			flex: 0 0 auto;
+			flex-direction: column !important;
+			width: 100%;
+			min-width: 0;
+			gap: 14px;
+		}
+
+		.setup-sidebar .players-card {
+			display: flex;
+			flex: 0 0 auto;
+			flex-direction: column;
+			width: 100%;
+			height: min(62dvh, 560px);
+			min-height: 300px;
+			overflow: hidden;
+		}
+
+		.setup-sidebar .players-card .player-list {
+			flex: 1 1 0;
+			min-height: 0;
+			overflow-x: auto;
+			overflow-y: auto;
+			overscroll-behavior: contain;
+			-webkit-overflow-scrolling: touch;
+		}
+	}
+
+	@media (max-width: 700px) {
+		main:has(.setup-layout) {
+			padding-bottom: 12px;
+		}
+
+		.setup-layout {
+			gap: 12px;
+		}
+
+		.setup-layout > .levels-card {
+			padding: 14px 12px;
+		}
+
+		.setup-layout .section-heading {
+			align-items: flex-start;
+			flex-wrap: wrap;
+			gap: 10px;
+		}
+
+		.setup-layout .section-actions {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 6px;
+			width: 100%;
+		}
+
+		.setup-layout .section-actions > button {
+			min-height: 38px;
+		}
+
+		.setup-layout .table-row {
+			min-width: 410px;
+			gap: 5px;
+		}
+
+		.setup-sidebar .players-card {
+			height: min(58dvh, 460px);
+			min-height: 260px;
+			padding: 14px;
+		}
+
+		.setup-sidebar .add-player-form {
+			flex-wrap: wrap;
+		}
+	}
+
 </style>
