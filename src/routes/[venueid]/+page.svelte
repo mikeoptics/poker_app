@@ -183,10 +183,8 @@
 	let mixedGames = $state(false);
 	// timer | tables | setup | payouts
 	let activeTab = $state('timer');
-	let eliminationAnimation = $state(false);
-	let eliminatedPlayerName = $state('');
-	/** @type {ReturnType<typeof setTimeout> | null} */
-	let eliminationTimer = null;
+	/** @type {{ id:string; playerName:string; createdAt:number } | null} */
+	let eliminationEvent = $state(null);
 	let balanceMessage = $state('');
 	let redtoothShowTournament = $state(false);
 	let redtoothTransitionPaused = $state(false);
@@ -914,8 +912,12 @@
 			redtoothPlayers = applyLocalResult(redtoothPlayers, p, finishPlace);
 		}
 
-		eliminatedPlayerName = p.name;
-		eliminationAnimation = true;
+		const eliminatedAt = Date.now();
+		eliminationEvent = {
+			id: `${Date.now()}-${p.id}`,
+			playerName: p.name,
+			createdAt: eliminatedAt
+		};
 
 		p.eliminationPosition = finishPlace;
 		p.eliminated = true;
@@ -928,14 +930,6 @@
 		distributeAcrossTables();
 		rebalanceTables();
 
-		if (eliminationTimer) {
-			clearTimeout(eliminationTimer);
-		}
-
-		eliminationTimer = setTimeout(() => {
-			eliminationAnimation = false;
-			eliminationTimer = null;
-		}, 7000);
 	}
 
 	/** @param {number} playerId @param {number} direction */
@@ -1540,7 +1534,7 @@
 		return {
 			levels, players, nextPlayerId, currentLevel, remainingMs, levelDurationMs, running,
 			soundEnabled, announcementEnabled, buyInAmount, mixedGames, activeTab, redtoothPlayers,
-			venueName, updatedAt: Date.now()
+			eliminationEvent, venueName, updatedAt: Date.now()
 		};
 	}
 
@@ -1562,6 +1556,7 @@
 		mixedGames = Boolean(state.mixedGames);
 		activeTab = state.activeTab ?? 'timer';
 		if (Array.isArray(state.redtoothPlayers)) redtoothPlayers = state.redtoothPlayers;
+		eliminationEvent = state.eliminationEvent ?? null;
 		venueName = state.venueName || venueName;
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
@@ -1719,7 +1714,6 @@ function startCasting() {
 		</div>
 
 		<div class="header-actions">
-			<a class="sound" href={`/${venueId}/display`} target="_blank" rel="noreferrer">TV display</a>
 			<button class="sound" onclick={startCasting}>Cast to TV</button>
 			<button class="sound" onclick={() => (soundEnabled = !soundEnabled)}>
 				{soundEnabled ? '🔊 Alarm' : '🔇 Alarm off'}
@@ -2413,22 +2407,6 @@ function startCasting() {
 			</section>
 		{/if}
 	</main>
-	{#if eliminationAnimation}
-		<div class="elimination-overlay">
-			<div class="elimination-impact"></div>
-
-			<div class="elimination-card">
-				<div class="elimination-top">PLAYER ELIMINATED</div>
-
-				<div class="elimination-name">
-					{eliminatedPlayerName}
-				</div>
-
-				<div class="elimination-word">ELIMINATED</div>
-			</div>
-		</div>
-	{/if}
-
 	{#if showClock}
 		<div
 			class="modal-backdrop"
@@ -3411,197 +3389,6 @@ function startCasting() {
 			grid-template-columns: 45px 80px 20px 1fr;
 		}
 	}
-	.elimination-overlay {
-		position: fixed;
-		inset: 0;
-		z-index: 9999;
-
-		display: flex;
-		align-items: center;
-		justify-content: center;
-
-		background: rgba(0, 0, 0, 0.82);
-
-		pointer-events: none;
-
-		animation:
-			eliminationFadeIn 0.18s ease-out,
-			eliminationFadeOut 0.5s ease-in 4.5s forwards;
-	}
-
-	.elimination-card {
-		position: relative;
-		text-align: center;
-
-		padding: 45px 70px;
-
-		transform: scale(0.65);
-
-		animation: eliminationSlam 0.55s cubic-bezier(0.16, 1.35, 0.3, 1) forwards;
-	}
-
-	.elimination-top {
-		margin-bottom: 12px;
-
-		color: #d9d9d9;
-		font-size: 1rem;
-		font-weight: 800;
-		letter-spacing: 0.3em;
-
-		animation: eliminationTop 0.4s ease-out 0.15s both;
-	}
-
-	.elimination-name {
-		color: #ffffff;
-
-		font-size: clamp(3rem, 8vw, 7rem);
-		font-weight: 950;
-		line-height: 0.95;
-
-		text-transform: uppercase;
-
-		text-shadow:
-			0 0 10px rgba(255, 40, 40, 0.8),
-			0 0 30px rgba(255, 0, 0, 0.6),
-			0 5px 0 #550000;
-
-		animation: eliminationName 0.5s cubic-bezier(0.16, 1.35, 0.3, 1) 0.12s both;
-	}
-
-	.elimination-word {
-		margin-top: 18px;
-
-		color: #ff3030;
-
-		font-size: clamp(1.8rem, 4vw, 3.5rem);
-		font-weight: 950;
-		letter-spacing: 0.18em;
-
-		text-shadow:
-			0 0 8px #ff0000,
-			0 0 25px rgba(255, 0, 0, 0.8);
-
-		animation:
-			eliminationWord 0.4s ease-out 0.45s both,
-			eliminationPulse 0.75s ease-in-out 0.9s infinite;
-	}
-
-	.elimination-impact {
-		position: absolute;
-		width: 20vw;
-		height: 20vw;
-		max-width: 350px;
-		max-height: 350px;
-
-		border-radius: 50%;
-
-		background: rgba(255, 0, 0, 0.25);
-
-		transform: scale(0);
-
-		animation: eliminationShockwave 0.8s ease-out;
-	}
-
-	@keyframes eliminationFadeIn {
-		from {
-			opacity: 0;
-		}
-
-		to {
-			opacity: 1;
-		}
-	}
-
-	@keyframes eliminationSlam {
-		0% {
-			transform: scale(0.65);
-			opacity: 0;
-		}
-
-		55% {
-			transform: scale(1.08);
-			opacity: 1;
-		}
-
-		100% {
-			transform: scale(1);
-			opacity: 1;
-		}
-	}
-
-	@keyframes eliminationTop {
-		from {
-			opacity: 0;
-			transform: translateY(-20px);
-		}
-
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	@keyframes eliminationName {
-		0% {
-			opacity: 0;
-			transform: scale(1.5);
-		}
-
-		65% {
-			opacity: 1;
-			transform: scale(0.96);
-		}
-
-		100% {
-			opacity: 1;
-			transform: scale(1);
-		}
-	}
-
-	@keyframes eliminationWord {
-		from {
-			opacity: 0;
-			transform: translateY(25px);
-		}
-
-		to {
-			opacity: 1;
-			transform: translateY(0);
-		}
-	}
-
-	@keyframes eliminationPulse {
-		0%,
-		100% {
-			transform: scale(1);
-		}
-
-		50% {
-			transform: scale(1.04);
-		}
-	}
-
-	@keyframes eliminationShockwave {
-		0% {
-			transform: scale(0);
-			opacity: 0.8;
-		}
-
-		100% {
-			transform: scale(5);
-			opacity: 0;
-		}
-	}
-	@keyframes eliminationFadeOut {
-		from {
-			opacity: 1;
-		}
-
-		to {
-			opacity: 0;
-		}
-	}
-
 	/* Timer + Redtooth two-column layout */
 	.timer-page-layout {
 		display: grid;
