@@ -4057,7 +4057,7 @@ function startCasting() {
 		border: 0 !important;
 		border-bottom: 1px solid rgba(255,255,255,.07) !important;
 		border-radius: 0 !important;
-		background: transparent !important;
+		background: #181b1f !important;
 	}
 	.director-player-row:last-child { border-bottom: 0 !important; }
 	.order-button {
