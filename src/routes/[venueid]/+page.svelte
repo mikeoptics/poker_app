@@ -1590,28 +1590,48 @@
 		}
 	}
 
-	function startCasting() {
-		const receiverId = import.meta.env.VITE_CAST_RECEIVER_APP_ID;
-		if (!window.cast?.framework) {
-			castStatus = 'Google Cast is unavailable in this browser.';
-			return;
-		}
-		if (!receiverId) {
-			castStatus = 'Configure VITE_CAST_RECEIVER_APP_ID after registering the receiver with Google.';
-			return;
-		}
-		const context = window.cast.framework.CastContext.getInstance();
-		context.setOptions({ receiverApplicationId: receiverId, autoJoinPolicy: window.chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED });
-		context.requestSession().then(() => {
-			const session = context.getCurrentSession();
-			const media = new window.chrome.cast.media.MediaInfo('urn:x-cast:poker-app', 'application/x-poker-app');
-			media.customData = { venueId };
-			return session.loadMedia(new window.chrome.cast.media.LoadRequest(media));
-		}).then(() => castStatus = 'Connected to TV.').catch(/** @param {unknown} error */ (error) => {
-			console.error('Chromecast connection failed:', error);
-			castStatus = 'Unable to connect to Chromecast.';
-		});
-	}
+function startCasting() {
+    const receiverId = import.meta.env.VITE_CAST_RECEIVER_APP_ID;
+    const namespace = 'urn:x-cast:com.miiiike.poker';
+
+    if (!window.cast?.framework) {
+        castStatus = 'Google Cast is unavailable in this browser.';
+        return;
+    }
+
+    if (!receiverId) {
+        castStatus = 'Configure VITE_CAST_RECEIVER_APP_ID.';
+        return;
+    }
+
+    const context = window.cast.framework.CastContext.getInstance();
+
+    context.setOptions({
+        receiverApplicationId: receiverId,
+        autoJoinPolicy: window.chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+    });
+
+    context.requestSession()
+        .then(() => {
+            const session = context.getCurrentSession();
+
+            if (!session) {
+                throw new Error('Cast session was not created.');
+            }
+
+            return session.sendMessage(namespace, {
+                venueId: String(venueId)
+            });
+        })
+        .then(() => {
+            castStatus = 'Connected to TV.';
+            console.log('Poker Cast message sent successfully.');
+        })
+        .catch(/** @param {unknown} error */ (error) => {
+            console.error('Chromecast connection failed:', error);
+            castStatus = 'Unable to connect to Chromecast.';
+        });
+}
 
 	function clearRedtoothSelection() {
 		redtoothSelectedPlayer = null;
