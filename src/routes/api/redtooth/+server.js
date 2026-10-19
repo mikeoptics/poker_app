@@ -5,8 +5,38 @@ const REDTOOTH_VENUE_SEARCH_URL = 'https://www.redtoothpoker.com/venues/find_aja
 const REDTOOTH_LEAGUE_URL = 'https://www.redtoothpoker.com/league/GetVenueLeagueTable';
 
 const DEFAULT_VENUE_ID = '2555';
-const SEASON = '3';
-const YEAR_ID = '20';
+
+// Redtooth seasons run for 13 weeks (91 days). Season 4, Year 20
+// starts on 19 October 2026. Calculate using the UK calendar date so
+// the season changes on the correct local date regardless of server timezone.
+const SEASON_ANCHOR_DATE = '2026-10-19';
+const SEASON_ANCHOR_NUMBER = 4;
+const YEAR_ANCHOR_ID = 20;
+const DAYS_PER_SEASON = 91;
+
+function getRedtoothSeason(now = new Date()) {
+	const dateParts = new Intl.DateTimeFormat('en-GB', {
+		timeZone: 'Europe/London',
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
+	}).formatToParts(now);
+	const dateValues = Object.fromEntries(dateParts.map((part) => [part.type, part.value]));
+	const todayUtc = Date.UTC(
+		Number(dateValues.year),
+		Number(dateValues.month) - 1,
+		Number(dateValues.day)
+	);
+	const [anchorYear, anchorMonth, anchorDay] = SEASON_ANCHOR_DATE.split('-').map(Number);
+	const anchorUtc = Date.UTC(anchorYear, anchorMonth - 1, anchorDay);
+	const elapsedSeasons = Math.floor((todayUtc - anchorUtc) / (DAYS_PER_SEASON * 24 * 60 * 60 * 1000));
+	const cyclePosition = SEASON_ANCHOR_NUMBER - 1 + elapsedSeasons;
+
+	return {
+		season: ((cyclePosition % 4) + 4) % 4 + 1,
+		yearId: YEAR_ANCHOR_ID + Math.floor(cyclePosition / 4)
+	};
+}
 
 /**
  * @param {unknown} value
@@ -198,6 +228,7 @@ async function findVenues(query) {
  * @param {number|string} venueId
  */
 async function getLeagueTable(venueId) {
+	const { season, yearId } = getRedtoothSeason();
 	const response = await fetch(REDTOOTH_LEAGUE_URL, {
 		method: 'POST',
 		headers: {
@@ -206,8 +237,8 @@ async function getLeagueTable(venueId) {
 		},
 		body: new URLSearchParams({
 			venueid: String(venueId),
-			season: SEASON,
-			yearid: YEAR_ID
+			season: String(season),
+			yearid: String(yearId)
 		})
 	});
 
@@ -220,8 +251,8 @@ async function getLeagueTable(venueId) {
 
 	return {
 		venueId: Number(venueId),
-		season: Number(SEASON),
-		yearId: Number(YEAR_ID),
+		season,
+		yearId,
 		players,
 		fetchedAt: new Date().toISOString()
 	};
