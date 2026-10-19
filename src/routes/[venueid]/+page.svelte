@@ -2080,31 +2080,6 @@ function startCasting() {
 
 				<!-- RIGHT: TOURNAMENT SETTINGS -->
 				<div class="setup-sidebar">
-					<section class="location-card">
-						<div class="section-heading"><div><span class="label">VENUE</span><h2>{venueName}</h2></div></div>
-						<p class="venue-id-note">Venue ID: {venueId}</p>
-					</section>
-
-					<!-- TOURNAMENT SETTINGS -->
-					<section class="setup-card tournament-settings-card">
-						<div class="section-heading">
-							<div>
-								<span class="label">TOURNAMENT</span>
-								<h2>Buy In</h2>
-							</div>
-						</div>
-
-						<div class="setup-grid">
-							<div class="setup-fields">
-								<label>
-									Entry Cost (£)
-
-									<input type="number" min="10" step="5" bind:value={buyInAmount} />
-								</label>
-							</div>
-						</div>
-					</section>
-
 					<!-- PLAYERS -->
 					<section class="setup-card players-card">
 						<div class="section-heading setup-heading">
@@ -2288,6 +2263,13 @@ function startCasting() {
 					<div class="pot-total">
 						£{prizePool.toLocaleString('en-GB')}
 					</div>
+				</div>
+
+				<div class="payout-buyin-field">
+					<label>
+						Entry Cost (£)
+						<input type="number" min="10" step="5" bind:value={buyInAmount} />
+					</label>
 				</div>
 
 				<div class="money-grid">
@@ -2812,6 +2794,9 @@ function startCasting() {
 	}
 
 	.setup-card,
+	.payout-buyin-field { max-width:220px; margin:0 0 16px; }
+	.payout-buyin-field label { display:flex; flex-direction:column; gap:7px; color:#8e969d; font-size:12px; font-weight:700; }
+	.payout-buyin-field input { width:100%; min-height:42px; padding:9px 12px; font-size:16px; }
 	.payout-card {
 		padding: 20px;
 		min-height: 0;
