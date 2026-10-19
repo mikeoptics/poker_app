@@ -212,8 +212,45 @@
       let lastEliminationEventId = null;
       let hasReceivedInitialState = false;
       let eliminationHideTimer = null;
+      let lastCurrentLevel = null;
+      let receiverSoundEnabled = true;
+      let receiverAudioContext = null;
+      const eliminationSound = new Audio('https://www.myinstants.com/media/sounds/fortnite-death-sound-not-knockout.mp3');
+      eliminationSound.volume = 0.8;
 
       const el = id => document.getElementById(id);
+
+      function playBlindAlarm() {
+        if (!receiverSoundEnabled) return;
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+          receiverAudioContext ||= new AudioContextClass();
+          if (receiverAudioContext.state === 'suspended') receiverAudioContext.resume();
+          const start = receiverAudioContext.currentTime;
+          [0, 0.3, 0.6, 0.9].forEach((offset) => {
+            const oscillator = receiverAudioContext.createOscillator();
+            const gain = receiverAudioContext.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, start + offset);
+            gain.gain.setValueAtTime(0.0001, start + offset);
+            gain.gain.exponentialRampToValueAtTime(0.22, start + offset + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + offset + 0.22);
+            oscillator.connect(gain);
+            gain.connect(receiverAudioContext.destination);
+            oscillator.start(start + offset);
+            oscillator.stop(start + offset + 0.24);
+          });
+        } catch (error) {
+          console.warn('Blind alarm playback failed:', error);
+        }
+      }
+
+      function playEliminationSound() {
+        if (!receiverSoundEnabled) return;
+        eliminationSound.currentTime = 0;
+        eliminationSound.play().catch(error => console.warn('Elimination sound playback failed:', error));
+      }
 
       function showElimination(event) {
         if (!hasReceivedInitialState) {
@@ -226,6 +263,7 @@
 
         lastEliminationEventId = event.id;
         el('elimination-name').textContent = event.playerName || 'PLAYER';
+        playEliminationSound();
         const overlay = el('elimination-overlay');
 
         if (eliminationHideTimer !== null) clearTimeout(eliminationHideTimer);
@@ -242,6 +280,14 @@
 
       function draw(d) {
         if (!d) return;
+
+        if (lastCurrentLevel === null) {
+          lastCurrentLevel = Number.isFinite(Number(d.currentLevel)) ? Number(d.currentLevel) : 0;
+        } else if (Number.isFinite(Number(d.currentLevel)) && Number(d.currentLevel) !== lastCurrentLevel) {
+          lastCurrentLevel = Number(d.currentLevel);
+          playBlindAlarm();
+        }
+        receiverSoundEnabled = d.soundEnabled !== false;
 
         el('venue').textContent =
           d.venueName || ('Venue ' + venueId);
