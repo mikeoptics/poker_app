@@ -4272,10 +4272,6 @@ function startCasting() {
 		background: radial-gradient(circle at top, rgba(255,255,255,.06), transparent 36rem), #142b46 !important;
 	}
 
-	.app.mode-play {
-		background: radial-gradient(circle at top, rgba(255,255,255,.07), transparent 36rem), #101f1d !important;
-	}
-
 	@media (max-width: 700px) {
 		.settings-button {
 			width: 40px !important;
