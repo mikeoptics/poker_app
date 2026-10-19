@@ -4139,4 +4139,115 @@ function startCasting() {
 		.director-blinds { font-size: 17px !important; }
 	}
 
+
+	/* Timer refinements: larger settings control, email-style player rows and text tabs. */
+	.settings-button {
+		width: 48px !important;
+		min-width: 48px !important;
+		height: 48px !important;
+		font-size: 29px !important;
+		border-radius: 11px !important;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.director-player-list {
+		display: flex !important;
+		flex-direction: column !important;
+		gap: 0 !important;
+		overflow: hidden;
+		border-top: 1px solid #343a40;
+		border-bottom: 1px solid #343a40;
+		background: #181b1f !important;
+	}
+
+	.director-player-swipe {
+		border-bottom: 1px solid #343a40;
+		background: #181b1f;
+	}
+
+	.director-player-swipe:last-child {
+		border-bottom: 0;
+	}
+
+	.director-player-row {
+		min-height: 62px !important;
+		padding: 12px 14px !important;
+		border: 0 !important;
+		border-radius: 0 !important;
+		background: #181b1f !important;
+	}
+
+	.director-player-identity strong {
+		font-size: 17px !important;
+		line-height: 1.3;
+		font-weight: 650 !important;
+	}
+
+	.director-player-list.eliminated-list .director-player-row {
+		border-bottom: 1px solid #343a40 !important;
+	}
+
+	.director-player-list.eliminated-list .director-player-row:last-child {
+		border-bottom: 0 !important;
+	}
+
+	.tabs {
+		display: flex !important;
+		gap: 22px !important;
+		padding: 0 2px 1px !important;
+		border: 0 !important;
+		border-bottom: 1px solid #30353a !important;
+		overflow-x: auto;
+	}
+
+	.tabs button {
+		flex: 0 0 auto !important;
+		padding: 11px 2px 10px !important;
+		border: 0 !important;
+		border-bottom: 2px solid transparent !important;
+		border-radius: 0 !important;
+		background: transparent !important;
+		color: #929aa1 !important;
+		font-size: 13px !important;
+		font-weight: 600 !important;
+		box-shadow: none !important;
+	}
+
+	.tabs button:hover {
+		background: transparent !important;
+		color: #f0f1ef !important;
+	}
+
+	.tabs button.active {
+		background: transparent !important;
+		color: #f4f4f1 !important;
+		border: 0 !important;
+		border-bottom: 2px solid #c4a36a !important;
+		box-shadow: none !important;
+	}
+
+	@media (max-width: 700px) {
+		.settings-button {
+			width: 46px !important;
+			min-width: 46px !important;
+			height: 46px !important;
+			font-size: 28px !important;
+		}
+
+		.director-player-row {
+			min-height: 58px !important;
+			padding: 11px 12px !important;
+		}
+
+		.director-player-identity strong {
+			font-size: 16px !important;
+		}
+
+		.tabs {
+			gap: 18px !important;
+		}
+	}
+
 </style>
