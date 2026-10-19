@@ -1637,6 +1637,46 @@ function startCasting() {
         });
 }
 
+	function resetTournament() {
+		const confirmed = window.confirm(
+			'Reset this tournament? This will clear all players and game results, and reset the timer. Your venue settings and Redtooth league standings will be kept.'
+		);
+
+		if (!confirmed) return;
+
+		pause();
+
+		if (transitionTimer !== null) {
+			clearTimeout(transitionTimer);
+			transitionTimer = null;
+		}
+
+		if (speechAudio) {
+			speechAudio.pause();
+			speechAudio.currentTime = 0;
+		}
+
+		closeClock();
+		players = [];
+		nextPlayerId = 1;
+		newPlayerName = '';
+		redtoothSearchResults = [];
+		redtoothSelectedPlayer = null;
+		currentLevel = 0;
+		setLevel(0);
+		tournamentMode = 'paused';
+		eliminationEvent = null;
+		announcementEvent = null;
+		balanceSuggestions = [];
+		balanceMessage = '';
+		redtoothShowTournament = false;
+		activeTab = 'timer';
+
+		// Keep redtoothPlayers intact so the league table remains visible on the TV.
+		lastSavedSnapshot = '';
+		saveTournament();
+	}
+
 	function clearRedtoothSelection() {
 		redtoothSelectedPlayer = null;
 	}
@@ -1724,6 +1764,7 @@ function startCasting() {
 
 		<div class="header-actions">
 			<button class="sound" onclick={startCasting}>Cast to TV</button>
+			<button class="sound" onclick={resetTournament}>Reset Tournament</button>
 			<button class="sound" onclick={() => (soundEnabled = !soundEnabled)}>
 				{soundEnabled ? '🔊 Alarm' : '🔇 Alarm off'}
 			</button>
