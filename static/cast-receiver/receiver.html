@@ -265,6 +265,7 @@
       let receiverSoundEnabled = true;
       let receiverAudioContext = null;
       let lastAnnouncementEventId = null;
+      let hasReceivedInitialAnnouncementState = false;
       const eliminationSound = new Audio('https://www.myinstants.com/media/sounds/fortnite-death-sound-not-knockout.mp3');
       eliminationSound.volume = 0.8;
 
@@ -297,6 +298,11 @@
       }
 
       function speakAnnouncement(event) {
+        if (!hasReceivedInitialAnnouncementState) {
+          hasReceivedInitialAnnouncementState = true;
+          lastAnnouncementEventId = typeof event?.id === 'string' ? event.id : null;
+          return;
+        }
         if (!event || typeof event.id !== 'string' || event.id === lastAnnouncementEventId) return;
         lastAnnouncementEventId = event.id;
         if (!receiverSoundEnabled || !('speechSynthesis' in window) || !event.text) return;
