@@ -4288,4 +4288,15 @@ function startCasting() {
 		}
 	}
 
+	/* Timer state colours: placed after the shared progress-bar override. */
+	.director-progress div.progress-paused {
+		background: #d94b50 !important;
+	}
+	.director-progress div.progress-break {
+		background: #397fbd !important;
+	}
+	.director-progress div.progress-ending {
+		animation: progress-ending-glow 1s ease-in-out infinite;
+	}
+
 </style>
