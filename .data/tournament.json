@@ -1,0 +1,15 @@
+{
+	"players": [],
+	"nextPlayerId": 1,
+	"currentLevel": 0,
+	"timeRemaining": 0,
+	"isRunning": false,
+	"activeTab": "timer",
+	"balanceSuggestions": [],
+	"balanceMessage": "",
+	"lastUpdated": 1790386719119,
+	"remainingMs": 360000,
+	"levelStartedAt": 423,
+	"levelDurationMs": 360000,
+	"running": true
+}
