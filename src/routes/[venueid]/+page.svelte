@@ -1899,12 +1899,16 @@ function startCasting() {
 								<div
 									class="director-player-swipe"
 									class:dragging={swipedPlayerId === player.id}
+									role="button"
+									tabindex="0"
+									aria-label={`Eliminate ${player.name}`}
+									onkeydown={(event) => event.key === "Enter" && removePlayer(player.id)}
 									onpointerdown={(event) => startPlayerSwipe(event, player.id)}
 									onpointermove={(event) => movePlayerSwipe(event, player.id)}
 									onpointerup={() => endPlayerSwipe(player.id)}
 									onpointercancel={cancelPlayerSwipe}
 								>
-									<div class="swipe-trash-reveal"><icon name="trash-2" size="18" /><span>ELIMINATED</span></div>
+									<div class="swipe-trash-reveal"><icon name="trash-2" size="18"></icon><span>ELIMINATED</span></div>
 									<div class="director-player-row" style:transform={`translateX(${swipedPlayerId === player.id ? playerSwipeOffset : 0}px)`}>
 										<div class="director-player-identity"><strong>{player.name}</strong>{#if player.guest}<span>GUEST</span>{:else if player.redtoothId === null}<span>UNLINKED</span>{/if}</div>
 									</div>
@@ -2338,7 +2342,7 @@ function startCasting() {
 			role="presentation"
 			onclick={(e) => e.target === e.currentTarget && (showSettings = false)}
 		>
-			<section class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+			<div class="settings-modal" role="dialog" aria-modal="true" aria-labelledby="settings-title">
 				<div class="settings-heading">
 					<div>
 						<span class="settings-eyebrow">PREFERENCES</span>
@@ -2363,18 +2367,18 @@ function startCasting() {
 
 				<div class="settings-option">
 					<div><strong>Alarm sound</strong><span>Play an alarm when a blind level ends</span></div>
-					<button class:enabled={soundEnabled} class="settings-switch" type="button" role="switch" aria-checked={soundEnabled} onclick={() => (soundEnabled = !soundEnabled)}><span></span></button>
+					<button class:enabled={soundEnabled} class="settings-switch" type="button" role="switch" aria-label="Alarm sound" aria-checked={soundEnabled} onclick={() => (soundEnabled = !soundEnabled)}><span></span></button>
 				</div>
 				<div class="settings-option">
 					<div><strong>Voice announcements</strong><span>Announce the next level when blinds change</span></div>
-					<button class:enabled={announcementEnabled} class="settings-switch" type="button" role="switch" aria-checked={announcementEnabled} onclick={() => (announcementEnabled = !announcementEnabled)}><span></span></button>
+					<button class:enabled={announcementEnabled} class="settings-switch" type="button" role="switch" aria-label="Voice announcements" aria-checked={announcementEnabled} onclick={() => (announcementEnabled = !announcementEnabled)}><span></span></button>
 				</div>
 
 				<div class="settings-danger">
 					<div><strong>Reset tournament</strong><span>Clear players and results and return to level 1</span></div>
 					<button class="settings-reset" type="button" onclick={() => { showSettings = false; resetTournament(); }}>Reset</button>
 				</div>
-			</section>
+			</div>
 		</div>
 	{/if}
 
@@ -3059,7 +3063,7 @@ function startCasting() {
 		50% { filter:brightness(1.55); box-shadow:0 0 12px 3px rgba(196,163,106,.9); }
 	}
 	@media (prefers-reduced-motion: reduce) {.director-progress div.progress-ending { animation:none; filter:brightness(1.35); box-shadow:0 0 8px 2px rgba(196,163,106,.65); }
-	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:1; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:0 0 0 auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; background:#b83c3c; color:#fff; }\n\t.swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:.7; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:1; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:0 0 0 auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:.7; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
 	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
 	}/* Match the original Chromecast receiver colourway throughout the TDC */
 	.app, .mode-play, .mode-break, .mode-paused {
@@ -3095,7 +3099,7 @@ function startCasting() {
 		color: #d5d9dc !important;
 		border: 1px solid #343a40 !important;
 		box-shadow: none !important;
-	}.clock-button:hover, .sound:hover, .add:hover, .secondary:hover, .tabs button:hover, .primary:hover, .director-add-button:hover, .level-arrow:hover:not(:disabled), .order-button:hover:not(:disabled) {
+	}.clock-button:hover, .sound:hover, .add:hover, .secondary:hover, .tabs button:hover, .primary:hover, .level-arrow:hover:not(:disabled), .order-button:hover:not(:disabled) {
 		background: #24282d !important;
 		color: #f4f4f1 !important;
 		border-color: #4a5158 !important;
