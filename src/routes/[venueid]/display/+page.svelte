@@ -2,11 +2,14 @@
 import { onMount } from 'svelte';
 import { page } from '$app/state';
 const venueId = $derived(page.params.venueid);
+/** @type {any} */
 let state = $state(null);
 let error = $state('');
 let clockNow = $state(Date.now());
-let pollTimer;
-let tickTimer;
+/** @type {ReturnType<typeof setInterval> | null} */
+let pollTimer = null;
+/** @type {ReturnType<typeof setInterval> | null} */
+let tickTimer = null;
 const remainingMs = $derived(state ? Math.max(0, Number(state.remainingMs || 0) - (state.running ? clockNow - Number(state.updatedAt || clockNow) : 0)) : 0);
 const seconds = $derived(Math.ceil(remainingMs / 1000));
 const timerText = $derived(String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0'));
