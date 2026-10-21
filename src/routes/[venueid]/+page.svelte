@@ -1022,7 +1022,7 @@
 			const previousPending = player.redtoothPendingPoints ?? 0;
 			const confirmedPoints = (player.redtoothPoints ?? 0) - previousPending;
 
-			const newPoints = pointsForPlace(player.eliminationPosition);
+			const newPoints = Math.max(0, pointsForPlace(player.eliminationPosition) - 10);
 
 			player.redtoothPendingPoints = newPoints;
 			player.redtoothPoints = confirmedPoints + newPoints;
@@ -1199,7 +1199,7 @@
 		 * from the projected league table before restoring the player.
 		 */
 		if (p.redtoothId && p.eliminationPosition !== null) {
-			const points = pointsForPlace(p.eliminationPosition);
+			const points = Math.max(0, pointsForPlace(p.eliminationPosition) - 10);
 
 			p.redtoothPendingPoints = Math.max(0, p.redtoothPendingPoints - points);
 
@@ -1236,7 +1236,7 @@
 			if (!remainingPlayer.eliminated || remainingPlayer.guest || remainingPlayer.redtoothId === null) continue;
 			const previousPending = remainingPlayer.redtoothPendingPoints ?? 0;
 			const confirmedPoints = (remainingPlayer.redtoothPoints ?? 0) - previousPending;
-			const newPoints = pointsForPlace(remainingPlayer.eliminationPosition ?? 1);
+			const newPoints = Math.max(0, pointsForPlace(remainingPlayer.eliminationPosition ?? 1) - 10);
 			remainingPlayer.redtoothPendingPoints = newPoints;
 			remainingPlayer.redtoothPoints = confirmedPoints + newPoints;
 			redtoothPlayers = redtoothPlayers.map((row) =>
