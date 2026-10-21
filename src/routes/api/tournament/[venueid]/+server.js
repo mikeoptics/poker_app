@@ -34,7 +34,7 @@ function publicState(s) {
 		const attending = Boolean(player);
 		const locked = Boolean(player?.eliminated);
 		const attendancePoints = started && attending ? 10 : 0;
-		const liveMinimum = started && attending && !locked && activeCount <= 8 ? pointsForPlace(8) : 0;
+		const liveMinimum = started && attending && !locked && activeCount <= 8 ? pointsForPlace(activeCount) : 0;
 		const existingLocalPoints = Number(row.localPoints ?? 0);
 		const livePoints = attendancePoints + liveMinimum;
 		const points = Number(row.points ?? 0) + existingLocalPoints + livePoints;
