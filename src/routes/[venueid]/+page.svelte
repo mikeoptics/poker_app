@@ -1645,6 +1645,10 @@
 		}
 	}
 
+function openDisplay() {
+		window.open(`/${venueId}/display`, '_blank', 'noopener,noreferrer');
+	}
+
 function startCasting() {
     const receiverId = import.meta.env.VITE_CAST_RECEIVER_APP_ID;
     const namespace = 'urn:x-cast:com.miiiike.poker';
@@ -1812,6 +1816,7 @@ function startCasting() {
 	<header class="header">
 		<div class="header-actions">
 			<button class="sound" onclick={startCasting}>Cast to TV</button>
+			<button class="sound" onclick={openDisplay}>Open Display</button>
 			<button class="clock-button" onclick={() => (showClock ? closeClock() : startClock())}>
 				⏱ Call the Clock
 			</button>
