@@ -15,6 +15,7 @@ function publicState(s) {
 	const l = s.levels?.[i] ?? null;
 	const n = s.levels?.[Math.min(i + 1, (s.levels?.length ?? 1) - 1)] ?? null;
 	const elapsed = s.running ? Math.max(0, Date.now() - (s.updatedAt ?? Date.now())) : 0;
+	/** @type {any[]} */
 	const tournamentPlayers = s.players ?? [];
 	const activePlayers = tournamentPlayers.filter((p) => !p.eliminated);
 	const activeCount = activePlayers.length;
@@ -24,8 +25,10 @@ function publicState(s) {
 			.filter((p) => !p.guest && p.redtoothId != null)
 			.map((p) => [String(p.redtoothId), p])
 	);
-	const pointsForPlace = (place) => ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 })[place] ?? 10;
+	/** @param {number} place */
+	const pointsForPlace = (place) => /** @type {Record<number, number>} */ ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 })[place] ?? 10;
 
+	/** @type {any[]} */
 	const source = s.redtoothPlayers ?? [];
 	const regionalPlaces = source.filter((r) => r.qualification === 'regional').length;
 	const playoffPlaces = source.filter((r) => r.qualification === 'playoff').length;
