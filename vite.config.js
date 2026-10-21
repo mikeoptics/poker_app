@@ -5,11 +5,7 @@ export default defineConfig({
 	plugins: [sveltekit()],
 
 	server: {
-	    host: true,
-	    allowedHosts: [
-	        '.trycloudflare.com',
-	        'poker.miiiike.com'
-	    ]
+		host: true,
+		allowedHosts: ['.trycloudflare.com', 'poker.miiiike.com']
 	}
 });
-

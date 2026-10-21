@@ -34,7 +34,6 @@ npm run preview
 
 The dependency ranges are intentionally kept on current major versions so `npm install` resolves current compatible Svelte/SvelteKit releases.
 
-
 ## Venue-specific tournaments
 
 - `/` opens the venue selector.

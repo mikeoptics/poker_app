@@ -97,61 +97,60 @@
 			</div>
 		{/if}
 
-			<div class="table-list-view">
-				{#each Array(tableCount) as _, ti}
-					{@const tableNumber = ti + 1}
-					{@const tablePlayers = activePlayers
-						.filter((p) => p.table === tableNumber)
-						.sort((a, b) => a.seat - b.seat)}
+		<div class="table-list-view">
+			{#each Array(tableCount) as _, ti}
+				{@const tableNumber = ti + 1}
+				{@const tablePlayers = activePlayers
+					.filter((p) => p.table === tableNumber)
+					.sort((a, b) => a.seat - b.seat)}
 
-					<section class="table-list-card">
-						<div class="table-list-heading">
-							<strong>Table {tableNumber}</strong>
-							<span>{tablePlayers.length} / 8 players</span>
+				<section class="table-list-card">
+					<div class="table-list-heading">
+						<strong>Table {tableNumber}</strong>
+						<span>{tablePlayers.length} / 8 players</span>
+					</div>
+
+					<div class="table-list-header">
+						<span>Seat</span>
+						<span>Position</span>
+						<span>Player</span>
+					</div>
+
+					{#each tablePlayers as player}
+						<div class="table-list-row">
+							<strong>{player.seat}</strong>
+							<span>{seatRole(player.seat)}</span>
+							<b>{player.name}</b>
 						</div>
+					{/each}
+				</section>
+			{/each}
 
-						<div class="table-list-header">
-							<span>Seat</span>
-							<span>Position</span>
-							<span>Player</span>
+			{#if eliminatedPlayers.length}
+				<section class="eliminated-list">
+					<div class="table-list-heading">
+						<strong>Eliminated</strong>
+						<span>{eliminatedPlayers.length}</span>
+					</div>
+
+					{#each [...eliminatedPlayers].sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999)) as player}
+						<div class="eliminated-list-row">
+							<strong>
+								{player.eliminationPosition}
+								{player.eliminationPosition === 1
+									? 'st'
+									: player.eliminationPosition === 2
+										? 'nd'
+										: player.eliminationPosition === 3
+											? 'rd'
+											: 'th'}
+							</strong>
+
+							<span>{player.name}</span>
 						</div>
-
-						{#each tablePlayers as player}
-							<div class="table-list-row">
-								<strong>{player.seat}</strong>
-								<span>{seatRole(player.seat)}</span>
-								<b>{player.name}</b>
-
-							</div>
-						{/each}
-					</section>
-				{/each}
-
-				{#if eliminatedPlayers.length}
-					<section class="eliminated-list">
-						<div class="table-list-heading">
-							<strong>Eliminated</strong>
-							<span>{eliminatedPlayers.length}</span>
-						</div>
-
-						{#each [...eliminatedPlayers].sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999)) as player}
-							<div class="eliminated-list-row">
-								<strong>
-									{player.eliminationPosition}
-									{player.eliminationPosition === 1
-										? 'st'
-										: player.eliminationPosition === 2
-											? 'nd'
-											: player.eliminationPosition === 3
-												? 'rd'
-												: 'th'}
-								</strong>
-
-								<span>{player.name}</span>
-							</div>
-						{/each}
-					</section>
-				{/if}
-			</div>
+					{/each}
+				</section>
+			{/if}
+		</div>
 	</div>
 </section>
