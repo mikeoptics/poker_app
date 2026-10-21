@@ -79,7 +79,7 @@ function parseLeagueTable(html) {
 
 		const name = cells[1];
 
-		const onclick = attributes.match(/onclick\s*=\s*["']\s*getGraph\s*\(\s*this\s*,\s*(\d+)\s*,/i);
+		const onclick = `${attributes} ${rowHtml}`.match(/onclick\s*=\s*["'][^"']*getGraph\s*\(\s*this\s*,\s*(\d+)/i);
 
 		const redtoothId = onclick ? Number.parseInt(onclick[1], 10) : null;
 
