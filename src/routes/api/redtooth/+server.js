@@ -227,6 +227,7 @@ async function findVenues(query) {
 /**
  * @param {number|string} venueId
  */
+/** @param {number|string} venueId @param {number} season @param {number} yearId */
 async function fetchSeasonTable(venueId, season, yearId) {
 	const response = await fetch(REDTOOTH_LEAGUE_URL, {
 		method: 'POST',
