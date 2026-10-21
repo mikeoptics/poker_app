@@ -2251,7 +2251,7 @@ function startCasting() {
 				<div class="payout-buyin-field">
 					<label>
 						Entry Cost (£)
-						<input type="number" min="10" step="5" bind:value={buyInAmount} />
+						<input type="number" min="5" step="5" bind:value={buyInAmount} />
 					</label>
 				</div>
 
