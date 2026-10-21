@@ -2238,17 +2238,17 @@ function startCasting() {
 										onclick={() => togglePaid(player.id)}
 									>
 										{player.paid ? '✓ Paid' : 'Unpaid'}
-					</button>
-					<button
-						class="tiny delete-player-button"
-						title={player.eliminated ? 'Undo elimination before deleting this player' : 'Delete player'}
-						disabled={player.eliminated}
-						onclick={() => deletePlayer(player.id)}
-					>
-						Delete
-					</button>
+						</button>
+						<button
+							class="tiny delete-player-button"
+							title={player.eliminated ? 'Undo elimination before deleting this player' : 'Delete player'}
+							disabled={player.eliminated}
+							onclick={() => deletePlayer(player.id)}
+						>
+							Delete
+						</button>
 
-					{#if maxRebuys > 0}
+						{#if maxRebuys > 0}
 										<button class="tiny" disabled={player.eliminated || player.rebuys >= maxRebuys} onclick={() => changeEntry(player.id, 'rebuys')}>
 											+ Rebuy ({player.rebuys})
 										</button>
