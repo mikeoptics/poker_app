@@ -404,6 +404,7 @@
 	let playerSwipeStartX = 0;
 	let playerSwipeOffset = $state(0);
 
+	/** @param {PointerEvent} event @param {number} playerId */
 	function startPlayerSwipe(event, playerId) {
 		swipedPlayerId = playerId;
 		playerSwipeStartX = event.clientX;
@@ -411,11 +412,13 @@
 		event.currentTarget.setPointerCapture(event.pointerId);
 	}
 
+	/** @param {PointerEvent} event @param {number} playerId */
 	function movePlayerSwipe(event, playerId) {
 		if (swipedPlayerId !== playerId) return;
 		playerSwipeOffset = Math.max(-112, Math.min(0, event.clientX - playerSwipeStartX));
 	}
 
+	/** @param {number} playerId */
 	function endPlayerSwipe(playerId) {
 		if (swipedPlayerId !== playerId) return;
 		if (playerSwipeOffset <= -82) {
@@ -451,6 +454,7 @@
 			return [{ place: 1, amount: total }];
 		}
 
+		/** @type {Record<number, number[]>} */
 		const schedule = {
 			7: [30, 5],
 			8: [30, 10],
@@ -488,6 +492,7 @@
 		}));
 	}
 
+/** @type {{ place: number; amount: number }[]} */
 	const payouts = $derived(calculatePayouts(prizePool));
 
 	/** @param {number} seconds */
@@ -2292,7 +2297,7 @@ function startCasting() {
 						</div>
 
 						<span class="total-percent">
-							£{payouts.reduce((sum, p) => sum + p.amount, 0).toLocaleString('en-GB')}
+							£{payouts.reduce((/** @type {number} */ sum, /** @type {{ place: number; amount: number }} */ p) => sum + p.amount, 0).toLocaleString('en-GB')}
 							/ £{prizePool.toLocaleString('en-GB')}
 						</span>
 					</div>
