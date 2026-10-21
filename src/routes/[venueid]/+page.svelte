@@ -416,20 +416,21 @@
 	/** @param {PointerEvent} event @param {number} playerId */
 	function movePlayerSwipe(event, playerId) {
 		if (swipedPlayerId !== playerId) return;
-		playerSwipeOffset = Math.max(-112, Math.min(0, event.clientX - playerSwipeStartX));
+		playerSwipeOffset = Math.max(-112, Math.min(112, event.clientX - playerSwipeStartX));
 	}
 
 	/** @param {number} playerId */
 	function endPlayerSwipe(playerId) {
 		if (swipedPlayerId !== playerId) return;
-		if (playerSwipeOffset <= -82) {
-			swipedPlayerId = null;
-			playerSwipeOffset = 0;
-			removePlayer(playerId);
-			return;
-		}
+		const swipeDistance = playerSwipeOffset;
 		swipedPlayerId = null;
 		playerSwipeOffset = 0;
+
+		if (swipeDistance <= -82) {
+			removePlayer(playerId);
+		} else if (swipeDistance >= 82) {
+			togglePaid(playerId);
+		}
 	}
 
 	function cancelPlayerSwipe() {
@@ -1592,6 +1593,7 @@
 					);
 				}
 			}
+			await saveTournament();
 		} catch (error) {
 			console.error('Redtooth refresh failed:', error);
 
@@ -1778,12 +1780,13 @@ function startCasting() {
 		const castScript = document.createElement('script');
 		castScript.src = 'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1';
 		document.head.appendChild(castScript);
-		loadTournament().catch((error) => console.error('Tournament load failed:', error));
+		loadTournament()
+			.catch((error) => console.error('Tournament load failed:', error))
+			.finally(() => refreshRedtooth());
 		syncInterval = setInterval(() => {
 			if (running) remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
 			saveTournament();
 		}, 1000);
-		refreshRedtooth();
 		startRedtoothViewTimer();
 		window.addEventListener('keydown', handleKeyboard);
 
@@ -1920,9 +1923,14 @@ function startCasting() {
 									onpointerup={() => endPlayerSwipe(player.id)}
 									onpointercancel={cancelPlayerSwipe}
 								>
+									<div class="swipe-payment-reveal"><span>{player.paid ? 'MARK UNPAID' : 'PAID'}</span></div>
 									<div class="swipe-trash-reveal"><icon name="trash-2" size="18"></icon><span>ELIMINATED</span></div>
 									<div class="director-player-row" style:transform={`translateX(${swipedPlayerId === player.id ? playerSwipeOffset : 0}px)`}>
-										<div class="director-player-identity"><strong>{player.name}</strong>{#if player.guest}<span>GUEST</span>{:else if player.redtoothId === null}<span>UNLINKED</span>{/if}</div>
+										<div class="director-player-identity">
+											<strong>{player.name}</strong>
+											{#if player.guest}<span>GUEST</span>{:else if player.redtoothId === null}<span>UNLINKED</span>{/if}
+											<span class="payment-pill" class:paid={player.paid}>{player.paid ? 'PAID' : 'UNPAID'}</span>
+										</div>
 									</div>
 								</div>
 							{/each}
@@ -2268,8 +2276,7 @@ function startCasting() {
 					</section>
 				</div>
 			</div>
-			```
-
+		{:else if activeTab === 'payouts'}
 			<section class="payout-card">
 				<div class="section-heading">
 					<div>
@@ -2598,7 +2605,20 @@ function startCasting() {
 		overflow: hidden;
 	}/* Make the players card substantially wider */
 	.setup-sidebar .players-card {
+		display: flex;
+		flex-direction: column;
 		width: 100%;
+		height: min(68dvh, 720px);
+		min-height: 320px;
+		overflow: hidden;
+	}
+	.setup-sidebar .players-card .player-list {
+		flex: 1 1 0;
+		min-height: 0;
+		overflow-x: auto;
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		-webkit-overflow-scrolling: touch;
 	}.setup-layout .table {
 		overflow: auto;
 		max-height: calc(100dvh - 190px);
@@ -3052,7 +3072,7 @@ function startCasting() {
 		50% { filter:brightness(1.55); box-shadow:0 0 12px 3px rgba(196,163,106,.9); }
 	}
 	@media (prefers-reduced-motion: reduce) {.director-progress div.progress-ending { animation:none; filter:brightness(1.35); box-shadow:0 0 8px 2px rgba(196,163,106,.65); }
-	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:1; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:0 0 0 auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:.7; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:1; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:0 0 0 auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:0 auto 0 0; width:112px; display:flex; align-items:center; justify-content:center; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:3px 7px; border:1px solid rgba(210,150,90,.35); border-radius:999px; background:rgba(180,115,55,.14); color:#e1b77e !important; font-size:9px !important; font-weight:900; letter-spacing:.07em; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:rgba(75,145,105,.14); color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:.7; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
 	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
 	}/* Match the original Chromecast receiver colourway throughout the TDC */
 	.app, .mode-play, .mode-break, .mode-paused {
