@@ -96,6 +96,12 @@
     .standing-stat { text-align: right; color: #cbd0d4; font-variant-numeric: tabular-nums; }
     .standing-row.regional .standing-position { color: #79c7a1; }
     .standing-row.playoff .standing-position { color: #83aef0; }
+    .standing-row.live .standing-stat { color: #62d394; }
+    .standing-row.locked .standing-stat { color: #d8b45b; }
+    .standing-row.absent { color: #858b91; opacity: .62; filter: grayscale(1); }
+    .standing-row.absent .standing-stat,
+    .standing-row.absent .standing-position,
+    .standing-row.absent .standing-name { color: #858b91; }
     .standings-empty { color: #92999f; text-align: center; padding: 3vh 1vw; font-size: 1.2vw; }
 
     @media (max-aspect-ratio: 4/3) {
@@ -330,7 +336,9 @@
         list.replaceChildren();
         rows.slice(0, 14).forEach(row => {
           const item = document.createElement('div');
-          item.className = 'standing-row' + (row.qualification === 'regional' ? ' regional' : row.qualification === 'playoff' ? ' playoff' : '');
+          item.className = 'standing-row' +
+            (row.qualification === 'regional' ? ' regional' : row.qualification === 'playoff' ? ' playoff' : '') +
+            (row.attendanceStatus === 'locked' ? ' locked' : row.attendanceStatus === 'live' ? ' live' : ' absent');
           const position = document.createElement('span');
           position.className = 'standing-position';
           position.textContent = String(row.position ?? '—');
