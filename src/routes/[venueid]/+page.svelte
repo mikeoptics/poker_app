@@ -181,7 +181,8 @@
 	let running = $state(false);
 	let soundEnabled = $state(true);
 	let announcementEnabled = $state(true);
-	let buyInAmount = $state(20);
+	let buyInAmount = $state(5);
+	let tournamentStarted = $state(false);
 	let mixedGames = $state(false);
 	// timer | tables | setup | payouts
 	let activeTab = $state('timer');
@@ -437,74 +438,53 @@
 	const averageStack = $derived(0);
 
 	/**
+	 * The payout schedule is expressed as cash amounts for a £5 entry.
+	 * The schedule scales proportionally if the entry price is changed.
 	 * @param {number} pot
 	 */
 	function calculatePayouts(pot) {
-		const total = Math.max(0, Math.round(Number(pot) || 0));
-		const entrants = players.length;
-
+		const total = Math.max(0, Number(pot) || 0);
+		const entrants = totalEntries;
 		if (total <= 0 || entrants === 0) return [];
 
-		let places;
-
-		if (entrants <= 3) {
-			places = 1;
-		} else if (entrants <= 6) {
-			places = 2;
-		} else if (entrants <= 10) {
-			places = 3;
-		} else if (entrants <= 15) {
-			places = 4;
-		} else if (entrants <= 20) {
-			places = 5;
-		} else if (entrants <= 30) {
-			places = 6;
-		} else {
-			places = Math.ceil(entrants * 0.2);
+		if (entrants <= 6) {
+			return [{ place: 1, amount: total }];
 		}
 
-		places = Math.min(places, entrants);
+		const schedule = {
+			7: [30, 5],
+			8: [30, 10],
+			9: [30, 10, 5],
+			10: [30, 15, 5],
+			11: [35, 15, 5],
+			12: [40, 15, 5],
+			13: [40, 20, 5],
+			14: [45, 20, 5],
+			15: [50, 20, 5],
+			16: [50, 25, 5],
+			17: [55, 25, 5],
+			18: [60, 25, 5],
+			19: [60, 30, 5],
+			20: [60, 30, 10],
+			21: [65, 30, 10],
+			22: [70, 30, 10],
+			23: [70, 35, 10],
+			24: [75, 35, 10],
+			25: [80, 35, 10],
+			26: [80, 40, 10],
+			27: [85, 40, 10],
+			28: [85, 40, 15]
+		};
+		const base = schedule[Math.min(entrants, 28)] ?? schedule[28];
+		const scale = Math.max(0, Number(buyInAmount) || 0) / 5;
+		const amounts = base.map((amount) => amount * scale);
 
-		const weights = [0.4, 0.27, 0.18, 0.1, 0.05, 0.04, 0.03].slice(0, places);
-
-		const weightTotal = weights.reduce((sum, value) => sum + value, 0);
-
-		let amounts = weights.map((weight) => Math.floor((total * weight) / weightTotal / 10) * 10);
-
-		amounts = amounts.map((amount) => Math.min(200, amount));
-
-		let assigned = amounts.reduce((sum, amount) => sum + amount, 0);
-
-		let remaining = total - assigned;
-
-		while (remaining >= 10) {
-			let changed = false;
-
-			for (let i = 0; i < amounts.length && remaining >= 10; i += 1) {
-				if (amounts[i] < 200) {
-					amounts[i] += 10;
-					remaining -= 10;
-					changed = true;
-				}
-			}
-
-			if (!changed) break;
-		}
-
-		while (remaining > 0 && places < entrants) {
-			amounts.push(0);
-			places += 1;
-
-			if (remaining >= 10) {
-				amounts[amounts.length - 1] = Math.min(200, remaining);
-
-				remaining -= amounts[amounts.length - 1];
-			}
-		}
+		// For fields above 28 entries, add the extra entries to first place.
+		if (entrants > 28) amounts[0] += (entrants - 28) * 5 * scale;
 
 		return amounts.map((amount, index) => ({
 			place: index + 1,
-			amount
+			amount: Math.round(amount * 100) / 100
 		}));
 	}
 
@@ -541,6 +521,7 @@
 	function start() {
 		if (running || !currentBlinds) return;
 
+		tournamentStarted = true;
 		running = true;
 		tournamentMode = currentBlinds?.break ? 'break' : 'play';
 
@@ -1608,7 +1589,7 @@
 		return {
 			levels, players, nextPlayerId, currentLevel, remainingMs, levelDurationMs, running,
 			soundEnabled, announcementEnabled, buyInAmount, mixedGames, activeTab, redtoothPlayers,
-			maxRebuys, maxTopUps,
+			maxRebuys, maxTopUps, tournamentStarted,
 			eliminationEvent, announcementEvent, venueName, updatedAt: Date.now()
 		};
 	}
@@ -1629,7 +1610,8 @@
 		announcementEnabled = state.announcementEnabled ?? true;
 		maxRebuys = Math.max(0, Number(state.maxRebuys ?? 0));
 		maxTopUps = Math.max(0, Number(state.maxTopUps ?? 0));
-		buyInAmount = state.buyInAmount ?? 20;
+		buyInAmount = state.buyInAmount ?? 5;
+		tournamentStarted = Boolean(state.tournamentStarted || state.running || players.some((player) => player.eliminated));
 		mixedGames = Boolean(state.mixedGames);
 		activeTab = state.activeTab ?? 'timer';
 		if (Array.isArray(state.redtoothPlayers)) redtoothPlayers = state.redtoothPlayers;
@@ -1727,6 +1709,7 @@ function startCasting() {
 
 		closeClock();
 		players = [];
+		tournamentStarted = false;
 		nextPlayerId = 1;
 		newPlayerName = '';
 		redtoothSearchResults = [];
