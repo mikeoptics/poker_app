@@ -1,16 +1,16 @@
 <script>
 import { onMount } from 'svelte';
-import { page } from '$app/state';
+import { page } from '$app/tournamentState';
 const venueId = $derived(page.params.venueid);
 /** @type {any} */
-let state = $state(null);
-let error = $state('');
-let clockNow = $state(Date.now());
-/** @type {ReturnType<typeof setInterval> | null} */
-let pollTimer = null;
-/** @type {ReturnType<typeof setInterval> | null} */
-let tickTimer = null;
-const remainingMs = $derived(state ? Math.max(0, Number(state.remainingMs || 0) - (state.running ? clockNow - Number(state.updatedAt || clockNow) : 0)) : 0);
+let tournamentState = $tournamentState(null);
+let error = $tournamentState('');
+let clockNow = $tournamentState(Date.now());
+/** @type {ReturnType<typeof setInterval> | undefined} */
+let pollTimer;
+/** @type {ReturnType<typeof setInterval> | undefined} */
+let tickTimer;
+const remainingMs = $derived(tournamentState ? Math.max(0, Number(tournamentState.remainingMs || 0) - (tournamentState.running ? clockNow - Number(tournamentState.updatedAt || clockNow) : 0)) : 0);
 const seconds = $derived(Math.ceil(remainingMs / 1000));
 const timerText = $derived(String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0'));
 async function refresh() {
@@ -18,8 +18,8 @@ async function refresh() {
   const response = await fetch('/api/tournament/' + venueId + '?public=1', { cache: 'no-store' });
   if (!response.ok) throw new Error('Tournament display is not available.');
   const result = await response.json();
-  if (!result.ok || !result.state) throw new Error('Waiting for tournament data.');
-  state = result.state;
+  if (!result.ok || !result.tournamentState) throw new Error('Waiting for tournament data.');
+  tournamentState = result.tournamentState;
   error = '';
  } catch (e) { error = e instanceof Error ? e.message : 'Unable to load tournament display.'; }
 }
@@ -32,19 +32,19 @@ onMount(() => {
 </script>
 <svelte:head><title>Live Tournament Display</title><meta name="viewport" content="width=device-width, initial-scale=1" /></svelte:head>
 <div class="screen">
- <header><div class="eyebrow">LIVE TOURNAMENT</div><h1>{state?.venueName || 'Tournament display'}</h1></header>
- {#if error && !state}<div class="waiting">{error}</div>{:else}
+ <header><div class="eyebrow">LIVE TOURNAMENT</div><h1>{tournamentState?.venueName || 'Tournament display'}</h1></header>
+ {#if error && !tournamentState}<div class="waiting">{error}</div>{:else}
  <div class="layout">
   <main class="timer-panel">
-   <div class="game">{state?.currentGame || 'WAITING'}</div><div class="timer">{timerText}</div><div class="blinds">{state?.blinds || '—'}</div>
-   <div class="status">{state?.running ? 'TOURNAMENT RUNNING' : state?.tournamentStarted ? 'TOURNAMENT PAUSED' : 'WAITING TO START'}</div>
-   <div class="next">NEXT: {state?.nextGame || '—'} · {state?.nextBlinds || '—'} · PLAYERS: {state?.activePlayerCount ?? 0}</div>
+   <div class="game">{tournamentState?.currentGame || 'WAITING'}</div><div class="timer">{timerText}</div><div class="blinds">{tournamentState?.blinds || '—'}</div>
+   <div class="status">{tournamentState?.running ? 'TOURNAMENT RUNNING' : tournamentState?.tournamentStarted ? 'TOURNAMENT PAUSED' : 'WAITING TO START'}</div>
+   <div class="next">NEXT: {tournamentState?.nextGame || '—'} · {tournamentState?.nextBlinds || '—'} · PLAYERS: {tournamentState?.activePlayerCount ?? 0}</div>
   </main>
   <aside class="standings">
    <div class="standings-title">LEAGUE STANDINGS</div><div class="standings-caption">Current season · live points</div>
    <div class="columns"><span>#</span><span>PLAYER</span><span>GP</span><span>PTS</span></div>
    <div class="rows">
-    {#each (state?.standings ?? []).slice(0, 18) as row}
+    {#each (tournamentState?.standings ?? []).slice(0, 18) as row}
      <div class="standing-row" class:live={row.attendanceStatus === 'live'} class:locked={row.attendanceStatus === 'locked'} class:absent={row.attendanceStatus === 'absent' || row.attendanceStatus === 'attending'}>
       <span>{row.position}</span><strong>{row.name}</strong><span>{row.games}</span><b>{row.points}</b>
      </div>
