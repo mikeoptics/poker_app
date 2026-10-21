@@ -947,7 +947,7 @@
 		 * Guests are deliberately ignored.
 		 */
 		if (p.redtoothId) {
-			const points = pointsForPlace(finishPlace);
+			const points = Math.max(0, pointsForPlace(finishPlace) - 10);
 
 			p.redtoothPendingPoints += points;
 
