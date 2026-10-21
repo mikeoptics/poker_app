@@ -133,7 +133,7 @@
 						<span>{eliminatedPlayers.length}</span>
 					</div>
 
-					{#each [...eliminatedPlayers].sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999)) as player}
+					{#each [...eliminatedPlayers].sort((a, b) => (b.eliminationPosition ?? 0) - (a.eliminationPosition ?? 0)) as player}
 						<div class="eliminated-list-row">
 							<strong>
 								{player.eliminationPosition}
