@@ -720,6 +720,18 @@
 		return `SEAT ${seat}`;
 	}
 
+	/** @param {number} id */
+	function deletePlayer(id) {
+		const player = players.find((item) => item.id === id);
+		// Undo an elimination first so finishing positions and league points remain valid.
+		if (!player || player.eliminated) return;
+		players = players.filter((item) => item.id !== id);
+		balanceSuggestions = [];
+		balanceMessage = '';
+		distributeAcrossTables();
+		rebalanceTables();
+	}
+
 	function addPlayerFromForm() {
 		const name = newPlayerName.trim();
 
@@ -2226,9 +2238,17 @@ function startCasting() {
 										onclick={() => togglePaid(player.id)}
 									>
 										{player.paid ? '✓ Paid' : 'Unpaid'}
-									</button>
+					</button>
+					<button
+						class="tiny delete-player-button"
+						title={player.eliminated ? 'Undo elimination before deleting this player' : 'Delete player'}
+						disabled={player.eliminated}
+						onclick={() => deletePlayer(player.id)}
+					>
+						Delete
+					</button>
 
-									{#if maxRebuys > 0}
+					{#if maxRebuys > 0}
 										<button class="tiny" disabled={player.eliminated || player.rebuys >= maxRebuys} onclick={() => changeEntry(player.id, 'rebuys')}>
 											+ Rebuy ({player.rebuys})
 										</button>
