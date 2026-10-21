@@ -1965,6 +1965,7 @@ function startCasting() {
 				{tableCount}
 				{seatRole}
 				{applyBalance}
+				{randomiseSeats}
 			/>
 		{:else if activeTab === 'setup'}
 			<div class="setup-layout">
