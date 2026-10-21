@@ -30,6 +30,7 @@
 	 * tableCount: number;
 	 * seatRole: (seat: number) => string;
 	 * applyBalance: (suggestion: BalanceMove) => void;
+	 * randomiseSeats: () => void;
 	 * }} */
 	let {
 		activePlayerCount,
@@ -39,7 +40,8 @@
 		activePlayers,
 		tableCount,
 		seatRole,
-		applyBalance
+		applyBalance,
+		randomiseSeats
 	} = $props();
 </script>
 
@@ -60,6 +62,7 @@
 					eliminated
 				{/if}
 			</span>
+			<button class="randomise-seating" type="button" onclick={randomiseSeats}>Randomise seating</button>
 		</div>
 
 		{#if balanceMessage}
