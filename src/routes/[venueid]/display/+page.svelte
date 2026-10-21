@@ -1,11 +1,11 @@
 <script>
 import { onMount } from 'svelte';
-import { page } from '$app/tournamentState';
+import { page } from '$app/state';
 const venueId = $derived(page.params.venueid);
 /** @type {any} */
-let tournamentState = $tournamentState(null);
-let error = $tournamentState('');
-let clockNow = $tournamentState(Date.now());
+let tournamentState = $state(null);
+let error = $state('');
+let clockNow = $state(Date.now());
 /** @type {ReturnType<typeof setInterval> | undefined} */
 let pollTimer;
 /** @type {ReturnType<typeof setInterval> | undefined} */
@@ -18,8 +18,8 @@ async function refresh() {
   const response = await fetch('/api/tournament/' + venueId + '?public=1', { cache: 'no-store' });
   if (!response.ok) throw new Error('Tournament display is not available.');
   const result = await response.json();
-  if (!result.ok || !result.tournamentState) throw new Error('Waiting for tournament data.');
-  tournamentState = result.tournamentState;
+  if (!result.ok || !result.state) throw new Error('Waiting for tournament data.');
+  tournamentState = result.state;
   error = '';
  } catch (e) { error = e instanceof Error ? e.message : 'Unable to load tournament display.'; }
 }
