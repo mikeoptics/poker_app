@@ -636,3 +636,20 @@
 .eliminated-list-row strong { color:#aeb5ba; font-size:12px; }
 .eliminated-list-row span { color:#e3e6e4; font-size:13px; font-weight:650; }
 @media (max-width:700px) { .tables-panel { padding:12px; border-radius:12px; } .table-list-view { grid-template-columns:minmax(0,1fr); gap:10px; margin-top:10px; } .table-list-header, .table-list-row { grid-template-columns:36px 72px minmax(0,1fr); gap:8px; padding:9px 10px; } }
+
+
+.randomise-seating {
+	margin-top: 10px;
+	align-self: flex-start;
+	padding: 8px 12px;
+	border: 1px solid #454c53;
+	border-radius: 7px;
+	background: #292f34;
+	color: #e7e9e7;
+	font-size: 11px;
+	font-weight: 800;
+	cursor: pointer;
+}
+.randomise-seating:hover {
+	background: #343b41;
+}
