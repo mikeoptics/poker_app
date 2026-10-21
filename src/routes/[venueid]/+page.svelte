@@ -2518,10 +2518,8 @@ function startCasting() {
 	}/* =========================
      TIMER TAB
      ========================= */
-	.tournament-player-list .redtooth-row.eliminated {
-		opacity: 0.42;
-		color: #777d82;
-	}.mixed-toggle {
+
+	.mixed-toggle {
 		border: 1px solid #343a40;
 		background: #181b1f;
 		color: #e8eaec;
@@ -2924,36 +2922,7 @@ function startCasting() {
 		}.payout-row {
 			grid-template-columns: 45px 80px 20px 1fr;
 		}
-	}/* Timer + Redtooth two-column layout */
-	.timer-page-layout {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr) 360px;
-		gap: 20px;
-		align-items: start;
-		width: 100%;
-	}/* Redtooth league panel */
-	.redtooth-panel {
-		border: 1px solid #d9dde1;
-		border-radius: 14px;
-		padding: 18px;
-		box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-		min-width: 0;
-		height: 100%;
-		min-height: 0;
-		overflow: hidden;
-		display: flex;
-		flex-direction: column;
-		color: #202428;
-		background: #ffffff;
-		transition:
-			border-color 0.6s ease,
-			box-shadow 0.6s ease;
-	}
 
-	@media (max-width: 1100px) {
-	}
-
-	@media (max-width: 850px) {
 	}.add-player-form {
 		display: flex;
 		align-items: center;
