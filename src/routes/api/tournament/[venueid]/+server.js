@@ -159,6 +159,8 @@ export async function PUT({ params, request }) {
 			soundEnabled: Boolean(v.soundEnabled),
 			announcementEnabled: Boolean(v.announcementEnabled),
 			buyInAmount: Math.max(0, Number(v.buyInAmount) || 0),
+			maxRebuys: Math.max(0, Number(v.maxRebuys) || 0),
+			maxTopUps: Math.max(0, Number(v.maxTopUps) || 0),
 			mixedGames: Boolean(v.mixedGames),
 			activeTab: ['timer', 'tables', 'setup', 'payouts'].includes(v.activeTab)
 				? v.activeTab
