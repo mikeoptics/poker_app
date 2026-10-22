@@ -1650,7 +1650,9 @@
 				currentLevel = Math.min(currentLevel, levels.length - 1);
 				if (!running && levels[currentLevel]) {
 					levelDurationMs = levels[currentLevel].minutes * 60_000;
-					remainingMs = levelDurationMs;
+					remainingMs = tournamentStarted
+						? Math.min(remainingMs, levelDurationMs)
+						: levelDurationMs;
 				}
 			} catch (error) {
 				console.warn('Unable to restore browser settings:', error);
