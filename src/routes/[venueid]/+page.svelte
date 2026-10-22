@@ -1514,7 +1514,16 @@
 			 * any results from the current tournament that Redtooth
 			 * has not yet published.
 			 */
-			redtoothPlayers = data.players.map(
+			// New seasons can have no current rows yet. Seed the visible
+			// table with last season's player directory at zero points.
+			const seasonRows =
+				Array.isArray(data.players) && data.players.length > 0
+					? data.players
+					: (data.playerDirectory ?? []).map((row) => ({
+							...row, position: 0, games: 0, points: 0,
+							qualification: null, qualificationMarker: null
+						}));
+			redtoothPlayers = seasonRows.map(
 				/** @param {RedtoothRow} row */
 				(row) => {
 					const local = row.redtoothId !== null ? localResults.get(row.redtoothId) : null;
@@ -1614,11 +1623,45 @@
 		};
 	}
 
+		const browserSettingsKey = `poker-timer-settings:${venueId}`;
+
+		function saveBrowserSettings() {
+			try {
+				localStorage.setItem(browserSettingsKey, JSON.stringify({
+					levels, soundEnabled, announcementEnabled, buyInAmount, mixedGames, maxRebuys, maxTopUps
+				}));
+			} catch (error) {
+				console.warn('Unable to save browser settings:', error);
+			}
+		}
+
+		function loadBrowserSettings() {
+			try {
+				const raw = localStorage.getItem(browserSettingsKey);
+				if (!raw) return;
+				const saved = JSON.parse(raw);
+				if (Array.isArray(saved.levels) && saved.levels.length) levels = saved.levels;
+				soundEnabled = saved.soundEnabled ?? soundEnabled;
+				announcementEnabled = saved.announcementEnabled ?? announcementEnabled;
+				buyInAmount = Number(saved.buyInAmount ?? buyInAmount);
+				mixedGames = saved.mixedGames ?? mixedGames;
+				maxRebuys = Math.max(0, Number(saved.maxRebuys ?? maxRebuys));
+				maxTopUps = Math.max(0, Number(saved.maxTopUps ?? maxTopUps));
+				currentLevel = Math.min(currentLevel, levels.length - 1);
+				if (!running && levels[currentLevel]) {
+					levelDurationMs = levels[currentLevel].minutes * 60_000;
+					remainingMs = levelDurationMs;
+				}
+			} catch (error) {
+				console.warn('Unable to restore browser settings:', error);
+			}
+		}
+
 	async function loadTournament() {
 		const response = await fetch(`/api/tournament/${venueId}`);
 		if (!response.ok) throw new Error('Unable to load this venue tournament.');
 		const { state } = await response.json();
-		if (!state) return;
+		if (!state) { loadBrowserSettings(); return; }
 		if (Array.isArray(state.levels) && state.levels.length) levels = state.levels;
 		if (Array.isArray(state.players)) players = state.players;
 		nextPlayerId = state.nextPlayerId ?? players.reduce((max, player) => Math.max(max, player.id), 0) + 1;
@@ -1641,6 +1684,7 @@
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
 		lastSavedSnapshot = JSON.stringify(state);
+		loadBrowserSettings();
 		if (running) {
 			tournamentMode = currentBlinds?.break ? 'break' : 'play';
 			frame = requestAnimationFrame(syncTimer);
@@ -1648,6 +1692,7 @@
 	}
 
 	async function saveTournament() {
+		saveBrowserSettings();
 		if (savingTournament) return;
 		savingTournament = true;
 		try {
@@ -1788,10 +1833,23 @@ function startCasting() {
 			saveTournament();
 		}, 1000);
 		startRedtoothViewTimer();
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === 'visible' && running) {
+				remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
+				if (remainingMs <= 0) finishLevel();
+				else {
+					if (frame !== null) cancelAnimationFrame(frame);
+					frame = requestAnimationFrame(syncTimer);
+				}
+			}
+			saveTournament();
+		};
 		window.addEventListener('keydown', handleKeyboard);
+		document.addEventListener('visibilitychange', handleVisibilityChange);
 
 		return () => {
 			window.removeEventListener('keydown', handleKeyboard);
+			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			if (syncInterval !== null) clearInterval(syncInterval);
 			if (redtoothViewTimer !== null) {
 				clearInterval(redtoothViewTimer);
