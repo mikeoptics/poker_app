@@ -621,6 +621,10 @@
 
 	function finishLevel() {
 		pause();
+		// Keep the persisted timer marked as running during the short level
+		// transition. The server can then advance it and send push alerts even
+		// if the phone suspends this tab before the transition timeout fires.
+		if (currentLevel < levels.length - 1) running = true;
 
 		if (soundEnabled) playAlarm();
 
