@@ -516,7 +516,11 @@
         event => console.error('Poker receiver error:', event)
       );
 
-      context.start();
+      // This is a non-media receiver. Keep the TV display running even
+      // after the sender becomes idle or disconnects.
+      const receiverOptions = new cast.framework.CastReceiverOptions();
+      receiverOptions.disableIdleTimeout = true;
+      context.start(receiverOptions);
 
       setInterval(tick, 250);
     })();
