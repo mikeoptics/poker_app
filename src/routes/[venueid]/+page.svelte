@@ -1828,7 +1828,10 @@ function startCasting() {
 		castScript.src = 'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1';
 		document.head.appendChild(castScript);
 		loadTournament()
-			.catch((error) => console.error('Tournament load failed:', error))
+			.catch((error) => {
+				console.error('Tournament load failed:', error);
+				loadBrowserSettings();
+			})
 			.finally(() => refreshRedtooth());
 		syncInterval = setInterval(() => {
 			if (running) remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
