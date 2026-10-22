@@ -1,6 +1,9 @@
 import { json } from '@sveltejs/kit';
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { startPushScheduler } from '$lib/server/push-notifications';
+
+startPushScheduler();
 const DATA_DIR = path.resolve('.data', 'venues');
 /** @param {string | number | null | undefined} id */
 const valid = (id) => /^\d{1,12}$/.test(String(id ?? ''));
