@@ -18,10 +18,23 @@ async function read(id) {
 /** @param {any} s */
 function publicState(s) {
 	if (!s) return null;
-	const i = s.currentLevel ?? 0;
+	let i = Math.max(0, Number(s.currentLevel ?? 0));
+	let remaining = Math.max(0, Number(s.remainingMs ?? 0));
+	let displayRunning = Boolean(s.running);
+	const elapsed = displayRunning ? Math.max(0, Date.now() - (s.updatedAt ?? Date.now())) : 0;
+	remaining -= elapsed;
+	// Advance the public display through any levels that elapsed while the
+	// director's browser was backgrounded or suspended.
+	while (displayRunning && remaining <= 0 && i < (s.levels?.length ?? 0) - 1) {
+		i += 1;
+		remaining += Math.max(1, Number(s.levels?.[i]?.minutes ?? 1)) * 60_000;
+	}
+	if (displayRunning && remaining <= 0) {
+		remaining = 0;
+		displayRunning = false;
+	}
 	const l = s.levels?.[i] ?? null;
 	const n = s.levels?.[Math.min(i + 1, (s.levels?.length ?? 1) - 1)] ?? null;
-	const elapsed = s.running ? Math.max(0, Date.now() - (s.updatedAt ?? Date.now())) : 0;
 	/** @type {any[]} */
 	const tournamentPlayers = s.players ?? [];
 	const activePlayers = tournamentPlayers.filter((p) => !p.eliminated);
@@ -102,8 +115,8 @@ function publicState(s) {
 		blinds: l?.break ? 'BREAK' : l ? l.sb + ' / ' + l.bb : '—',
 		nextGame: n?.break ? 'BREAK' : s.mixedGames ? (n?.game ?? '') : 'BLINDS',
 		nextBlinds: n?.break ? 'BREAK' : n ? n.sb + ' / ' + n.bb : '—',
-		remainingMs: Math.max(0, (s.remainingMs ?? 0) - elapsed),
-		running: Boolean(s.running),
+		remainingMs: remaining,
+		running: displayRunning,
 		tournamentStarted: started,
 		soundEnabled: s.soundEnabled !== false,
 		updatedAt: Date.now(),
