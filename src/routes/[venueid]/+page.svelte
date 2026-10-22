@@ -181,6 +181,7 @@
 	let running = $state(false);
 	let soundEnabled = $state(true);
 	let announcementEnabled = $state(true);
+	let notificationStatus = $state('');
 	let buyInAmount = $state(5);
 	let tournamentStarted = $state(false);
 	let mixedGames = $state(false);
@@ -523,6 +524,51 @@
 		}
 
 		frame = requestAnimationFrame(syncTimer);
+	}
+
+	function base64UrlToUint8Array(value) {
+		const padding = '='.repeat((4 - (value.length % 4)) % 4);
+		const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+		const raw = atob(base64);
+		return Uint8Array.from([...raw].map((character) => character.charCodeAt(0)));
+	}
+
+	async function enableBlindNotifications() {
+		try {
+			if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+				notificationStatus = 'Push notifications are not supported by this browser.';
+				return;
+			}
+			const permission = await Notification.requestPermission();
+			if (permission !== 'granted') {
+				notificationStatus = 'Notifications are blocked. Allow them in your browser settings.';
+				return;
+			}
+			const keyResponse = await fetch(`/api/notifications/${venueId}`);
+			const { publicKey } = await keyResponse.json();
+			if (!publicKey) {
+				notificationStatus = 'Push notifications need server keys to be configured.';
+				return;
+			}
+			const registration = await navigator.serviceWorker.register('/service-worker.js');
+			let subscription = await registration.pushManager.getSubscription();
+			if (!subscription) {
+				subscription = await registration.pushManager.subscribe({
+					userVisibleOnly: true,
+					applicationServerKey: base64UrlToUint8Array(publicKey)
+				});
+			}
+			const response = await fetch(`/api/notifications/${venueId}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(subscription)
+			});
+			if (!response.ok) throw new Error('Unable to register push subscription.');
+			notificationStatus = 'Blind alerts enabled on this device.';
+		} catch (error) {
+			console.error('Unable to enable blind notifications:', error);
+			notificationStatus = 'Could not enable notifications. Check browser permission and server setup.';
+		}
 	}
 
 	function start() {
@@ -1922,6 +1968,8 @@ function startCasting() {
 	<header class="header">
 		<div class="header-actions">
 			<button class="sound" onclick={startCasting}>Cast to TV</button>
+			<button class="sound" onclick={enableBlindNotifications}>Enable blind alerts</button>
+			{#if notificationStatus}<span class="cast-status">{notificationStatus}</span>{/if}
 			<button class="sound" onclick={openDisplay}>Open Display</button>
 			<button class="clock-button" onclick={() => (showClock ? closeClock() : startClock())}>
 				⏱ Call the Clock
