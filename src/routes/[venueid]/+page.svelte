@@ -1833,13 +1833,35 @@ function startCasting() {
 			saveTournament();
 		}, 1000);
 		startRedtoothViewTimer();
-		const handleVisibilityChange = () => {
-			if (document.visibilityState === 'visible' && running) {
-				remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
-				if (remainingMs <= 0) finishLevel();
-				else {
-					if (frame !== null) cancelAnimationFrame(frame);
-					frame = requestAnimationFrame(syncTimer);
+		const handleVisibilityChange = async () => {
+			if (document.visibilityState === 'visible') {
+				// The server derives the correct level from wall-clock time, so
+				// the director catches up after the browser has throttled its tab.
+				try {
+					const response = await fetch(`/api/tournament/${venueId}?public=1`, { cache: 'no-store' });
+					const result = await response.json();
+					const state = result?.state;
+					if (response.ok && result.ok && state) {
+						currentLevel = Math.min(Number(state.currentLevel) || 0, levels.length - 1);
+						levelDurationMs = Math.max(1, Number(levels[currentLevel]?.minutes) || 1) * 60_000;
+						remainingMs = Math.max(0, Number(state.remainingMs) || 0);
+						running = Boolean(state.running);
+						tournamentStarted = Boolean(state.tournamentStarted);
+						levelStartedAt = now() - (levelDurationMs - remainingMs);
+						if (frame !== null) cancelAnimationFrame(frame);
+						frame = running ? requestAnimationFrame(syncTimer) : null;
+						tournamentMode = running ? (currentBlinds?.break ? 'break' : 'play') : 'paused';
+					}
+				} catch (error) {
+					console.warn('Unable to catch up tournament timer:', error);
+					if (running) {
+						remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
+						if (remainingMs <= 0) finishLevel();
+						else {
+							if (frame !== null) cancelAnimationFrame(frame);
+							frame = requestAnimationFrame(syncTimer);
+						}
+					}
 				}
 			}
 			saveTournament();
