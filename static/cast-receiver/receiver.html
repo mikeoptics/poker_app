@@ -264,6 +264,7 @@
       let updatedAt = 0;
       let running = false;
       let refreshInterval = null;
+      let screenWakeLock = null;
       let lastEliminationEventId = null;
       let hasReceivedInitialState = false;
       let eliminationHideTimer = null;
@@ -418,6 +419,17 @@
         speakAnnouncement(d.announcementEvent);
       }
 
+      async function requestScreenWakeLock() {
+        try {
+          if ('wakeLock' in navigator && !screenWakeLock) {
+            screenWakeLock = await navigator.wakeLock.request('screen');
+            screenWakeLock.addEventListener('release', () => { screenWakeLock = null; });
+          }
+        } catch (error) {
+          console.warn('Screen wake lock is unavailable:', error);
+        }
+      }
+
       async function refresh() {
         if (!venueId) return;
 
@@ -427,24 +439,35 @@
             { cache: 'no-store' }
           );
 
-          if (!response.ok) {
-            console.error('Tournament refresh failed:', response.status);
-            return;
-          }
-
+          if (!response.ok) throw new Error('Tournament refresh returned HTTP ' + response.status);
           const result = await response.json();
-          draw(result.state);
+          if (result.ok && result.state) draw(result.state);
         } catch (error) {
           console.error('Tournament refresh error:', error);
+        } finally {
+          // Schedule the next request only after this one completes, avoiding
+          // overlapping requests if the network or server is slow.
+          if (venueId) refreshInterval = setTimeout(refresh, 1000);
         }
       }
 
       function startPolling() {
-        if (refreshInterval !== null) return;
-
+        if (refreshInterval !== null) clearTimeout(refreshInterval);
+        refreshInterval = null;
+        requestScreenWakeLock();
         refresh();
-        refreshInterval = setInterval(refresh, 1000);
       }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          requestScreenWakeLock();
+          if (venueId) {
+            if (refreshInterval !== null) clearTimeout(refreshInterval);
+            refreshInterval = null;
+            refresh();
+          }
+        }
+      });
 
       function tick() {
         const ms = running
