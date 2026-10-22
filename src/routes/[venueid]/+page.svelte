@@ -638,8 +638,11 @@
 			const next = currentLevel + 1;
 
 			if (next < levels.length) {
+				running = false;
 				setLevel(next);
 				start();
+			} else {
+				running = false;
 			}
 		}, 1200);
 	}
