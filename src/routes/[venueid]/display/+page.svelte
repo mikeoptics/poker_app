@@ -10,6 +10,12 @@
 	let pollTimer;
 	/** @type {ReturnType<typeof setInterval> | undefined} */
 	let tickTimer;
+	let lastAnnouncementId = '';
+	let announcementInitialized = false;
+	const showAnnouncement = $derived(
+		Boolean(tournamentState?.announcementEvent?.text) &&
+		clockNow - Number(tournamentState.announcementEvent.createdAt || 0) < 15000
+	);
 	const remainingMs = $derived(
 		tournamentState
 			? Math.max(
@@ -31,6 +37,19 @@
 			if (!response.ok) throw new Error('Tournament display is not available.');
 			const result = await response.json();
 			if (!result.ok || !result.state) throw new Error('Waiting for tournament data.');
+			const nextAnnouncement = result.state.announcementEvent;
+			if (!announcementInitialized) {
+				lastAnnouncementId = nextAnnouncement?.id ?? '';
+				announcementInitialized = true;
+			} else if (nextAnnouncement?.id && nextAnnouncement.id !== lastAnnouncementId) {
+				lastAnnouncementId = nextAnnouncement.id;
+				if (typeof window !== 'undefined' && 'speechSynthesis' in window && nextAnnouncement.text) {
+					window.speechSynthesis.cancel();
+					const utterance = new SpeechSynthesisUtterance(nextAnnouncement.text);
+					utterance.rate = 0.95;
+					window.speechSynthesis.speak(utterance);
+				}
+			}
 			tournamentState = result.state;
 			error = '';
 		} catch (e) {
@@ -62,6 +81,9 @@
 		<h1>{tournamentState?.venueName || 'Tournament display'}</h1>
 	</header>
 	{#if error && !tournamentState}<div class="waiting">{error}</div>{:else}
+		{#if showAnnouncement}
+			<div class="move-announcement" role="status" aria-live="assertive">{tournamentState.announcementEvent.text}</div>
+		{/if}
 		<div class="layout">
 			<main class="timer-panel">
 				<div class="game">{tournamentState?.currentGame || 'WAITING'}</div>
@@ -140,6 +162,19 @@
 		font-size: clamp(1.4rem, 2.5vw, 2.5rem);
 		text-align: right;
 	}
+	.move-announcement {
+			flex: 0 0 auto;
+			padding: 16px 22px;
+			border: 1px solid #8d7548;
+			border-radius: 12px;
+			background: linear-gradient(110deg, #3a3020, #25251f);
+			color: #ffe3a3;
+			font-size: clamp(1rem, 2vw, 2rem);
+			font-weight: 900;
+			letter-spacing: .015em;
+			text-align: center;
+			box-shadow: 0 8px 28px rgba(0,0,0,.25);
+		}
 	.layout {
 		flex: 1;
 		min-height: 0;
