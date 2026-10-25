@@ -3758,4 +3758,43 @@ function startCasting() {
 	text-align: right;
 }
 
+
+
+/* Preserve a safe gutter after the dashboard expands to viewport width. */
+.director-dashboard {
+	box-sizing: border-box !important;
+	padding-left: 14px !important;
+	padding-right: 14px !important;
+}
+.director-level-bar,
+.director-progress,
+.director-level-context,
+.director-players {
+	min-width: 0;
+	box-sizing: border-box;
+}
+.director-level-context {
+	padding-left: 2px;
+	padding-right: 2px;
+}
+.director-section-heading {
+	padding-left: 2px;
+	padding-right: 2px;
+	box-sizing: border-box;
+}
+@media (max-width: 700px) {
+	.director-dashboard {
+		padding-left: 12px !important;
+		padding-right: 12px !important;
+	}
+	.director-level-context span {
+		font-size: 8px !important;
+		letter-spacing: 0 !important;
+	}
+	.director-player-count {
+		gap: 4px !important;
+		letter-spacing: .025em !important;
+	}
+}
+
 </style>
