@@ -1990,7 +1990,7 @@ function startCasting() {
 				<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6m17-3 3 3M12 2v3"/></svg>
 			</button>
 			<button class="icon-action" type="button" onclick={() => (showSettings = true)} aria-label="Tournament settings" title="Tournament settings" aria-haspopup="dialog" aria-expanded={showSettings}>
-				<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-1.7 2.94-.08-.03a1.65 1.65 0 0 0-1.78.33l-.06.06h-3.4l-.02-.09a1.65 1.65 0 0 0-1.17-1.17l-.09-.02-2.94 1.7-.06-.08a1.65 1.65 0 0 0-1.82-.33l-.08.03-1.7-2.94.06-.06A1.65 1.65 0 0 0 5.4 15l-.03-.08v-3.4l.09-.02a1.65 1.65 0 0 0 1.17-1.17l.02-.09-1.7-2.94.08-.06a1.65 1.65 0 0 0 .33-1.82l-.03-.08 2.94-1.7.06.06a1.65 1.65 0 0 0 1.82.33l.08-.03h3.4l.02.09a1.65 1.65 0 0 0 1.17 1.17l.09.02 2.94-1.7.06.08a1.65 1.65 0 0 0 1.82.33l.08-.03 1.7 2.94-.06.06A1.65 1.65 0 0 0 18.6 9l.03.08v3.4l-.09.02a1.65 1.65 0 0 0-1.17 1.17l-.02.09Z"/></svg>
+				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="8" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="10" cy="18" r="2"/></svg>
 			</button>
 			{#if notificationStatus}<span class="cast-status">{notificationStatus}</span>{/if}
 			{#if castStatus}<span class="cast-status">{castStatus}</span>{/if}
