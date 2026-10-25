@@ -5,42 +5,4 @@
 Loading svelte-check in workspace: /Users/admin/Downloads/poker-blind-timer-sveltekit
 Getting Svelte diagnostics...
 
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:132:3
-Warn: Non-interactive element `<section>` cannot have interactive role 'dialog'
-https://svelte.dev/e/a11y_no_noninteractive_element_to_interactive_role (svelte)
-	}}>
-		<section class="replace-modal" role="dialog" aria-modal="true" aria-labelledby="replace-modal-title">
-			<div class="replace-modal-heading">
-				<div>
-					<span class="replace-modal-eyebrow">TABLE {replacingPlayer.table} · SEAT {replacingPlayer.seat}</span>
-					<h2 id="replace-modal-title">Replace {replacingPlayer.name}</h2>
-				</div>
-				<button class="replace-modal-close" type="button" aria-label="Close" onclick={() => (replacingPlayerId = null)}>×</button>
-			</div>
-			<p>Select an active player from another table to move into this seat.</p>
-			{#if replacementCandidates.length}
-				<label for="replacement-player-select">Player to move</label>
-				<select id="replacement-player-select" class="replacement-player-select" style="color-scheme: dark; color: #f0f2f1; background-color: #111519;" bind:value={selectedReplacementId}>
-					<option value="" style="color: #f0f2f1; background: #111519;">Select a player</option>
-					{#each replacementCandidates as candidate (candidate.id)}
-						<option value={candidate.id} style="color: #f0f2f1; background: #111519;">{candidate.name} — {tableNames[candidate.table] || `Table ${candidate.table}`}, Seat {candidate.seat}</option>
-					{/each}
-				</select>
-			{:else}
-				<p class="replace-no-candidates">There are no active players at another table to move here.</p>
-			{/if}
-			<div class="replace-modal-actions">
-				<button class="replace-cancel" type="button" onclick={() => (replacingPlayerId = null)}>Cancel</button>
-				<button class="replace-confirm" type="button" disabled={!selectedReplacementId || !replacementCandidates.some((player) => player.id === Number(selectedReplacementId))} onclick={confirmReplacement}>Move player</button>
-			</div>
-		</section>
-	</div>
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1769:54
-Warn: This reference only captures the initial value of `venueId`. Did you mean to reference it inside a closure instead?
-https://svelte.dev/e/state_referenced_locally (svelte)
-
-		const browserSettingsKey = `poker-timer-settings:${venueId}`;
-
-====================================
-svelte-check found 0 errors and 2 warnings in 2 files
+svelte-check found 0 errors and 0 warnings
