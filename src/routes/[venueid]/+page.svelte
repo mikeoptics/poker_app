@@ -2457,12 +2457,14 @@ function startCasting() {
 						</strong>
 					</div>
 
-					<div class="money-stat">
-						<span>ENTRIES</span>
-						<strong>
-							{totalEntries}
-						</strong>
-					</div>
+					{#if maxRebuys > 0 || maxTopUps > 0}
+						<div class="money-stat">
+							<span>ENTRIES</span>
+							<strong>
+								{totalEntries}
+							</strong>
+						</div>
+					{/if}
 
 				</div>
 
