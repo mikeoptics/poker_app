@@ -3633,6 +3633,22 @@ function startCasting() {
 		box-shadow: none !important;
 	}
 
+	/* Player rows: remove the coloured outline/frame on every swipe row. */
+	.director-player-list .director-player-swipe,
+	.director-player-list .director-player-row,
+	.director-player-list .director-player-row.is-eliminated {
+		border: 0 !important;
+		outline: 0 !important;
+		box-shadow: none !important;
+		background-image: none !important;
+	}
+	.director-player-list .director-player-swipe::before,
+	.director-player-list .director-player-swipe::after,
+	.director-player-list .director-player-row::before,
+	.director-player-list .director-player-row::after {
+		content: none !important;
+		display: none !important;
+	}
 	/* Timer page: remove the enclosing card/frame around the player list. */
 	.director-dashboard > .director-players,
 	.director-players {
