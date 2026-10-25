@@ -3728,4 +3728,31 @@ function startCasting() {
 		:global(*), :global(*::before), :global(*::after) { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
 	}
 
+
+	/* Shared surface and form treatment for the remaining tournament tabs. */
+	.levels-card, .setup-card, .payout-card {
+		border:1px solid var(--line) !important;
+		border-radius:14px !important;
+		background:var(--surface-1) !important;
+		box-shadow:none !important;
+		color:var(--text-primary);
+	}
+	.section-heading h2, .section-heading h3 { color:var(--text-primary) !important; }
+	.section-heading .label, .section-heading p { color:var(--text-secondary); }
+	.table { border-color:var(--line) !important; background:transparent !important; }
+	.table-head { background:var(--surface-2) !important; color:var(--text-secondary) !important; }
+	.table-row { border-color:var(--line) !important; color:var(--text-primary); }
+	.table-row.active { background:#29271f !important; }
+	:global(input), :global(select), :global(textarea) {
+		border-color:var(--line) !important;
+		border-radius:8px;
+		background:#121518 !important;
+		color:var(--text-primary) !important;
+	}
+	:global(input:focus-visible), :global(select:focus-visible), :global(textarea:focus-visible) {
+		outline:2px solid var(--accent-gold);
+		outline-offset:2px;
+	}
+	:global(button:disabled) { cursor:not-allowed; }
+
 </style>
