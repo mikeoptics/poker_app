@@ -198,6 +198,7 @@
 	/** @type {{ id:string; text:string; createdAt:number } | null} */
 	let announcementEvent = $state(null);
 	let balanceMessage = $state('');
+	let balanceAction = $state('move');
 	let redtoothShowTournament = $state(false);
 	let redtoothTransitionPaused = $state(false);
 	/** @type {ReturnType<typeof setTimeout> | null} */
@@ -1025,9 +1026,9 @@
 		p.eliminationPosition = finishPlace;
 		p.eliminated = true;
 
-		// Keep the eliminated player in their original seat as a visible marker.
-		balanceSuggestions = [];
-		balanceMessage = '';
+		// Keep the eliminated player in their original seat as a visible marker,
+		// then offer a table-balancing recommendation if the counts warrant it.
+		rebalanceTables();
 
 	}
 
@@ -1104,100 +1105,87 @@
 		balanceSuggestions = [];
 		balanceMessage = '';
 
-		const active = players.filter((p) => !p.eliminated);
+		const active = players.filter((player) => !player.eliminated && Number(player.table) > 0);
+		if (!active.length) return;
 
-		if (active.length === 0) {
+		const grouped = new Map();
+		for (const player of active) {
+			if (!grouped.has(player.table)) grouped.set(player.table, []);
+			grouped.get(player.table).push(player);
+		}
+		const tableIds = [...grouped.keys()].sort((a, b) => a - b);
+		const requiredTables = Math.ceil(active.length / 8);
+		const counts = new Map(tableIds.map((id) => [id, grouped.get(id).length]));
+		const nextSeat = (tableId, plannedMoves = []) => {
+			const occupied = new Set([
+				...active.filter((player) => player.table === tableId).map((player) => player.seat),
+				...plannedMoves.filter((move) => move.to === tableId).map((move) => move.seat)
+			]);
+			for (let seat = 1; seat <= 8; seat += 1) if (!occupied.has(seat)) return seat;
+			return null;
+		};
+
+		// More physical tables than the player count requires: recommend closing the
+		// smallest table and distributing its players into tables with spare seats.
+		if (tableIds.length > requiredTables) {
+			balanceAction = 'merge';
+			const sourceTable = [...tableIds].sort((a, b) => counts.get(a) - counts.get(b))[0];
+			const destinations = tableIds.filter((id) => id !== sourceTable);
+			for (const player of grouped.get(sourceTable)) {
+				const destination = destinations
+					.filter((id) => counts.get(id) < 8)
+					.sort((a, b) => counts.get(a) - counts.get(b))[0];
+				if (destination === undefined) break;
+				const seat = nextSeat(destination, balanceSuggestions);
+				if (seat === null) continue;
+				balanceSuggestions.push({ id: player.id, name: player.name, from: sourceTable, to: destination, seat });
+				counts.set(sourceTable, counts.get(sourceTable) - 1);
+				counts.set(destination, counts.get(destination) + 1);
+			}
+			if (balanceSuggestions.length) balanceMessage = `Merge Table ${sourceTable} into the other tables?`;
 			return;
 		}
 
-		const tables = Math.ceil(active.length / 8);
-
-		// One table = final table.
-		if (tables === 1) {
-			const ordered = [...active].sort((a, b) => a.table - b.table || a.seat - b.seat);
-
-			ordered.forEach((p, index) => {
-				p.table = 1;
-				p.seat = finalSeats[index];
-			});
-
+		// Too few tables or a table exceeding eight: recommend opening a new table.
+		if (tableIds.length < requiredTables || Math.max(...counts.values()) > 8) {
+			balanceAction = 'split';
+			const sourceTable = [...tableIds].sort((a, b) => counts.get(b) - counts.get(a))[0];
+			const newTable = Math.max(...tableIds) + 1;
+			const sourcePlayers = [...grouped.get(sourceTable)].sort((a, b) => b.seat - a.seat);
+			const targetSize = Math.ceil(active.length / requiredTables);
+			while (counts.get(sourceTable) > targetSize) {
+				const player = sourcePlayers.shift();
+				if (!player) break;
+				const seat = nextSeat(newTable, balanceSuggestions);
+				balanceSuggestions.push({ id: player.id, name: player.name, from: sourceTable, to: newTable, seat: seat ?? 1 });
+				counts.set(sourceTable, counts.get(sourceTable) - 1);
+			}
+			if (balanceSuggestions.length) balanceMessage = `Split Table ${sourceTable} and open Table ${newTable}?`;
 			return;
 		}
 
-		// Work out the ideal 8-max distribution.
-		const baseSize = Math.floor(active.length / tables);
-		const extraPlayers = active.length % tables;
-
-		const targetCounts = Array.from(
-			{ length: tables },
-			(_, i) => baseSize + (i < extraPlayers ? 1 : 0)
-		);
-
-		const currentCounts = Array.from(
-			{ length: tables },
-			(_, i) => active.filter((p) => p.table === i + 1).length
-		);
-
-		// Already balanced.
-		const alreadyBalanced = currentCounts.every((count, index) => count === targetCounts[index]);
-
-		if (alreadyBalanced) {
-			return;
-		}
-
-		// Build a working copy so we can generate movement suggestions.
-		const workingCounts = [...currentCounts];
-
-		for (let pass = 0; pass < active.length; pass += 1) {
-			let fromTable = -1;
-			let toTable = -1;
-
-			for (let i = 0; i < tables; i += 1) {
-				if (workingCounts[i] > targetCounts[i] && fromTable === -1) {
-					fromTable = i + 1;
-				}
-
-				if (workingCounts[i] < targetCounts[i] && toTable === -1) {
-					toTable = i + 1;
-				}
+		// Existing tables are valid, but a difference greater than two warrants
+		// moving enough players to bring the spread back within two.
+		const largest = Math.max(...counts.values());
+		const smallest = Math.min(...counts.values());
+		if (largest - smallest > 2) {
+			balanceAction = 'move';
+			const working = new Map(counts);
+			const candidates = [...active].sort((a, b) => b.seat - a.seat);
+			while (Math.max(...working.values()) - Math.min(...working.values()) > 2) {
+				const from = [...tableIds].sort((a, b) => working.get(b) - working.get(a))[0];
+				const to = [...tableIds].sort((a, b) => working.get(a) - working.get(b))[0];
+				const player = candidates.find((item) => item.table === from && !balanceSuggestions.some((move) => move.id === item.id));
+				if (!player || working.get(from) <= 1 || working.get(to) >= 8) break;
+				const seat = nextSeat(to, balanceSuggestions);
+				if (seat === null) break;
+				balanceSuggestions.push({ id: player.id, name: player.name, from, to, seat });
+				working.set(from, working.get(from) - 1);
+				working.set(to, working.get(to) + 1);
 			}
-
-			if (fromTable === -1 || toTable === -1) {
-				break;
-			}
-
-			const candidate = active.find(
-				(p) => p.table === fromTable && !balanceSuggestions.some((move) => move.id === p.id)
-			);
-
-			if (!candidate) {
-				break;
-			}
-
-			const targetSeat =
-				seats.find(
-					(seat) =>
-						!active.some((p) => p.table === toTable && p.seat === seat) &&
-						!balanceSuggestions.some((move) => move.to === toTable && move.seat === seat)
-				) ?? 1;
-
-			balanceSuggestions.push({
-				id: candidate.id,
-				name: candidate.name,
-				from: fromTable,
-				to: toTable,
-				seat: targetSeat
-			});
-
-			workingCounts[fromTable - 1] -= 1;
-			workingCounts[toTable - 1] += 1;
-		}
-
-		if (balanceSuggestions.length) {
-			balanceMessage = 'Table balance required — move the following player(s):';
+			if (balanceSuggestions.length) balanceMessage = `Move ${balanceSuggestions.length} player(s) to balance the tables?`;
 		}
 	}
-
 	function applyBalance() {
 		for (const move of balanceSuggestions) {
 			const p = players.find((x) => x.id === move.id);
@@ -1209,8 +1197,8 @@
 		}
 
 		balanceSuggestions = [];
-
-		balanceMessage = 'Tables balanced — no table differs by more than one player.';
+		balanceMessage = '';
+		balanceAction = 'move';
 	}
 
 	/** @param {number} eliminatedPlayerId @param {number} replacementPlayerId */
@@ -2473,6 +2461,19 @@ function startCasting() {
 					{/if}
 				</div>
 			</section>
+		{/if}
+		{#if balanceMessage && balanceSuggestions.length}
+			<div class="table-balance-toast" role="status" aria-live="polite">
+				<div class="table-balance-toast-copy">
+					<strong>{balanceAction === 'merge' ? 'Merge tables' : balanceAction === 'split' ? 'Split table' : 'Balance tables'}</strong>
+					<span>{balanceMessage}</span>
+					<small>{balanceSuggestions.map((move) => move.name).join(', ')}</small>
+				</div>
+				<div class="table-balance-toast-actions">
+					<button type="button" class="balance-toast-dismiss" onclick={() => { balanceMessage = ''; balanceSuggestions = []; }}>Dismiss</button>
+					<button type="button" class="balance-toast-accept" onclick={applyBalance}>Apply</button>
+				</div>
+			</div>
 		{/if}
 	</main>
 	{#if showSettings}
