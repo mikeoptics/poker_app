@@ -3602,7 +3602,6 @@ function startCasting() {
 		}
 	}
 
-</style>
 
 /* Compact Lucide-style icon toolbar and section navigation. */
 .icon-action {
@@ -3645,3 +3644,4 @@ function startCasting() {
 	.icon-tabs { justify-content: space-around; gap: 8px !important; }
 	.icon-tabs button { flex: 1 1 0 !important; max-width: 56px; }
 }
+</style>
