@@ -15,8 +15,8 @@
 	// Keep the visual table-move banner on screen long enough to be read
 	// while the Cast receiver plays the matching spoken announcement.
 	const showAnnouncement = $derived(
-		Boolean(tournamentState?.announcementEvent?.text) &&
-		clockNow - Number(tournamentState.announcementEvent.createdAt || 0) < 30000
+		Boolean(tournamentState?.tableMoveEvent?.text) &&
+		clockNow - Number(tournamentState.tableMoveEvent.createdAt || 0) < 30000
 	);
 	const remainingMs = $derived(
 		tournamentState
@@ -37,6 +37,7 @@
 	let tableMoveSound = null;
 	let soundEnabled = $state(false);
 	let lastSpokenAnnouncementId = '';
+	let lastTableMoveEventId = '';
 
 	function playTableMoveSound() {
 		if (!soundEnabled || !tableMoveSound) return;
@@ -82,7 +83,6 @@
 	async function speakAnnouncement(announcement) {
 		if (!announcement?.text || !announcement.id || announcement.id === lastSpokenAnnouncementId) return;
 		lastSpokenAnnouncementId = announcement.id;
-		playTableMoveSound();
 		try {
 			const tts = await getKokoro();
 			if (tts) {
@@ -120,6 +120,11 @@
 			const result = await response.json();
 			if (!result.ok || !result.state) throw new Error('Waiting for tournament data.');
 			const nextAnnouncement = result.state.announcementEvent;
+			const nextTableMove = result.state.tableMoveEvent;
+			if (nextTableMove?.id && nextTableMove.id !== lastTableMoveEventId) {
+				lastTableMoveEventId = nextTableMove.id;
+				playTableMoveSound();
+			}
 			if (!announcementInitialized) {
 				announcementInitialized = true;
 				if (nextAnnouncement?.id && Date.now() - Number(nextAnnouncement.createdAt || 0) <= 30000) {
@@ -174,7 +179,7 @@
 	</header>
 	{#if error && !tournamentState}<div class="waiting">{error}</div>{:else}
 		{#if showAnnouncement}
-			<div class="move-announcement" role="status" aria-live="assertive">{tournamentState.announcementEvent.text}</div>
+			<div class="move-announcement" role="status" aria-live="assertive">{tournamentState.tableMoveEvent.text}</div>
 		{/if}
 		<div class="layout">
 			<main class="timer-panel">
