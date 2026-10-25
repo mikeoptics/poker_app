@@ -1267,14 +1267,21 @@
 		const replacement = players.find((player) => player.id === replacementPlayerId && !player.eliminated);
 		if (!eliminated || !replacement || replacement.table === eliminated.table) return;
 
-		const targetTable = eliminated.table;
-		const targetSeat = eliminated.seat;
+		const targetTable = Number(eliminated.table);
+		const targetSeat = Number(eliminated.seat);
+		if (!targetTable || !targetSeat) return;
+
+		// Clear every eliminated record attached to this seat. Older tournament
+		// state can contain more than one marker at the same table/seat.
+		for (const player of players) {
+			if (player.eliminated && Number(player.table) === targetTable && Number(player.seat) === targetSeat) {
+				player.table = 0;
+				player.seat = 0;
+			}
+		}
+
 		replacement.table = targetTable;
 		replacement.seat = targetSeat;
-
-		// The replacement now occupies this seat; remove the eliminated marker from the layout.
-		eliminated.table = 0;
-		eliminated.seat = 0;
 
 		announcementEvent = {
 			id: `move-${Date.now()}-${replacement.id}`,
