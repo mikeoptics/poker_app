@@ -181,9 +181,11 @@ export async function GET({ params, url }) {
 					}
 					if (level > previousLevel && s.announcementEnabled) {
 						const next = s.levels[level];
+						const game = s.mixedGames ? String(next?.game ?? '') : '';
+						const speechGame = game.replace(/\\bPLO5\\b/g, 'P L O five').replace(/\\bPLO4\\b/g, 'P L O four').replace(/\\bNLH\\b/g, 'N L H');
 						const text = next?.break
-							? 'The tournament is now on a break.'
-							: `Blinds are now ${next?.sb ?? 0} / ${next?.bb ?? 0}.`;
+							? `Break. ${next.minutes} minutes.`
+							: `Next level. ${game ? speechGame + '. ' : ''}Blinds ${next?.sb ?? 0} ${next?.bb ?? 0}.`;
 						s.announcementEvent = { id: `level-${now}-${level}`, text, createdAt: now };
 					}
 					await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
@@ -218,18 +220,28 @@ export async function PUT({ params, request }) {
 		const tableMoveEvent = preserveRecentEvent(v.tableMoveEvent, existing?.tableMoveEvent);
 		// A sleeping admin tab can submit an older running timer snapshot when it wakes.
 		// Do not let that stale snapshot roll back a level already advanced by the server.
+		const existingLevel = Number(existing?.currentLevel) || 0;
+		const incomingLevel = Number(v.currentLevel) || 0;
+		const existingRemaining = Math.max(
+			0,
+			Number(existing?.remainingMs) - Math.max(0, Date.now() - Number(existing?.updatedAt || Date.now()))
+		);
+		const sameLevelStaleTimer = Boolean(
+			existing?.running && v.running &&
+			existingLevel === incomingLevel &&
+			Number(existing.levelDurationMs) === Number(v.levelDurationMs) &&
+			Number(v.remainingMs) > existingRemaining + 2000
+		);
 		const keepServerTimer = Boolean(
 			existing?.running && v.running &&
-			Number(existing.currentLevel) > Number(v.currentLevel)
+			(existingLevel > incomingLevel || sameLevelStaleTimer)
 		);
 		const s = {
 			levels: v.levels,
 			players: v.players,
 			nextPlayerId: Number(v.nextPlayerId) || 1,
 			currentLevel: keepServerTimer ? existing.currentLevel : Math.max(0, Number(v.currentLevel) || 0),
-			remainingMs: keepServerTimer
-				? Math.max(0, Number(existing.remainingMs) - Math.max(0, Date.now() - Number(existing.updatedAt || Date.now())))
-				: Math.max(0, Number(v.remainingMs) || 0),
+			remainingMs: keepServerTimer ? existingRemaining : Math.max(0, Number(v.remainingMs) || 0),
 			levelDurationMs: keepServerTimer ? existing.levelDurationMs : Math.max(0, Number(v.levelDurationMs) || 0),
 			running: keepServerTimer ? true : Boolean(v.running),
 			tournamentStarted: Boolean(v.tournamentStarted || v.running),
@@ -280,6 +292,9 @@ export async function PUT({ params, request }) {
 			venueName: String(v.venueName ?? '').slice(0, 160),
 			updatedAt: Date.now()
 		};
+		if (keepServerTimer) {
+			s.levelDurationMs = Number(existing.levelDurationMs) || s.levelDurationMs;
+		}
 		await fs.mkdir(DATA_DIR, { recursive: true });
 		await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 		return json({ ok: true, updatedAt: s.updatedAt });
