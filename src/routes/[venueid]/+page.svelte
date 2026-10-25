@@ -3643,7 +3643,17 @@ function startCasting() {
 	}
 
 	/* Player rows: remove the coloured outline/frame on every swipe row. */
-	.director-player-list .director-player-swipe,
+	.director-player-list .director-player-swipe {
+		border: 0 !important;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.18) !important;
+		border-radius: 0 !important;
+		outline: 0 !important;
+		box-shadow: none !important;
+		background-image: none !important;
+	}
+	.director-player-list .director-player-swipe:last-child {
+		border-bottom: 0 !important;
+	}
 	.director-player-list .director-player-row,
 	.director-player-list .director-player-row.is-eliminated {
 		border: 0 !important;
