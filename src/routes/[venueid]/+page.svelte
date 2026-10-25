@@ -2081,7 +2081,7 @@ function startCasting() {
 						{#if eliminatedPlayers.length > 0}
 							<div class="director-eliminated-heading">ELIMINATED · {eliminatedPlayers.length}</div>
 							<div class="director-player-list eliminated-list">
-								{#each [...eliminatedPlayers].sort((a, b) => (b.eliminationPosition ?? 0) - (a.eliminationPosition ?? 0)) as player (player.id)}
+								{#each [...eliminatedPlayers].sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999)) as player (player.id)}
 									<div class="director-player-row is-eliminated">
 										<div class="director-player-identity"><strong>{player.name}</strong><span>{player.eliminationPosition}{player.eliminationPosition === 1 ? 'ST' : player.eliminationPosition === 2 ? 'ND' : player.eliminationPosition === 3 ? 'RD' : 'TH'} PLACE</span></div>
 										<div class="director-eliminated-actions">
