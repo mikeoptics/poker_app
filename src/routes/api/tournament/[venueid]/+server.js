@@ -314,6 +314,34 @@ export async function POST({ params, request }) {
 		const action = String(body?.action ?? '');
 		return await withVenueWriteLock(params.venueid, async () => {
 			const s = await read(params.venueid);
+			if (action === 'setPlayerPaid' || action === 'renamePlayer' || action === 'adjustPlayerEntry') {
+				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				const playerId = Number(body.playerId);
+				if (!Number.isInteger(playerId) || playerId <= 0) return json({ error: 'Invalid player ID.' }, { status: 400 });
+				const player = s.players.find((/** @type {any} */ p) => Number(p.id) === playerId);
+				if (!player) return json({ error: 'Player not found.' }, { status: 404 });
+				if (action === 'setPlayerPaid') {
+					if (typeof body.paid !== 'boolean') return json({ error: 'Invalid paid status.' }, { status: 400 });
+					player.paid = body.paid;
+				} else if (action === 'renamePlayer') {
+					if (typeof body.name !== 'string' || !body.name.trim() || body.name.trim().length > 160)
+						return json({ error: 'Invalid player name.' }, { status: 400 });
+					player.name = body.name.trim();
+				} else {
+					const field = body.field;
+					if (field !== 'rebuys' && field !== 'topUps') return json({ error: 'Invalid entry type.' }, { status: 400 });
+					const delta = Number(body.delta);
+					if (delta !== 1 && delta !== -1) return json({ error: 'Invalid entry adjustment.' }, { status: 400 });
+					if (player.eliminated && delta > 0) return json({ error: 'Eliminated players cannot add entries.' }, { status: 409 });
+					const nextValue = Number(player[field] || 0) + delta;
+					if (!Number.isInteger(nextValue) || nextValue < 0 || nextValue > 1000)
+						return json({ error: 'Entry count is out of range.' }, { status: 409 });
+					player[field] = nextValue;
+				}
+				s.updatedAt = Date.now();
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, player, updatedAt: s.updatedAt });
+			}
 			if (action === 'savePlayers') {
 				if (!s) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 				/** @param {unknown} value @param {number} [max] */
