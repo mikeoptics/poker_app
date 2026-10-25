@@ -181,6 +181,8 @@
 	let eliminationEvent = $state(null);
 	/** @type {{ id:string; text:string; createdAt:number } | null} */
 	let announcementEvent = $state(null);
+	/** @type {{ id:string; text:string; createdAt:number } | null} */
+	let tableMoveEvent = $state(null);
 	let tableNames = $state({});
 	let balanceMessage = $state('');
 	let balanceAction = $state('move');
@@ -1248,7 +1250,7 @@
 		}
 
 		if (appliedMoves.length) {
-			announcementEvent = {
+			tableMoveEvent = {
 				id: `table-move-${Date.now()}`,
 				text: appliedMoves.map((move) => `${move.name}, please move to position ${move.seat} on table ${move.to}`).join('. '),
 				createdAt: Date.now()
@@ -1283,7 +1285,7 @@
 		replacement.table = targetTable;
 		replacement.seat = targetSeat;
 
-		announcementEvent = {
+	tableMoveEvent = {
 			id: `move-${Date.now()}-${replacement.id}`,
 			text: `${replacement.name}, please move to position ${targetSeat} on table ${targetTable}`,
 			createdAt: Date.now()
@@ -1755,7 +1757,7 @@
 			levels, players, nextPlayerId, currentLevel, remainingMs, levelDurationMs, running,
 			soundEnabled, announcementEnabled, buyInAmount, mixedGames, activeTab, redtoothPlayers,
 			maxRebuys, maxTopUps, tournamentStarted,
-			eliminationEvent, announcementEvent, tableNames, venueName
+			eliminationEvent, announcementEvent, tableMoveEvent, tableNames, venueName
 		};
 	}
 
@@ -1818,6 +1820,7 @@
 		if (Array.isArray(state.redtoothPlayers)) redtoothPlayers = state.redtoothPlayers;
 		eliminationEvent = state.eliminationEvent ?? null;
 		announcementEvent = state.announcementEvent ?? null;
+		tableMoveEvent = state.tableMoveEvent ?? null;
 		tableNames = state.tableNames && typeof state.tableNames === 'object' ? state.tableNames : {};
 		venueName = state.venueName || venueName;
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
@@ -1934,6 +1937,7 @@ function startCasting() {
 		tournamentMode = 'paused';
 		eliminationEvent = null;
 		announcementEvent = null;
+		tableMoveEvent = null;
 		balanceSuggestions = [];
 		balanceMessage = '';
 		redtoothShowTournament = false;
