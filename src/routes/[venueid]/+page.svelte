@@ -3583,4 +3583,38 @@ function startCasting() {
 		background:#c62828 !important;
 		color:#fff !important;
 	}
+
+	/* Refined unpaid status and flat player-list separators. */
+	.payment-pill {
+		padding: 3px 8px !important;
+		border: 1px solid #704044 !important;
+		border-radius: 999px !important;
+		background: #392326 !important;
+		color: #e6a2a5 !important;
+		font-size: 9px !important;
+		font-weight: 750 !important;
+		letter-spacing: .06em !important;
+		box-shadow: none !important;
+	}
+	.director-player-list {
+		border-top: 0 !important;
+		border-bottom: 0 !important;
+		border-radius: 0 !important;
+		overflow: visible !important;
+	}
+	.director-player-swipe {
+		border: 0 !important;
+		border-bottom: 1px solid #343a40 !important;
+		border-radius: 0 !important;
+		background: #181b1f !important;
+	}
+	.director-player-swipe:last-child {
+		border-bottom: 0 !important;
+	}
+	.director-player-row,
+	.director-player-list.eliminated-list .director-player-row {
+		border: 0 !important;
+		border-radius: 0 !important;
+		background: #181b1f !important;
+	}
 </style>
