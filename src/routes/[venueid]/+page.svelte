@@ -641,14 +641,9 @@
 	}
 
 	function resetTimer() {
-		pause();
-
-		if (transitionTimer !== null) {
-			clearTimeout(transitionTimer);
-		}
-
+		if (transitionTimer !== null) clearTimeout(transitionTimer);
 		transitionTimer = null;
-		setLevel(currentLevel);
+		void sendTimerCommand('reset');
 	}
 
 	function finishLevel() {
@@ -1934,6 +1929,7 @@ function startCasting() {
 		redtoothSelectedPlayer = null;
 		currentLevel = 0;
 		setLevel(0);
+		void sendTimerCommand('selectLevel', 0);
 		tournamentMode = 'paused';
 		eliminationEvent = null;
 		announcementEvent = null;
