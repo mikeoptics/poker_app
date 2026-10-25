@@ -2285,36 +2285,16 @@ function startCasting() {
 						<p class="empty players-empty">No players added yet.</p>
 					{:else}
 						<div class="players-roster-list">
+							<div class="players-roster-table-heading">
+								<span>Player</span><span>Redtooth status</span><span></span>
+							</div>
 							{#each players as player (player.id)}
 								<div class="players-roster-row" class:player-eliminated={player.eliminated}>
-									<div class="players-roster-main">
-										<input class="players-name-input" aria-label="Player name" value={player.name} onchange={(e) => updatePlayerName(player.id, e.currentTarget.value)} />
-										<div class="players-tags">
-											{#if player.redtoothId != null}<span class="roster-tag tag-linked">Redtooth linked</span>{:else if !player.guest}<span class="roster-tag tag-unlinked">Not linked</span>{:else}<span class="roster-tag">Guest</span>{/if}
-											<span class="roster-tag">{player.eliminated ? 'Eliminated' : `Table ${player.table} · Seat ${player.seat}`}</span>
-											{#if player.eliminated}<span class="roster-tag tag-place">{player.eliminationPosition === 1 ? '1st' : player.eliminationPosition === 2 ? '2nd' : player.eliminationPosition === 3 ? '3rd' : `${player.eliminationPosition}th`} place</span>{/if}
-										</div>
-									</div>
-									<div class="players-roster-actions">
-										<button class:paid={player.paid} class="paid-button" type="button" onclick={() => togglePaid(player.id)}>{player.paid ? '✓ Paid' : 'Unpaid'}</button>
-										{#if maxRebuys > 0}
-											<button class="tiny" type="button" disabled={player.eliminated || player.rebuys >= maxRebuys} onclick={() => changeEntry(player.id, 'rebuys')}>+ Rebuy ({player.rebuys})</button>
-											<button class="tiny entry-remove" type="button" disabled={player.eliminated || player.rebuys === 0} onclick={() => removeEntry(player.id, 'rebuys')}>−</button>
-										{/if}
-										{#if maxTopUps > 0}
-											<button class="tiny" type="button" disabled={player.eliminated || player.topUps >= maxTopUps} onclick={() => changeEntry(player.id, 'topUps')}>+ Top-up ({player.topUps})</button>
-											<button class="tiny entry-remove" type="button" disabled={player.eliminated || player.topUps === 0} onclick={() => removeEntry(player.id, 'topUps')}>−</button>
-										{/if}
-										{#if player.eliminated}
-											<button class="tiny restore-player" type="button" onclick={() => restorePlayer(player.id)}>Restore</button>
-											<div class="elimination-order-controls">
-												<button class="order-button" title="Improve finishing position" disabled={player.eliminationPosition === activePlayerCount + 1} onclick={() => moveEliminatedPlayer(player.id, -1)}>↑</button>
-												<button class="order-button" title="Lower finishing position" disabled={player.eliminationPosition === players.length} onclick={() => moveEliminatedPlayer(player.id, 1)}>↓</button>
-											</div>
-										{:else}
-											<button class="tiny delete-player-button" type="button" title="Delete player" onclick={() => deletePlayer(player.id)}>Delete</button>
-										{/if}
-									</div>
+									<input class="players-name-input" aria-label="Player name" value={player.name} onchange={(e) => updatePlayerName(player.id, e.currentTarget.value)} />
+									<span class="roster-status">
+										{#if player.redtoothId != null}<span class="roster-tag tag-linked">Linked</span>{:else if !player.guest}<span class="roster-tag tag-unlinked">Not linked</span>{:else}<span class="roster-tag">Guest</span>{/if}
+									</span>
+									<button class="tiny delete-player-button" type="button" title="Delete player" onclick={() => deletePlayer(player.id)}>Delete</button>
 								</div>
 							{/each}
 						</div>
@@ -3557,19 +3537,16 @@ function startCasting() {
 	.players-roster-heading h3 { margin:0; color:#f2f3f4; font-size:1rem; }
 	.players-roster-heading > span { color:#858d95; font-size:.72rem; text-align:right; }
 	.players-roster-list { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
-	.players-roster-row { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:12px 2px; border-bottom:1px solid #292e34; }
-	.players-roster-main { display:flex; flex:1; flex-direction:column; gap:7px; min-width:160px; }
+	.players-roster-table-heading, .players-roster-row { display:grid; grid-template-columns:minmax(180px, 1fr) minmax(130px, 220px) 88px; align-items:center; column-gap:16px; padding:10px 8px; }
+	.players-roster-table-heading { position:sticky; top:0; z-index:1; background:#17191b; border-bottom:1px solid #3a4046; color:#858d95; font-size:.67rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+	.players-roster-row { border-bottom:1px solid #292e34; }
+	
 	.players-name-input { box-sizing:border-box; width:min(100%,360px); min-height:34px; padding:6px 9px; border:1px solid #343a40; border-radius:7px; background:#111316; color:#f4f4f1; font-size:.9rem; }
-	.players-tags { display:flex; flex-wrap:wrap; gap:6px; }
+	
 	.roster-tag { display:inline-flex; align-items:center; padding:3px 7px; border-radius:5px; background:#252a2f; color:#aeb5bb; font-size:.62rem; font-weight:750; white-space:nowrap; }
 	.tag-linked { background:#1d3c2b; color:#8bd5a4; }.tag-unlinked { background:#422525; color:#e5a0a0; }.tag-place { background:#40351d; color:#e6c77f; }
-	.players-roster-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:6px; }
-	.players-roster-actions .paid-button { min-height:30px; padding:6px 10px; font-size:.68rem; }
-	.players-roster-actions .tiny { min-height:30px; padding:6px 9px; font-size:.66rem; }
-	.players-roster-actions button:disabled { opacity:.35; cursor:not-allowed; }
-	.players-roster-actions .entry-remove { min-width:28px; }
-	.players-roster-actions .restore-player { background:#263c30; color:#a8e6be; }
-	.players-roster-actions .delete-player-button { background:#3b2525; color:#e9aaaa; }
+	.roster-status { display:flex; align-items:center; }
+	.delete-player-button { justify-self:end; min-height:30px; padding:6px 10px; font-size:.68rem; background:#3b2525; color:#e9aaaa; }
 	.players-roster-row.player-eliminated { opacity:.65; }.players-roster-row.player-eliminated .players-name-input { color:#9ba2a8; text-decoration:line-through; }
 	.players-empty { padding:20px 0; }
 	@media (max-width:760px) {
@@ -3581,9 +3558,9 @@ function startCasting() {
 		.players-roster { flex:0 0 auto; height:50vh; max-height:50vh; min-height:260px; padding:13px; }
 		.players-roster-heading { align-items:flex-start; flex-direction:column; }
 		.players-roster-heading > span { text-align:left; }
-		.players-roster-row { align-items:stretch; flex-direction:column; gap:10px; }
-		.players-roster-main { min-width:0; }
-		.players-name-input { width:100%; }
-		.players-roster-actions { justify-content:flex-start; }
+		.players-roster-table-heading, .players-roster-row { grid-template-columns:minmax(0, 1fr) minmax(100px, 130px) 68px; column-gap:8px; padding:9px 3px; }
+		.players-roster-table-heading { font-size:.58rem; }
+		.players-name-input { width:100%; min-width:0; }
+		.delete-player-button { padding:5px 7px; }
 	}
 </style>
