@@ -1803,14 +1803,14 @@ function startCasting() {
         });
 }
 
-	function resetTournament() {
+	async function resetTournament() {
 		const confirmed = window.confirm(
 			'Reset this tournament? This will clear all players and game results, and reset the timer. Your venue settings and Redtooth league standings will be kept.'
 		);
 
 		if (!confirmed) return;
 
-		pause();
+		await sendTimerCommand('pause');
 
 		if (transitionTimer !== null) {
 			clearTimeout(transitionTimer);
@@ -1823,14 +1823,13 @@ function startCasting() {
 		}
 
 		closeClock();
-		players = [];
-		void fetch(`/api/tournament/${venueId}`, {
+		const clearResponse = await fetch(`/api/tournament/${venueId}`, {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
 			body: JSON.stringify({ action: 'clearPlayers' })
-		}).then((response) => {
-			if (!response.ok) throw new Error('Unable to clear server player state.');
-		}).catch((error) => console.error('Tournament reset failed:', error));
+		});
+		if (!clearResponse.ok) throw new Error('Unable to clear server player state.');
+		players = [];
 		tournamentStarted = false;
 		nextPlayerId = 1;
 		newPlayerName = '';
@@ -1838,7 +1837,7 @@ function startCasting() {
 		redtoothSelectedPlayer = null;
 		currentLevel = 0;
 		setLevel(0);
-		void sendTimerCommand('selectLevel', 0);
+		await sendTimerCommand('selectLevel', 0);
 		tournamentMode = 'paused';
 		eliminationEvent = null;
 		announcementEvent = null;
@@ -1851,7 +1850,7 @@ function startCasting() {
 		// Keep redtoothPlayers intact so the league table remains visible on the TV.
 		lastSavedSnapshot = '';
 		lastSavedRedtoothSnapshot = JSON.stringify({ players: [], redtoothPlayers });
-		saveTournament();
+		await saveTournament();
 	}
 
 	function clearRedtoothSelection() {
