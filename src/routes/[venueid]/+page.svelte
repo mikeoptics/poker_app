@@ -2765,13 +2765,7 @@ function startCasting() {
      SETUP
      ========================= */
 
-	.setup-layout {
-		height: 100%;
-		display: grid;
-		grid-template-columns: minmax(430px, 0.9fr) minmax(560px, 1.4fr);
-		gap: 14px;
-		min-height: 0;
-	}.levels-card, .payout-card {
+.levels-card, .payout-card {
 		background: #17191b;
 		border: 1px solid #292d30;
 		border-radius: 14px;
@@ -2784,26 +2778,11 @@ function startCasting() {
 		min-height: 0;
 		overflow: hidden;
 	}/* Make the players card substantially wider */
-	.setup-sidebar .players-card {
-		display: flex;
-		flex-direction: column;
-		width: 100%;
-		height: min(68dvh, 720px);
-		min-height: 320px;
-		overflow: hidden;
-	}/* On smaller screens, stack the two columns */
+/* On smaller screens, stack the two columns */
 	@media (max-width: 1100px) {
-		.setup-layout {
-			grid-template-columns: 1fr;
-		}
-		.setup-sidebar {
-			display: grid;
-			grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-			gap: 18px;
-		}
-		.players-card {
-			grid-column: 1 / -1;
-		}
+
+
+
 	}
 	@media (max-width: 700px) {
 	}.compact-levels .section-heading {
@@ -3001,9 +2980,7 @@ function startCasting() {
      ========================= */
 
 	@media (max-width: 1050px) {
-		.setup-layout {
-			grid-template-columns: 1fr;
-		}
+
 	}
 
 	@media (max-width: 760px) {.app {
@@ -3276,16 +3253,7 @@ function startCasting() {
 	}.level-main strong { order: 3; font-size: 13px !important; letter-spacing: .12em !important; color: #aeb5bb !important; }.director-blinds { order: 4; font-size: clamp(17px, 2.4vw, 23px) !important; font-weight: 650 !important; color: #aeb5bb !important; }.director-hint { order: 5; }.director-eyebrow { order: 1; }
 	@media (max-width:700px) {.director-clock { font-size: clamp(56px, 16vw, 76px) !important; }.director-blinds { font-size: 17px !important; }
 	}/* Timer refinements: larger settings control, email-style player rows and text tabs. */
-	.settings-button {
-		width: 48px !important;
-		min-width: 48px !important;
-		height: 48px !important;
-		font-size: 29px !important;
-		border-radius: 11px !important;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-	}.director-player-list {
+.director-player-list {
 		display: flex !important;
 		flex-direction: column !important;
 		gap: 0 !important;
@@ -3346,16 +3314,7 @@ function startCasting() {
 			gap: 18px !important;
 		}
 	}/* Keep the settings control aligned with the other header actions. */
-	.settings-button {
-		width: 40px !important;
-		min-width: 40px !important;
-		height: 40px !important;
-		min-height: 40px !important;
-		padding: 0 !important;
-		font-size: 23px !important;
-		border-radius: 9px !important;
-		line-height: 1 !important;
-	}
+
 
 	@media (max-width: 700px) {
 	}/* Timer state colours: placed after the shared progress-bar override. */
@@ -3366,9 +3325,7 @@ function startCasting() {
 	}.director-progress div.progress-ending {
 		animation: progress-ending-glow 1s ease-in-out infinite;
 	}/* Setup page responsive layout and independent player-list scrolling */
-	.setup-layout {
-		min-width: 0;
-	}
+
 
 	@media (max-width: 1100px) {
 	}
