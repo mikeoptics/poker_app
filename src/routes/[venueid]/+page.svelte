@@ -1187,12 +1187,28 @@
 		}
 	}
 	function applyBalance() {
+		const closedTables = balanceAction === 'merge'
+			? [...new Set(balanceSuggestions.map((move) => move.from))]
+			: [];
+
 		for (const move of balanceSuggestions) {
 			const p = players.find((x) => x.id === move.id);
-
 			if (p) {
 				p.table = move.to;
 				p.seat = move.seat;
+			}
+		}
+
+		// Once a table is merged away, clear its historical eliminated-seat markers
+		// so the closed table no longer remains visible in the table list.
+		for (const tableId of closedTables) {
+			if (!players.some((player) => !player.eliminated && player.table === tableId)) {
+				for (const player of players) {
+					if (player.eliminated && player.table === tableId) {
+						player.table = 0;
+						player.seat = 0;
+					}
+				}
 			}
 		}
 
