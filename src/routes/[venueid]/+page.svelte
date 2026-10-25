@@ -3605,7 +3605,7 @@ function startCasting() {
 	.director-player-swipe {
 		overflow: hidden !important;
 		border: none !important;
-		border-bottom: none !important;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 		outline: none !important;
 		box-shadow: none !important;
 		border-image: none !important;
