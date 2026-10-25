@@ -112,6 +112,22 @@
       .standing-row { font-size: 1.6vw; }
     }
 
+    .announcement-banner {
+      display: none;
+      width: 100%;
+      padding: 18px 24px;
+      border: 2px solid #c4a36a;
+      border-radius: 16px;
+      background: linear-gradient(110deg, #3a3020, #25251f);
+      color: #ffe3a3;
+      font-size: clamp(1.5rem, 3vw, 3rem);
+      font-weight: 900;
+      text-align: center;
+      box-shadow: 0 8px 28px rgba(0,0,0,.3);
+    }
+    .announcement-banner.show { display: block; animation: announcementIn .25s ease-out; }
+    @keyframes announcementIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
     .next {
       text-align: center;
       color: #aeb5bb;
@@ -242,6 +258,7 @@
     </div>
 
     <div class="next" id="next"></div>
+    <div class="announcement-banner" id="announcement-banner" role="status" aria-live="assertive"></div>
   </div>
 
   <div class="elimination-overlay" id="elimination-overlay" aria-hidden="true">
@@ -273,6 +290,8 @@
       let receiverAudioContext = null;
       let lastAnnouncementEventId = null;
       let hasReceivedInitialAnnouncementState = false;
+      let lastDisplayedAnnouncementEventId = null;
+      let announcementHideTimer = null;
       const eliminationSound = new Audio('https://www.myinstants.com/media/sounds/fortnite-death-sound-not-knockout.mp3');
       eliminationSound.volume = 0.8;
 
@@ -302,6 +321,22 @@
         } catch (error) {
           console.warn('Blind alarm playback failed:', error);
         }
+      }
+
+      function showTableMoveAnnouncement(event) {
+        if (!event || typeof event.id !== "string" || !event.text) return;
+        if (event.id === lastDisplayedAnnouncementEventId) return;
+        lastDisplayedAnnouncementEventId = event.id;
+        const banner = el("announcement-banner");
+        banner.textContent = event.text;
+        banner.classList.remove("show");
+        void banner.offsetWidth;
+        banner.classList.add("show");
+        if (announcementHideTimer !== null) clearTimeout(announcementHideTimer);
+        announcementHideTimer = setTimeout(() => {
+          banner.classList.remove("show");
+          announcementHideTimer = null;
+        }, 15000);
       }
 
       function speakAnnouncement(event) {
@@ -430,6 +465,7 @@
         running = Boolean(d.running);
         renderStandings(d.standings);
         showElimination(d.eliminationEvent);
+        showTableMoveAnnouncement(d.announcementEvent);
         speakAnnouncement(d.announcementEvent);
       }
 
