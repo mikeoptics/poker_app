@@ -198,6 +198,7 @@
 	let eliminationEvent = $state(null);
 	/** @type {{ id:string; text:string; createdAt:number } | null} */
 	let announcementEvent = $state(null);
+	let tableNames = $state({});
 	let balanceMessage = $state('');
 	let balanceAction = $state('move');
 	let redtoothShowTournament = $state(false);
@@ -1213,6 +1214,15 @@
 			if (balanceSuggestions.length) balanceMessage = `Move ${balanceSuggestions.length} player(s) to balance the tables?`;
 		}
 	}
+	function renameTable(tableNumber, name) {
+		const cleanName = String(name ?? '').trim().slice(0, 32);
+		const next = { ...tableNames };
+		if (!cleanName || cleanName === `Table ${tableNumber}`) delete next[tableNumber];
+		else next[tableNumber] = cleanName;
+		tableNames = next;
+		void saveTournament();
+	}
+
 	function applyBalance() {
 		const appliedMoves = [...balanceSuggestions];
 		const closedTables = balanceAction === 'merge'
@@ -1742,7 +1752,7 @@
 			levels, players, nextPlayerId, currentLevel, remainingMs, levelDurationMs, running,
 			soundEnabled, announcementEnabled, buyInAmount, mixedGames, activeTab, redtoothPlayers,
 			maxRebuys, maxTopUps, tournamentStarted,
-			eliminationEvent, announcementEvent, venueName, updatedAt: Date.now()
+			eliminationEvent, announcementEvent, tableNames, venueName, updatedAt: Date.now()
 		};
 	}
 
@@ -1805,6 +1815,7 @@
 		if (Array.isArray(state.redtoothPlayers)) redtoothPlayers = state.redtoothPlayers;
 		eliminationEvent = state.eliminationEvent ?? null;
 		announcementEvent = state.announcementEvent ?? null;
+		tableNames = state.tableNames && typeof state.tableNames === 'object' ? state.tableNames : {};
 		venueName = state.venueName || venueName;
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
@@ -2247,6 +2258,8 @@ function startCasting() {
 				{balanceSuggestions}
 				{activePlayers}
 				{tableCount}
+				{tableNames}
+				renameTable={renameTable}
 				{seatRole}
 				{applyBalance}
 				replacePlayer={replaceEliminatedSeat}
