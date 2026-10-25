@@ -3992,7 +3992,6 @@ function startCasting() {
 	font-size: 12px;
 	text-align: right;
 }
-</style>
 
 
 /* Table-balancing recommendation toast */
@@ -4026,3 +4025,6 @@ function startCasting() {
 		.table-balance-toast { right: 12px; bottom: 12px; width: calc(100vw - 24px); align-items: flex-start; flex-direction: column; }
 		.table-balance-toast-actions { align-self: flex-end; }
 	}
+
+</style>
+
