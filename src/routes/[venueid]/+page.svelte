@@ -51,6 +51,7 @@
 	}
 	let lastSavedSnapshot = '';
 	let lastSavedRedtoothSnapshot = '';
+	let lastSavedSettingsSnapshot = '';
 	let castStatus = $state('');
 	let timerCompact = $state(false);
 	const games = ['NLH', 'PLO5', 'Pineapple', 'PLO4', 'Crazy Pineapple'];
@@ -1609,10 +1610,8 @@
 
 	function tournamentSnapshot() {
 		return {
-			levels, players, nextPlayerId,
-			soundEnabled, announcementEnabled, buyInAmount, mixedGames, activeTab, redtoothPlayers,
-			maxRebuys, maxTopUps, tournamentStarted,
-			eliminationEvent, announcementEvent, tableMoveEvent, tableNames, venueName
+			levels, players, nextPlayerId, tournamentStarted,
+			eliminationEvent, announcementEvent, tableMoveEvent, redtoothPlayers
 		};
 	}
 
@@ -1646,6 +1645,7 @@
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
 		lastSavedSnapshot = JSON.stringify(state);
+		lastSavedSettingsSnapshot = JSON.stringify({ soundEnabled, announcementEnabled, buyInAmount, maxRebuys, maxTopUps, mixedGames, activeTab, tableNames, venueName });
 		lastSavedRedtoothSnapshot = JSON.stringify({ players: players.map((player) => ({ id: player.id, redtoothId: player.redtoothId, redtoothGames: player.redtoothGames, redtoothPoints: player.redtoothPoints, redtoothPendingPoints: player.redtoothPendingPoints, redtoothConfirmed: player.redtoothConfirmed })), redtoothPlayers });
 		if (running) {
 			tournamentMode = currentBlinds?.break ? 'break' : 'play';
@@ -1662,6 +1662,8 @@
 		try {
 			const snapshot = tournamentSnapshot();
 			const serialised = JSON.stringify(snapshot);
+			const settings = { soundEnabled, announcementEnabled, buyInAmount, maxRebuys, maxTopUps, mixedGames, activeTab, tableNames, venueName };
+			const settingsSerialised = JSON.stringify(settings);
 			const redtoothState = {
 				players: players.map((player) => ({
 					id: player.id,
@@ -1682,6 +1684,15 @@
 				});
 				if (!response.ok) throw new Error('Unable to save tournament settings.');
 				lastSavedSnapshot = serialised;
+			}
+			if (settingsSerialised !== lastSavedSettingsSnapshot) {
+				const response = await fetch(`/api/tournament/${venueId}`, {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ action: 'saveSettings', settings })
+				});
+				if (!response.ok) throw new Error('Unable to save tournament settings.');
+				lastSavedSettingsSnapshot = settingsSerialised;
 			}
 			if (redtoothSerialised !== lastSavedRedtoothSnapshot) {
 				const response = await fetch(`/api/tournament/${venueId}`, {
