@@ -1970,10 +1970,10 @@ function startCasting() {
 			: 'Use your browser menu and select Install app or Add to Home Screen.';
 	}
 
-	/** @param {Event & { prompt: () => void, userChoice: Promise<{ outcome: string }> }} event */
+	/** @param {Event} event */
 	function handleBeforeInstallPrompt(event) {
 		event.preventDefault();
-		installPrompt = event;
+		installPrompt = /** @type {Event & { prompt: () => void, userChoice: Promise<{ outcome: string }> }} */ (event);
 		installStatus = '';
 	}
 
@@ -1989,7 +1989,7 @@ function startCasting() {
 	}
 
 	onMount(() => {
-		window.addEventListener('beforeinstallprompt', (event) => handleBeforeInstallPrompt(/** @type {Event & { prompt: () => void, userChoice: Promise<{ outcome: string }> }} */ (event)));
+		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 		window.addEventListener('appinstalled', () => {
 			appInstalled = true;
 			installPrompt = null;
@@ -2061,7 +2061,7 @@ function startCasting() {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
 		return () => {
-			window.removeEventListener('beforeinstallprompt', (event) => handleBeforeInstallPrompt(/** @type {Event & { prompt: () => void, userChoice: Promise<{ outcome: string }> }} */ (event)));
+			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 			window.removeEventListener('keydown', handleKeyboard);
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			if (syncInterval !== null) clearInterval(syncInterval);
