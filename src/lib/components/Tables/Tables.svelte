@@ -9,6 +9,8 @@
 		balanceSuggestions,
 		activePlayers,
 		tableCount,
+		tableNames = {},
+		renameTable,
 		seatRole,
 		applyBalance,
 		replacePlayer,
@@ -17,6 +19,8 @@
 
 	let replacingPlayerId = $state(null);
 	let selectedReplacementId = $state('');
+	let editingTableNumber = $state(null);
+	let tableNameDraft = $state('');
 
 	const visibleTableNumbers = $derived(
 		[...new Set(players.filter((player) => Number(player.table) > 0 && Number(player.seat) > 0).map((player) => Number(player.table)))].sort((a, b) => a - b)
@@ -32,6 +36,17 @@
 				.sort((a, b) => a.table - b.table || a.seat - b.seat)
 			: []
 	);
+
+	function startRename(tableNumber) {
+		editingTableNumber = tableNumber;
+		tableNameDraft = tableNames[tableNumber] || `Table ${tableNumber}`;
+	}
+
+	function saveRename(tableNumber) {
+		renameTable?.(tableNumber, tableNameDraft);
+		editingTableNumber = null;
+		tableNameDraft = '';
+	}
 
 	function openReplace(player) {
 		replacingPlayerId = player.id;
@@ -64,7 +79,18 @@
 				{@const seatNumbers = [...new Set(tablePlayers.map((player) => player.seat))].sort((a, b) => a - b)}
 				<section class="table-list-card">
 					<div class="table-list-heading">
-						<strong>Table {tableNumber}</strong>
+						{#if editingTableNumber === tableNumber}
+							<form class="table-rename-form" onsubmit={(event) => { event.preventDefault(); saveRename(tableNumber); }}>
+								<input aria-label="Table name" maxlength="32" bind:value={tableNameDraft} />
+								<button type="submit">Save</button>
+								<button type="button" class="table-rename-cancel" onclick={() => (editingTableNumber = null)}>Cancel</button>
+							</form>
+						{:else}
+							<div class="table-title-group">
+								<strong>{tableNames[tableNumber] || `Table ${tableNumber}`}</strong>
+								<button class="table-rename-button" type="button" aria-label={`Rename ${tableNames[tableNumber] || `Table ${tableNumber}`}`} title="Rename table" onclick={() => startRename(tableNumber)}>Edit</button>
+							</div>
+						{/if}
 						<span>{tablePlayers.filter((player) => !player.eliminated).length} / 8 players</span>
 					</div>
 					<div class="table-list-header">
@@ -112,7 +138,7 @@
 				<select id="replacement-player-select" class="replacement-player-select" style="color-scheme: dark; color: #f0f2f1; background-color: #111519;" bind:value={selectedReplacementId}>
 					<option value="" style="color: #f0f2f1; background: #111519;">Select a player</option>
 					{#each replacementCandidates as candidate (candidate.id)}
-						<option value={candidate.id} style="color: #f0f2f1; background: #111519;">{candidate.name} — Table {candidate.table}, Seat {candidate.seat}</option>
+						<option value={candidate.id} style="color: #f0f2f1; background: #111519;">{candidate.name} — {tableNames[candidate.table] || `Table ${candidate.table}`}, Seat {candidate.seat}</option>
 					{/each}
 				</select>
 			{:else}
