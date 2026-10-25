@@ -29,18 +29,78 @@
 	const timerText = $derived(
 		String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0')
 	);
+	let kokoroTTS = null;
+	let kokoroLoading = null;
+	let announcementAudio = null;
+	let lastSpokenAnnouncementId = '';
+
+	async function getKokoro() {
+		if (kokoroTTS) return kokoroTTS;
+		if (kokoroLoading) return kokoroLoading;
+		kokoroLoading = (async () => {
+			try {
+				const { KokoroTTS } = await import('kokoro-js');
+				const modelId = 'onnx-community/Kokoro-82M-v1.0-ONNX';
+				if (navigator.gpu) {
+					try {
+						kokoroTTS = await KokoroTTS.from_pretrained(modelId, { device: 'webgpu', dtype: 'fp32' });
+						return kokoroTTS;
+					} catch (error) {
+						console.warn('Cast display WebGPU TTS unavailable; using WASM.', error);
+					}
+				}
+				kokoroTTS = await KokoroTTS.from_pretrained(modelId, { device: 'wasm', dtype: 'q8' });
+				return kokoroTTS;
+			} catch (error) {
+				console.error('Cast display TTS failed to load:', error);
+				kokoroLoading = null;
+				return null;
+			}
+		})();
+		return kokoroLoading;
+	}
+
+	async function speakAnnouncement(announcement) {
+		if (!announcement?.text || !announcement.id || announcement.id === lastSpokenAnnouncementId) return;
+		lastSpokenAnnouncementId = announcement.id;
+		try {
+			const tts = await getKokoro();
+			if (tts) {
+				const audio = await tts.generate(announcement.text, { voice: 'bm_lewis' });
+				const url = URL.createObjectURL(audio.toBlob());
+				if (announcementAudio) {
+					announcementAudio.pause();
+					if (announcementAudio.src.startsWith('blob:')) URL.revokeObjectURL(announcementAudio.src);
+				}
+				announcementAudio = new Audio(url);
+				announcementAudio.volume = 1;
+				await announcementAudio.play();
+				return;
+			}
+		} catch (error) {
+			console.error('Cast audio announcement playback failed:', error);
+		}
+		// Keep a native speech fallback for receivers where Kokoro cannot initialise.
+		if ('speechSynthesis' in window) {
+			try {
+				window.speechSynthesis.cancel();
+				const utterance = new SpeechSynthesisUtterance(announcement.text);
+				utterance.lang = 'en-GB';
+				window.speechSynthesis.speak(utterance);
+			} catch (error) {
+				console.error('Native Cast speech fallback failed:', error);
+			}
+		}
+	}
+
 	async function refresh() {
 		try {
-			const response = await fetch('/api/tournament/' + venueId + '?public=1', {
-				cache: 'no-store'
-			});
+			const response = await fetch('/api/tournament/' + venueId + '?public=1', { cache: 'no-store' });
 			if (!response.ok) throw new Error('Tournament display is not available.');
 			const result = await response.json();
 			if (!result.ok || !result.state) throw new Error('Waiting for tournament data.');
 			const nextAnnouncement = result.state.announcementEvent;
 			if (!announcementInitialized) {
-				// If the display starts or reconnects just after a table move, do not
-				// discard that fresh announcement as the initial baseline.
 				announcementInitialized = true;
 				if (nextAnnouncement?.id && Date.now() - Number(nextAnnouncement.createdAt || 0) <= 30000) {
 					lastAnnouncementId = '';
@@ -50,35 +110,7 @@
 			}
 			if (nextAnnouncement?.id && nextAnnouncement.id !== lastAnnouncementId) {
 				lastAnnouncementId = nextAnnouncement.id;
-				if (typeof window !== 'undefined' && 'speechSynthesis' in window && nextAnnouncement.text) {
-					let announcementSpoken = false;
-					const speakAnnouncement = () => {
-						if (announcementSpoken) return;
-						announcementSpoken = true;
-						window.speechSynthesis.cancel();
-						window.speechSynthesis.resume();
-						const utterance = new SpeechSynthesisUtterance(nextAnnouncement.text);
-						utterance.lang = 'en-GB';
-						utterance.rate = 0.95;
-						const voices = window.speechSynthesis.getVoices();
-						const preferredVoice = voices.find((voice) => voice.lang === 'en-GB') ||
-							voices.find((voice) => voice.lang.startsWith('en-'));
-						if (preferredVoice) utterance.voice = preferredVoice;
-						window.speechSynthesis.speak(utterance);
-					};
-					if (window.speechSynthesis.getVoices().length) {
-						speakAnnouncement();
-					} else {
-						window.speechSynthesis.addEventListener('voiceschanged', speakAnnouncement, { once: true });
-						// Some Cast browsers do not fire voiceschanged; retry with the
-						// browser's default voice after the initial voice list settles.
-						setTimeout(() => {
-							if (window.speechSynthesis.pending || window.speechSynthesis.speaking) return;
-						window.speechSynthesis.removeEventListener('voiceschanged', speakAnnouncement);
-						speakAnnouncement();
-						}, 700);
-					}
-				}
+				void speakAnnouncement(nextAnnouncement);
 			}
 			tournamentState = result.state;
 			error = '';
