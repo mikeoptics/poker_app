@@ -314,6 +314,31 @@ export async function POST({ params, request }) {
 		const action = String(body?.action ?? '');
 		return await withVenueWriteLock(params.venueid, async () => {
 			const s = await read(params.venueid);
+			if (action === 'eliminatePlayer' || action === 'restorePlayer') {
+				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				const playerId = Number(body.playerId);
+				if (!Number.isInteger(playerId) || playerId <= 0) return json({ error: 'Invalid player ID.' }, { status: 400 });
+				const player = s.players.find((/** @type {any} */ item) => Number(item.id) === playerId);
+				if (!player) return json({ error: 'Player not found.' }, { status: 404 });
+				if (action === 'eliminatePlayer') {
+					if (player.eliminated) return json({ error: 'Player is already eliminated.' }, { status: 409 });
+					const finishPlace = s.players.filter((/** @type {any} */ item) => !item.eliminated).length;
+					player.eliminated = true;
+					player.eliminationPosition = finishPlace;
+					s.eliminationEvent = { id: `${Date.now()}-${player.id}`, playerName: String(player.name).slice(0, 160), createdAt: Date.now() };
+				} else {
+					if (!player.eliminated) return json({ error: 'Player is not eliminated.' }, { status: 409 });
+					const restoredPosition = Number(player.eliminationPosition);
+					player.eliminated = false;
+					player.eliminationPosition = null;
+					for (const other of s.players) {
+						if (other.eliminated && Number.isFinite(restoredPosition) && Number(other.eliminationPosition) > restoredPosition) other.eliminationPosition -= 1;
+					}
+				}
+				s.updatedAt = Date.now();
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, player, players: s.players, eliminationEvent: s.eliminationEvent ?? null, updatedAt: s.updatedAt });
+			}
 			if (action === 'addPlayer') {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 				if (s.players.length >= 500) return json({ error: 'Player limit reached.' }, { status: 409 });
