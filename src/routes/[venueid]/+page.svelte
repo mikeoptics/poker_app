@@ -872,11 +872,23 @@
 	function addPlayer(name, redtoothPlayer = null, guest = false) {
 		const id = nextPlayerId++;
 		console.log('ADDING:', name, redtoothPlayer?.redtoothId);
+		const seatedPlayers = players.filter((player) => !player.eliminated && Number(player.table) > 0);
+		const existingTables = [...new Set(seatedPlayers.map((player) => player.table))].sort((a, b) => a - b);
+		const targetTable = existingTables.length
+			? existingTables.sort((a, b) =>
+				seatedPlayers.filter((player) => player.table === a).length -
+				seatedPlayers.filter((player) => player.table === b).length
+			)[0]
+			: 1;
+		const occupiedSeats = seatedPlayers.filter((player) => player.table === targetTable).map((player) => player.seat);
+		let targetSeat = 1;
+		while (occupiedSeats.includes(targetSeat)) targetSeat += 1;
+
 		players.push({
 			id,
 			name,
-			table: 1,
-			seat: 1,
+			table: targetTable,
+			seat: targetSeat,
 			buyIns: 1,
 			rebuys: 0,
 			topUps: 0,
@@ -893,11 +905,9 @@
 			guest
 		});
 		console.log('STORED:', players[players.length - 1].redtoothId);
-		distributeAcrossTables();
-
-		if (players.length <= 8) {
-			rebalanceTables();
-		}
+		// Keep existing seats stable. If adding this player exceeds a table's
+		// capacity, offer a split rather than silently redistributing everyone.
+		rebalanceTables();
 	}
 
 	/**
