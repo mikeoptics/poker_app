@@ -182,7 +182,7 @@ export async function GET({ params, url }) {
 					if (level > previousLevel && s.announcementEnabled) {
 						const next = s.levels[level];
 						const game = s.mixedGames ? String(next?.game ?? '') : '';
-						const speechGame = game.replace(/\\bPLO5\\b/g, 'P L O five').replace(/\\bPLO4\\b/g, 'P L O four').replace(/\\bNLH\\b/g, 'N L H');
+						const speechGame = game.replace(/\bPLO5\b/g, 'P L O five').replace(/\bPLO4\b/g, 'P L O four').replace(/\bNLH\b/g, 'N L H');
 						const text = next?.break
 							? `Break. ${next.minutes} minutes.`
 							: `Next level. ${game ? speechGame + '. ' : ''}Blinds ${next?.sb ?? 0} ${next?.bb ?? 0}.`;
