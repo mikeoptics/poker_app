@@ -1,6 +1,6 @@
 export function GET({ params, url }) {
 	const venueId = String(params.venueid || '');
-	if (!/^\\d{1,12}$/.test(venueId)) {
+	if (!/^\d{1,12}$/.test(venueId)) {
 		return new Response('Not found', { status: 404 });
 	}
 	const venueName = (url.searchParams.get('name') || `Venue ${venueId}`).slice(0, 100);
