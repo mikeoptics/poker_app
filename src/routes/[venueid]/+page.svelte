@@ -3617,4 +3617,19 @@ function startCasting() {
 		border-radius: 0 !important;
 		background: #181b1f !important;
 	}
+
+	/* Bottom icon navigation should sit directly on the app surface. */
+	.icon-tabs,
+	.icon-tabs button,
+	.icon-tabs button:hover,
+	.icon-tabs button:focus,
+	.icon-tabs button:active {
+		background: transparent !important;
+		box-shadow: none !important;
+	}
+	.icon-tabs button.active {
+		background: transparent !important;
+		color: #c4a36a !important;
+		box-shadow: none !important;
+	}
 </style>
