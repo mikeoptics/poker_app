@@ -135,51 +135,49 @@
     }
 
     .table-move-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 9998;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 5vw;
-      background: rgba(0, 0, 0, 0.88);
-      pointer-events: none;
-      opacity: 0;
-      visibility: hidden;
+      display: none;
+      width: 100%;
+      flex: 0 0 auto;
+      padding: 1.4vh 2vw;
+      border: 1px solid #8f784f;
+      border-left: 6px solid #c4a36a;
+      border-radius: 12px;
+      background: #242629;
+      color: #f4f4f1;
+      text-align: left;
     }
 
     .table-move-overlay.show {
-      opacity: 1;
-      visibility: visible;
-      animation: eliminationDisplay 5s ease forwards;
+      display: block;
     }
 
     .table-move-card {
-      max-width: 90vw;
-      padding: 4vh 5vw;
-      border: 3px solid #c4a36a;
-      border-radius: 24px;
-      background: linear-gradient(135deg, #3a3020, #17191c);
-      box-shadow: 0 0 50px rgba(196, 163, 106, 0.35);
-      text-align: center;
-      animation: eliminationSlam 0.55s cubic-bezier(0.16, 1.35, 0.3, 1) forwards;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      max-width: 100%;
     }
 
     .table-move-heading {
-      margin-bottom: 2vh;
-      color: #e0c58f;
-      font-size: clamp(1.4rem, 3vw, 3rem);
-      font-weight: 900;
-      letter-spacing: 0.2em;
+      flex: 0 0 auto;
+      color: #c4a36a;
+      font-size: clamp(1rem, 1.5vw, 1.5rem);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
     }
 
     .table-move-message {
-      color: #fff2d2;
-      font-size: clamp(2rem, 5vw, 5rem);
-      font-weight: 950;
-      line-height: 1.08;
+      min-width: 0;
+      color: #ffffff;
+      font-size: clamp(1.25rem, 2.4vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.15;
       overflow-wrap: anywhere;
-      text-shadow: 0 0 22px rgba(196, 163, 106, 0.35);
+    }
+
+    @media (max-width: 700px) {
+      .table-move-card { align-items: flex-start; flex-direction: column; gap: .4rem; }
     }
 
     .elimination-overlay {
@@ -291,6 +289,13 @@
     <header>LIVE TOURNAMENT</header>
     <h1 id="venue">Connect from the Poker App</h1>
 
+    <div class="table-move-overlay" id="table-move-overlay" role="status" aria-live="assertive" aria-hidden="true">
+      <div class="table-move-card">
+        <div class="table-move-heading">TABLE MOVE</div>
+        <div class="table-move-message" id="table-move-message"></div>
+      </div>
+    </div>
+
     <div class="display-layout">
       <main class="hero">
         <div class="game" id="game">WAITING</div>
@@ -307,13 +312,6 @@
 
     <div class="next" id="next"></div>
     <div class="announcement-banner" id="announcement-banner" role="status" aria-live="assertive"></div>
-  </div>
-
-  <div class="table-move-overlay" id="table-move-overlay" role="status" aria-live="assertive" aria-hidden="true">
-    <div class="table-move-card">
-      <div class="table-move-heading">TABLE MOVE</div>
-      <div class="table-move-message" id="table-move-message"></div>
-    </div>
   </div>
 
   <div class="elimination-overlay" id="elimination-overlay" aria-hidden="true">
@@ -386,11 +384,9 @@
         const overlay = el('table-move-overlay');
         el('table-move-message').textContent = event.text;
 
-        // Use the same forced-reflow/replay pattern as the working elimination
-        // overlay so every new move event visibly animates on the Cast receiver.
+        // Keep the notice in normal page flow at the top of the display so
+        // it remains visible without obscuring the timer or blind levels.
         if (announcementHideTimer !== null) clearTimeout(announcementHideTimer);
-        overlay.classList.remove('show');
-        void overlay.offsetWidth;
         overlay.classList.add('show');
         overlay.setAttribute('aria-hidden', 'false');
 
@@ -398,7 +394,7 @@
           overlay.classList.remove('show');
           overlay.setAttribute('aria-hidden', 'true');
           announcementHideTimer = null;
-        }, 5200);
+        }, 12000);
       }
 
       function speakAnnouncement(event) {
