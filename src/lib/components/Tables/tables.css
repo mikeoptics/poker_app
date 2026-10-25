@@ -773,3 +773,58 @@
 	text-decoration: line-through;
 	text-decoration-thickness: 1.5px;
 }
+
+
+/* Table renaming controls */
+.table-title-group {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	min-width: 0;
+}
+.table-rename-button {
+	border: 1px solid #3c4742;
+	border-radius: 6px;
+	background: #202824;
+	color: #b9c8be;
+	padding: 4px 7px;
+	font-size: 10px;
+	font-weight: 700;
+	cursor: pointer;
+}
+.table-rename-button:hover { background: #2c3931; color: #fff; }
+.table-rename-form {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+	min-width: 0;
+}
+.table-rename-form input {
+	width: min(190px, 42vw);
+	min-width: 90px;
+	min-height: 32px;
+	padding: 5px 8px;
+	border: 1px solid #52675a;
+	border-radius: 6px;
+	background: #111719;
+	color: #f0f3f1;
+	font: inherit;
+	font-size: 12px;
+}
+.table-rename-form button {
+	min-height: 30px;
+	padding: 5px 8px;
+	border: 1px solid #52675a;
+	border-radius: 6px;
+	background: #365342;
+	color: #f0f6f1;
+	font-size: 10px;
+	font-weight: 700;
+	cursor: pointer;
+}
+.table-rename-form button.table-rename-cancel {
+	border-color: #414a4e;
+	background: #292f32;
+	color: #d5dcda;
+}
