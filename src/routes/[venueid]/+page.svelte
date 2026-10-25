@@ -36,6 +36,7 @@
 	/** @type {ReturnType<typeof setInterval> | null} */
 	let syncInterval = null;
 	let savingTournament = false;
+	let savePending = false;
 	let lastSavedSnapshot = '';
 	let castStatus = $state('');
 	let timerCompact = $state(false);
@@ -1208,24 +1209,26 @@
 		}
 	}
 	function applyBalance() {
+		const appliedMoves = [...balanceSuggestions];
 		const closedTables = balanceAction === 'merge'
-			? [...new Set(balanceSuggestions.map((move) => move.from))]
+			? [...new Set(appliedMoves.map((move) => move.from))]
 			: [];
 
-		for (const move of balanceSuggestions) {
-			const p = players.find((x) => x.id === move.id);
-			if (p) {
-				p.table = move.to;
-				p.seat = move.seat;
+		for (const move of appliedMoves) {
+			const player = players.find((item) => item.id === move.id);
+			if (player) {
+				player.table = move.to;
+				player.seat = move.seat;
 			}
 		}
 
-		// Once a table is merged away, clear its historical eliminated-seat markers
-		// so the closed table no longer remains visible in the table list.
+		// A merge is only complete when every active player has left the source
+		// table. Clear its eliminated markers as well, so the table disappears.
 		for (const tableId of closedTables) {
-			if (!players.some((player) => !player.eliminated && player.table === tableId)) {
+			const activeRemain = players.some((player) => !player.eliminated && player.table === tableId && player.seat > 0);
+			if (!activeRemain) {
 				for (const player of players) {
-					if (player.eliminated && player.table === tableId) {
+					if (player.table === tableId) {
 						player.table = 0;
 						player.seat = 0;
 					}
@@ -1233,9 +1236,18 @@
 			}
 		}
 
+		if (appliedMoves.length) {
+			announcementEvent = {
+				id: `table-move-${Date.now()}`,
+				text: appliedMoves.map((move) => `${move.name}, please move to position ${move.seat} on table ${move.to}`).join('. '),
+				createdAt: Date.now()
+			};
+		}
+
 		balanceSuggestions = [];
 		balanceMessage = '';
 		balanceAction = 'move';
+		void saveTournament();
 	}
 
 	/** @param {number} eliminatedPlayerId @param {number} replacementPlayerId */
@@ -1258,6 +1270,7 @@
 			text: `${replacement.name}, please move to position ${targetSeat} on table ${targetTable}`,
 			createdAt: Date.now()
 		};
+		void saveTournament();
 	}
 
 	function playAlarm() {
@@ -1800,7 +1813,10 @@
 
 	async function saveTournament() {
 		saveBrowserSettings();
-		if (savingTournament) return;
+		if (savingTournament) {
+			savePending = true;
+			return;
+		}
 		savingTournament = true;
 		try {
 			const snapshot = tournamentSnapshot();
@@ -1814,6 +1830,10 @@
 			console.error('Tournament save failed:', error);
 		} finally {
 			savingTournament = false;
+			if (savePending) {
+				savePending = false;
+				void saveTournament();
+			}
 		}
 	}
 
