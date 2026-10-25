@@ -2288,7 +2288,7 @@ function startCasting() {
 								<span>Player</span><span>Redtooth status</span><span></span>
 							</div>
 							{#each players as player (player.id)}
-								<div class="players-roster-row" class:player-eliminated={player.eliminated}>
+								<div class="players-roster-row">
 									<input class="players-name-input" aria-label="Player name" value={player.name} disabled={player.redtoothId != null} title={player.redtoothId != null ? "Linked player names are managed by Redtooth" : "Edit player name"} onchange={(e) => updatePlayerName(player.id, e.currentTarget.value)} />
 									<span class="roster-status">
 										{#if player.redtoothId != null}<span class="roster-tag tag-linked">Linked</span>{:else if !player.guest}<span class="roster-tag tag-unlinked">Not linked</span>{:else}<span class="roster-tag">Guest</span>{/if}
@@ -3540,13 +3540,16 @@ function startCasting() {
 	.players-roster-table-heading { position:sticky; top:0; z-index:1; background:#17191b; border-bottom:1px solid #3a4046; color:#858d95; font-size:.67rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
 	.players-roster-row { border-bottom:1px solid #292e34; }
 	
-	.players-name-input { box-sizing:border-box; width:min(100%,360px); min-height:34px; padding:6px 9px; border:1px solid #343a40; border-radius:7px; background:#111316; color:#f4f4f1; font-size:.9rem; }
+	.players-name-input { box-sizing:border-box; width:min(100%,360px); min-height:34px; padding:6px 9px; border:1px solid transparent; border-radius:0; background:transparent; color:#f4f4f1; font:inherit; font-size:.9rem; }
+	.players-name-input:not(:disabled):hover { border-bottom-color:#454c53; }
+	.players-name-input:not(:disabled):focus { border:1px solid #59636d; border-radius:6px; outline:none; background:#111316; }
+	.players-name-input:disabled { opacity:1; cursor:default; }
 	
 	.roster-tag { display:inline-flex; align-items:center; padding:3px 7px; border-radius:5px; background:#252a2f; color:#aeb5bb; font-size:.62rem; font-weight:750; white-space:nowrap; }
 	.tag-linked { background:#1d3c2b; color:#8bd5a4; }.tag-unlinked { background:#422525; color:#e5a0a0; }.tag-place { background:#40351d; color:#e6c77f; }
 	.roster-status { display:flex; align-items:center; }
 	.delete-player-button { justify-self:end; min-height:30px; padding:6px 10px; font-size:.68rem; background:#3b2525; color:#e9aaaa; }
-	.players-roster-row.player-eliminated { opacity:.65; }.players-roster-row.player-eliminated .players-name-input { color:#9ba2a8; text-decoration:line-through; }
+	
 	.players-empty { padding:20px 0; }
 	@media (max-width:760px) {
 		.players-panel-heading { align-items:flex-start; flex-direction:column; padding:16px; }
