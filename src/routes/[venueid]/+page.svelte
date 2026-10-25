@@ -1022,13 +1022,8 @@
 				eliminationSound.currentTime = 0;
 				eliminationSound.play().catch(() => {});
 			}
-			if (p.redtoothId) {
-				const points = Math.max(0, pointsForPlace(finishPlace) - 10);
-				p.redtoothPendingPoints += points;
-				redtoothPlayers = applyLocalResult(redtoothPlayers, p, finishPlace);
-			}
+			redtoothPlayers = result.redtoothPlayers ?? redtoothPlayers;
 			rebalanceTables();
-			schedulePlayerSave();
 		} catch (error) {
 			console.error('Player elimination failed:', error);
 			await loadTournament();
@@ -1045,22 +1040,7 @@
 			const result = await response.json();
 			if (!response.ok) throw new Error(result.error || 'Unable to reorder finishing position.');
 			players = result.players;
-			const eliminated = players.filter((player) => player.eliminated)
-				.sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999));
-			for (const player of eliminated) {
-				if (player.guest || player.redtoothId === null || player.eliminationPosition === null) continue;
-				const previousPending = player.redtoothPendingPoints ?? 0;
-				const confirmedPoints = (player.redtoothPoints ?? 0) - previousPending;
-				const newPoints = Math.max(0, pointsForPlace(player.eliminationPosition) - 10);
-				player.redtoothPendingPoints = newPoints;
-				player.redtoothPoints = confirmedPoints + newPoints;
-				redtoothPlayers = redtoothPlayers.map((row) =>
-					row.redtoothId === player.redtoothId
-						? { ...row, localGames: 1, localPoints: newPoints, pendingPoints: newPoints }
-						: row
-				);
-			}
-			schedulePlayerSave();
+			redtoothPlayers = result.redtoothPlayers ?? redtoothPlayers;
 		} catch (error) {
 			console.error('Elimination reorder failed:', error);
 			await loadTournament();
@@ -1256,40 +1236,7 @@
 			const restoredPlayer = players.find((player) => player.id === id);
 			if (!restoredPlayer) return;
 
-			// Remove this player's unpublished Redtooth result.
-			if (restoredPlayer.redtoothId && restoredPosition !== null) {
-				const points = Math.max(0, pointsForPlace(restoredPosition) - 10);
-				const previousPending = restoredPlayer.redtoothPendingPoints ?? 0;
-				const confirmedPoints = (restoredPlayer.redtoothPoints ?? 0) - previousPending;
-				restoredPlayer.redtoothPendingPoints = 0;
-				restoredPlayer.redtoothPoints = confirmedPoints;
-				redtoothPlayers = redtoothPlayers.map((row) =>
-					row.redtoothId === restoredPlayer.redtoothId
-						? {
-							...row,
-							localGames: Math.max(0, (row.localGames ?? 0) - 1),
-							localPoints: Math.max(0, (row.localPoints ?? 0) - points),
-							pendingPoints: Math.max(0, (row.pendingPoints ?? 0) - points)
-						}
-						: row
-				);
-			}
-
-			// Recalculate unpublished league points for players whose positions shifted.
-			for (const remainingPlayer of players) {
-				if (!remainingPlayer.eliminated || remainingPlayer.guest || remainingPlayer.redtoothId === null) continue;
-				const previousPending = remainingPlayer.redtoothPendingPoints ?? 0;
-				const confirmedPoints = (remainingPlayer.redtoothPoints ?? 0) - previousPending;
-				const newPoints = Math.max(0, pointsForPlace(remainingPlayer.eliminationPosition ?? 1) - 10);
-				remainingPlayer.redtoothPendingPoints = newPoints;
-				remainingPlayer.redtoothPoints = confirmedPoints + newPoints;
-				redtoothPlayers = redtoothPlayers.map((row) =>
-					row.redtoothId === remainingPlayer.redtoothId
-						? { ...row, localGames: 1, localPoints: newPoints, pendingPoints: newPoints }
-						: row
-				);
-			}
-			schedulePlayerSave();
+			redtoothPlayers = result.redtoothPlayers ?? redtoothPlayers;
 		} catch (error) {
 			console.error('Player restoration failed:', error);
 			await loadTournament();
