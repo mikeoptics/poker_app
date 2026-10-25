@@ -796,12 +796,10 @@
 				body: JSON.stringify({ action: 'deletePlayer', playerId: id })
 			});
 			if (!response.ok) throw new Error((await response.json()).error || 'Unable to delete player.');
-			players = players.filter((item) => item.id !== id);
+			players = (await response.json()).players;
 			balanceSuggestions = [];
 			balanceMessage = '';
-			distributeAcrossTables();
 			rebalanceTables();
-			schedulePlayerSave();
 		} catch (error) {
 			console.error('Player deletion failed:', error);
 			await loadTournament();
@@ -900,7 +898,6 @@
 			// Keep existing seats stable. If adding this player exceeds a table's
 			// capacity, offer a split rather than silently redistributing everyone.
 			rebalanceTables();
-			schedulePlayerSave();
 		} catch (error) {
 			console.error('Player addition failed:', error);
 			await loadTournament();
@@ -1723,20 +1720,23 @@
 				method: 'PUT', headers: { 'content-type': 'application/json' }, body: serialised
 			});
 			if (!response.ok) throw new Error('Unable to save tournament settings.');
-			const playerResponse = await fetch(`/api/tournament/${venueId}`, {
+			const redtoothResponse = await fetch(`/api/tournament/${venueId}`, {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({
-					action: 'savePlayers',
-					players,
-					nextPlayerId,
-					redtoothPlayers,
-					eliminationEvent,
-					tableMoveEvent,
-					announcementEvent
+					action: 'saveRedtoothState',
+					players: players.map((player) => ({
+						id: player.id,
+						redtoothId: player.redtoothId,
+						redtoothGames: player.redtoothGames,
+						redtoothPoints: player.redtoothPoints,
+						redtoothPendingPoints: player.redtoothPendingPoints,
+						redtoothConfirmed: player.redtoothConfirmed
+					})),
+					redtoothPlayers
 				})
 			});
-			if (!playerResponse.ok) throw new Error('Unable to save player state.');
+			if (!redtoothResponse.ok) throw new Error('Unable to save Redtooth state.');
 			lastSavedSnapshot = serialised;
 		} catch (error) {
 			console.error('Tournament save failed:', error);
