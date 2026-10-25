@@ -236,6 +236,7 @@
 
 	const redtoothRegisteredPlayers = $derived(players.filter((p) => p.redtoothId !== null));
 	const activePlayerCount = $derived(activePlayers.length);
+	const unpaidPlayerCount = $derived(activePlayers.filter((p) => !p.paid).length);
 	const currentBlinds = $derived(levels[currentLevel]);
 
 	const previousBlinds = $derived(currentLevel > 0 ? levels[currentLevel - 1] : null);
@@ -2025,9 +2026,12 @@ function startCasting() {
 			<section class="director-dashboard">
 				<div class="director-level-bar">
 					<button class="level-arrow" aria-label="Previous blind level" onclick={previousLevel} disabled={currentLevel === 0}>◀</button>
-					<button class="level-main" onclick={toggleTimer} aria-label={running ? 'Pause tournament timer' : 'Resume tournament timer'}>
-						<span class="director-eyebrow">LEVEL {currentLevel + 1} OF {levels.length} · {running ? 'RUNNING' : 'PAUSED'}</span>
-						<span class="director-clock">{formattedTime}</span>
+					<div class="level-main">
+						<div class="timer-state-line">
+							<span class="director-eyebrow">LEVEL {currentLevel + 1} OF {levels.length}</span>
+							<span class:state-running={running} class="timer-state" aria-live="polite">{running ? 'RUNNING' : 'PAUSED'}</span>
+						</div>
+						<span class="director-clock" aria-label={`Time remaining ${formattedTime}`}>{formattedTime}</span>
 						{#if currentBlinds?.break}
 							<strong>BREAK</strong>
 							<span class="director-blinds">{currentBlinds.minutes} MINUTES</span>
@@ -2035,11 +2039,11 @@ function startCasting() {
 							{#if mixedGames}<strong>{currentBlinds?.game}</strong>{/if}
 							<span class="director-blinds">{currentBlinds?.sb} / {currentBlinds?.bb}</span>
 						{/if}
-						<span class="director-hint">TAP TO {running ? 'PAUSE' : 'START'}</span>
-					</button>
+						<button class="timer-primary-action" type="button" onclick={toggleTimer}>{running ? 'PAUSE TIMER' : 'START TIMER'}</button>
+					</div>
 					<button class="level-arrow" aria-label="Next blind level" onclick={nextLevel} disabled={currentLevel >= levels.length - 1}>▶</button>
 				</div>
-				<div class="director-progress"><div
+				<div class="director-progress" role="progressbar" aria-label="Level time remaining" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(progress)}><div
 					class:progress-paused={!running}
 					class:progress-break={running && currentBlinds?.break}
 					class:progress-ending={running && displaySeconds <= 10}
@@ -2051,8 +2055,8 @@ function startCasting() {
 				</div>
 				<section class="director-players">
 					<div class="director-section-heading">
-						<div><h1>Players</h1></div>
-						<div class="director-player-count"><strong>{activePlayerCount}</strong><span>REMAINING</span></div>
+						<div><h1>Players</h1><p class="players-payment-summary">{activePlayerCount} active <span>·</span> {unpaidPlayerCount} unpaid</p></div>
+						<div class="director-player-count" aria-label={`${activePlayerCount} active players`}><strong>{activePlayerCount}</strong><span>ACTIVE</span></div>
 					</div>
 
 					{#if activePlayers.length === 0 && eliminatedPlayers.length === 0}
@@ -2080,9 +2084,7 @@ function startCasting() {
 											{#if player.eliminated}
 												<span>{player.eliminationPosition}{player.eliminationPosition === 1 ? 'ST' : player.eliminationPosition === 2 ? 'ND' : player.eliminationPosition === 3 ? 'RD' : 'TH'} PLACE</span>
 											{/if}
-											{#if !player.paid}
-												<span class="payment-pill">UNPAID</span>
-												{/if}
+											<span class:paid={player.paid} class="payment-pill" aria-label={player.paid ? 'Paid' : 'Unpaid'}>{player.paid ? 'PAID' : 'UNPAID'}</span>
 										</div>
 									</div>
 								</div>
@@ -3632,4 +3634,95 @@ function startCasting() {
 		color: #c4a36a !important;
 		box-shadow: none !important;
 	}
+
+	/* Experimental premium timer interface */
+	:global(:root) {
+		--app-bg: #0f1113;
+		--surface-1: #191b1e;
+		--surface-2: #202328;
+		--line: #30343a;
+		--text-primary: #f5f5f5;
+		--text-secondary: #b0b5bc;
+		--text-muted: #9299a2;
+		--accent-gold: #c5a15a;
+		--accent-gold-pressed: #d5b76f;
+		--unpaid-bg: #302023;
+		--unpaid-line: #804047;
+		--unpaid-text: #e6a0a5;
+		--paid-bg: #1d2d26;
+		--paid-line: #365a46;
+		--paid-text: #9dd1af;
+	}
+	.app { background:var(--app-bg) !important; color:var(--text-primary); padding: max(12px, env(safe-area-inset-top)) 18px max(8px, env(safe-area-inset-bottom)) !important; gap:0; }
+	.header { min-height:48px; margin-bottom:12px !important; }
+	.header-actions { display:flex !important; flex:0 0 auto !important; align-items:center; gap:8px !important; }
+	.icon-action { width:44px !important; min-width:44px !important; height:44px !important; min-height:44px !important; border:1px solid var(--line) !important; border-radius:12px !important; background:var(--surface-1) !important; color:var(--text-secondary) !important; }
+	.icon-action svg { width:22px; height:22px; }
+	main { overflow-x:hidden !important; overflow-y:auto !important; overscroll-behavior:contain; scrollbar-width:thin; }
+	.director-dashboard { max-width:760px; margin:0 auto; padding:0 0 24px !important; }
+	.director-level-bar { display:grid; grid-template-columns:48px minmax(0,1fr) 48px; gap:10px !important; align-items:stretch; }
+	.level-arrow { align-self:center; width:48px; min-width:48px; height:48px; min-height:48px !important; border:1px solid var(--line) !important; border-radius:12px !important; background:var(--surface-1) !important; color:var(--text-secondary) !important; font-size:17px !important; }
+	.level-arrow:disabled { background:transparent !important; border-color:#25292e !important; color:#515860 !important; }
+	.level-main { min-width:0; min-height:0 !important; padding:18px 16px 16px !important; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px !important; border:1px solid var(--line) !important; border-radius:18px !important; background:var(--surface-1) !important; text-align:center; }
+	.timer-state-line { display:flex; width:100%; align-items:center; justify-content:space-between; gap:10px; }
+	.director-eyebrow { color:var(--text-secondary) !important; font-size:11px !important; font-weight:700 !important; letter-spacing:.09em !important; }
+	.timer-state { padding:4px 8px; border:1px solid #55504a; border-radius:6px; color:#d7bd8a; font-size:10px; font-weight:800; letter-spacing:.08em; }
+	.timer-state.state-running { border-color:#365a46; color:#9dd1af; }
+	.director-clock { order:initial !important; max-width:100%; color:var(--text-primary) !important; font-size:clamp(58px, 13vw, 82px) !important; font-weight:750 !important; font-variant-numeric:tabular-nums; letter-spacing:-.055em !important; line-height:1 !important; white-space:nowrap; }
+	.level-main strong { order:initial !important; color:var(--text-secondary) !important; font-size:12px !important; letter-spacing:.1em !important; }
+	.director-blinds { order:initial !important; color:var(--text-secondary) !important; font-size:clamp(17px, 4vw, 22px) !important; font-weight:650 !important; }
+	.timer-primary-action { min-height:46px; width:min(100%,260px); margin-top:7px; padding:0 20px; border:1px solid var(--accent-gold) !important; border-radius:10px; background:var(--accent-gold) !important; color:#171614 !important; font-size:13px; font-weight:800; letter-spacing:.04em; }
+	.timer-primary-action:hover { background:var(--accent-gold-pressed) !important; }
+	.timer-primary-action:focus-visible, .icon-action:focus-visible, .level-arrow:focus-visible, .icon-tabs button:focus-visible { outline:2px solid var(--accent-gold-pressed); outline-offset:3px; }
+	.director-progress { height:4px !important; margin:12px 2px 0; overflow:hidden; border-radius:99px; background:#292e34 !important; }
+	.director-progress div { border-radius:99px; }
+	.director-level-context { display:flex; justify-content:space-between; gap:14px; margin:10px 2px 22px !important; color:var(--text-muted) !important; font-size:11px !important; letter-spacing:.02em; }
+	.director-level-context span { min-width:0; }
+	.director-players { padding:0 !important; }
+	.director-section-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; margin:0 2px 10px !important; }
+	.director-section-heading h1 { color:var(--text-primary) !important; font-size:23px !important; font-weight:700; letter-spacing:-.035em; }
+	.players-payment-summary { margin:3px 0 0; color:var(--text-secondary); font-size:12px; }
+	.players-payment-summary span { padding:0 3px; color:var(--text-muted); }
+	.director-player-count { display:flex; flex-direction:row !important; align-items:baseline; gap:6px; color:var(--text-secondary) !important; }
+	.director-player-count strong { font-size:20px; font-weight:700; color:var(--text-primary) !important; }
+	.director-player-count span { font-size:10px; font-weight:750; letter-spacing:.08em; }
+	.director-player-list { overflow:visible !important; border:0 !important; border-radius:0 !important; background:transparent !important; }
+	.director-player-swipe { border:0 !important; border-bottom:1px solid var(--line) !important; border-radius:0 !important; background:transparent !important; }
+	.director-player-swipe:last-child { border-bottom:0 !important; }
+	.director-player-row, .director-player-list.eliminated-list .director-player-row { min-height:66px !important; padding:12px 10px !important; border:0 !important; border-radius:0 !important; background:transparent !important; }
+	.director-player-identity { min-width:0; gap:10px !important; }
+	.director-player-identity strong { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-primary) !important; font-size:16px !important; font-weight:600 !important; }
+	.payment-pill { flex:0 0 auto; min-height:28px; display:inline-flex; align-items:center; justify-content:center; padding:3px 9px !important; border:1px solid var(--unpaid-line) !important; border-radius:7px !important; background:var(--unpaid-bg) !important; color:var(--unpaid-text) !important; font-size:11px !important; font-weight:750 !important; letter-spacing:.035em !important; box-shadow:none !important; }
+	.payment-pill.paid { border-color:var(--paid-line) !important; background:var(--paid-bg) !important; color:var(--paid-text) !important; }
+	.director-empty { padding:24px 12px; border-top:1px solid var(--line); color:var(--text-secondary) !important; text-align:center; }
+	.tabs.icon-tabs { order:10; position:relative; z-index:5; flex:0 0 auto; display:flex; justify-content:space-around; align-items:center; gap:6px !important; width:min(760px,100%); min-height:60px; margin:8px auto 0 !important; padding:7px 4px max(7px, env(safe-area-inset-bottom)) !important; border:0 !important; border-top:1px solid var(--line) !important; background:var(--app-bg) !important; }
+	.icon-tabs button { flex:1 1 0 !important; max-width:64px; min-width:44px !important; min-height:44px !important; width:100%; height:44px; padding:0 !important; border:0 !important; border-radius:10px !important; background:transparent !important; color:var(--text-muted) !important; }
+	.icon-tabs button.active { color:var(--accent-gold) !important; background:transparent !important; box-shadow:inset 0 -2px 0 var(--accent-gold) !important; }
+	.icon-tabs button:hover, .icon-tabs button:focus, .icon-tabs button:active { background:transparent !important; }
+	@media (max-width:700px) {
+		.app { padding-left:16px !important; padding-right:16px !important; }
+		.header { margin-bottom:8px !important; }
+		.header-actions { display:flex !important; flex-wrap:nowrap !important; }
+		.header-actions > button { display:inline-flex !important; }
+		.director-level-bar { grid-template-columns:40px minmax(0,1fr) 40px; gap:7px !important; }
+		.level-arrow { width:40px; min-width:40px; height:44px; min-height:44px !important; }
+		.level-main { padding:16px 12px 14px !important; border-radius:15px !important; }
+		.director-clock { font-size:clamp(52px, 14vw, 72px) !important; }
+		.director-level-context { font-size:10px !important; margin-bottom:18px !important; }
+		.director-player-row { min-height:64px !important; padding:11px 6px !important; }
+		.director-player-identity strong { font-size:16px !important; }
+		.icon-tabs { min-height:58px; }
+	}
+	@media (max-width:360px) {
+		.app { padding-left:12px !important; padding-right:12px !important; }
+		.header-actions { gap:4px !important; }
+		.icon-action { width:40px !important; min-width:40px !important; height:40px !important; min-height:40px !important; }
+		.director-clock { font-size:clamp(46px, 13.5vw, 58px) !important; }
+		.director-player-identity { gap:6px !important; }
+		.payment-pill { padding:3px 6px !important; font-size:10px !important; }
+	}
+	@media (prefers-reduced-motion:reduce) {
+		:global(*), :global(*::before), :global(*::after) { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+	}
+
 </style>
