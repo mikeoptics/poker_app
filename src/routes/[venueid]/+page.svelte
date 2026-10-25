@@ -1839,6 +1839,12 @@
 			const snapshot = tournamentSnapshot();
 			const serialised = JSON.stringify(snapshot);
 			if (serialised === lastSavedSnapshot) return;
+			// Create/update the tournament configuration first. A new venue has no
+			// JSON record yet, so savePlayers would otherwise return 404.
+			const response = await fetch(`/api/tournament/${venueId}`, {
+				method: 'PUT', headers: { 'content-type': 'application/json' }, body: serialised
+			});
+			if (!response.ok) throw new Error('Unable to save tournament settings.');
 			const playerResponse = await fetch(`/api/tournament/${venueId}`, {
 				method: 'POST',
 				headers: { 'content-type': 'application/json' },
@@ -1853,10 +1859,7 @@
 				})
 			});
 			if (!playerResponse.ok) throw new Error('Unable to save player state.');
-			const response = await fetch(`/api/tournament/${venueId}`, {
-				method: 'PUT', headers: { 'content-type': 'application/json' }, body: serialised
-			});
-			if (response.ok) lastSavedSnapshot = serialised;
+			lastSavedSnapshot = serialised;
 		} catch (error) {
 			console.error('Tournament save failed:', error);
 		} finally {
