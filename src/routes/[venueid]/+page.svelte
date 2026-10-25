@@ -2394,40 +2394,6 @@ function startCasting() {
 				</section>
 		{:else if activeTab === 'setup'}
 			<section class="players-workspace">
-				<div class="players-panel-heading">
-					<div>
-						<span class="label">TOURNAMENT MANAGEMENT</span>
-						<h2>Players</h2>
-						<p>Add players, manage entries and track payments.</p>
-					</div>
-					<div class="players-summary">
-						<div><strong>{activePlayerCount}</strong><span>Active</span></div>
-						<div><strong>{players.length}</strong><span>Players</span></div>
-						<div><strong>{totalEntries}</strong><span>Entries</span></div>
-					</div>
-				</div>
-
-				<div class="players-add-panel">
-					<form class="players-add-form" onsubmit={(e) => { e.preventDefault(); addPlayerFromForm(); }}>
-						<label class="redtooth-player-input">
-							<span>Player name</span>
-							<div class="redtooth-autocomplete">
-								<input value={newPlayerName} placeholder="Search Redtooth or enter a name" autocomplete="off" oninput={(e) => { newPlayerName = e.currentTarget.value; redtoothSelectedPlayer = null; searchRedtooth(e.currentTarget.value); }} />
-								{#if redtoothSearchResults.length > 0}
-									<div class="redtooth-search-results">
-										{#each redtoothSearchResults as result}
-											<button type="button" class="redtooth-search-result" onclick={() => selectRedtoothPlayer(result)}>
-												<span><strong>{result.name}</strong><small>{result.games} games · {result.points} pts</small></span>
-												<span class="redtooth-search-position">#{result.position}</span>
-											</button>
-										{/each}
-									</div>
-								{/if}
-							</div>
-						</label>
-						<button class="primary add-player-submit" type="submit">+ Add player</button>
-					</form>
-				</div>
 
 				<div class="players-roster">
 					<div class="players-roster-heading">
@@ -2455,6 +2421,29 @@ function startCasting() {
 							{/each}
 						</div>
 					{/if}
+				</div>
+			</section>
+
+				<div class="players-add-panel">
+					<form class="players-add-form" onsubmit={(e) => { e.preventDefault(); addPlayerFromForm(); }}>
+						<label class="redtooth-player-input">
+							<span>Player name</span>
+							<div class="redtooth-autocomplete">
+								<input value={newPlayerName} placeholder="Search Redtooth or enter a name" autocomplete="off" oninput={(e) => { newPlayerName = e.currentTarget.value; redtoothSelectedPlayer = null; searchRedtooth(e.currentTarget.value); }} />
+								{#if redtoothSearchResults.length > 0}
+									<div class="redtooth-search-results">
+										{#each redtoothSearchResults as result}
+											<button type="button" class="redtooth-search-result" onclick={() => selectRedtoothPlayer(result)}>
+												<span><strong>{result.name}</strong><small>{result.games} games · {result.points} pts</small></span>
+												<span class="redtooth-search-position">#{result.position}</span>
+											</button>
+										{/each}
+									</div>
+								{/if}
+							</div>
+						</label>
+						<button class="primary add-player-submit" type="submit">+ Add player</button>
+					</form>
 				</div>
 			</section>
 		{:else if activeTab === 'payouts'}
