@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
+	import { fly } from 'svelte/transition';
 	import { ClockArrowUp, Settings } from '@lucide/svelte';
 	import { page } from '$app/state';
 	import Tables from '$lib/components/Tables/Tables.svelte';
@@ -2032,7 +2033,7 @@ function startCasting() {
 					timerCompact = timerCompact ? scrollTop > 24 : scrollTop > 80;
 				}}
 			>
-				<div class="director-sticky-timer" class:compact={timerCompact}>
+				<div class="director-sticky-timer">
 				<div class="director-level-bar">
 					<button class="level-arrow" aria-label="Previous blind level" onclick={previousLevel} disabled={currentLevel === 0}>◀</button>
 					<button class="level-main" onclick={toggleTimer} aria-label={running ? 'Pause tournament timer' : 'Resume tournament timer'}>
@@ -2060,6 +2061,30 @@ function startCasting() {
 					<span>NEXT: {#if nextBlinds}{nextBlinds.break ? 'BREAK' : `${nextBlinds.sb} / ${nextBlinds.bb}`}{:else}—{/if}</span>
 				</div>
 				</div>
+				{#if timerCompact}
+					<div class="director-compact-overlay" transition:fly={{ y: -18, duration: 180 }}>
+						<div class="director-level-bar">
+							<button class="level-arrow" aria-label="Previous blind level" onclick={previousLevel} disabled={currentLevel === 0}>◀</button>
+							<button class="level-main" onclick={toggleTimer} aria-label={running ? 'Pause tournament timer' : 'Resume tournament timer'}>
+								<span class="director-clock">{formattedTime}</span>
+								{#if currentBlinds?.break}
+									<strong>BREAK</strong>
+									<span class="director-blinds">{currentBlinds.minutes} MINUTES</span>
+								{:else}
+									{#if mixedGames}<strong>{currentBlinds?.game}</strong>{/if}
+									<span class="director-blinds">{currentBlinds?.sb} / {currentBlinds?.bb}</span>
+								{/if}
+							</button>
+							<button class="level-arrow" aria-label="Next blind level" onclick={nextLevel} disabled={currentLevel >= levels.length - 1}>▶</button>
+						</div>
+						<div class="director-progress"><div
+							class:progress-paused={!running}
+							class:progress-break={running && currentBlinds?.break}
+							class:progress-ending={running && displaySeconds <= 10}
+							style={`width:${progress}%`}
+						></div></div>
+					</div>
+				{/if}
 				<section class="director-players">
 					<div class="director-section-heading">
 						<div><h1>Players</h1></div>
@@ -3814,71 +3839,56 @@ function startCasting() {
 	}
 
 
-/* Collapsing sticky timer: the dashboard remains the single scroll container. */
+/* The full timer stays in normal flow. The compact copy is a separate overlay,
+   so changing its size cannot alter the scroll geometry of the player list. */
 .director-sticky-timer {
-	position: sticky;
-	top: 0;
-	z-index: 20;
+	position: relative;
+	z-index: 1;
 	background: #101214;
 	padding: 0 0 8px;
-	transform-origin: top center;
 }
-.director-sticky-timer .director-level-bar,
-.director-sticky-timer .level-main,
-.director-sticky-timer .level-arrow,
-.director-sticky-timer .director-progress,
-.director-sticky-timer .director-level-context {
-	/* Avoid animating layout dimensions while the scroll container is moving. */
-	transition: none;
+.director-compact-overlay {
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 100;
+	padding: 8px 14px;
+	background: #101214;
+	box-shadow: 0 5px 16px rgba(0,0,0,.35);
 }
-.director-sticky-timer .director-eyebrow,
-.director-sticky-timer .director-hint {
-	transition: opacity .12s ease;
-}
-.director-sticky-timer.compact .director-level-bar {
+.director-compact-overlay .director-level-bar {
 	grid-template-columns: 38px minmax(0, 1fr) 38px;
 	gap: 6px;
 }
-.director-sticky-timer.compact .level-arrow,
-.director-sticky-timer.compact .level-main {
+.director-compact-overlay .level-arrow,
+.director-compact-overlay .level-main {
 	min-height: 62px;
 	height: 62px;
 	padding: 5px 8px;
 	border-radius: 9px;
 }
-.director-sticky-timer.compact .level-main {
+.director-compact-overlay .level-main {
 	gap: 2px;
 	flex-direction: row;
 	flex-wrap: wrap;
 	column-gap: 10px;
 }
-.director-sticky-timer.compact .director-eyebrow,
-.director-sticky-timer.compact .director-hint {
-	display: none;
-}
-.director-sticky-timer.compact .director-clock {
+.director-compact-overlay .director-clock {
 	font-size: 27px !important;
 	line-height: 1;
 }
-.director-sticky-timer.compact .director-blinds {
+.director-compact-overlay .director-blinds {
 	font-size: 16px !important;
 }
-.director-sticky-timer.compact .level-main strong {
+.director-compact-overlay .level-main strong {
 	font-size: 14px !important;
 }
-.director-sticky-timer.compact .director-progress {
+.director-compact-overlay .director-progress {
 	margin-top: 5px;
 }
-.director-sticky-timer.compact .director-level-context {
-	margin-top: 4px;
-	margin-bottom: 4px;
-	font-size: 8px;
-}
-@media (prefers-reduced-motion: reduce) {
-	.director-sticky-timer,
-	.director-sticky-timer * {
-		transition: none !important;
-	}
+@media (max-width: 700px) {
+	.director-compact-overlay { padding: 8px 12px; }
 }
 
 </style>
