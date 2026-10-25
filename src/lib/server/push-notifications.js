@@ -57,14 +57,16 @@ async function checkVenueFiles() {
 		const subscriptionsFile = path.join(PUSH_DIR, venueId + '.json');
 		try {
 			const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
-			if (!state.running || !Array.isArray(state.levels) || !state.levels.length) continue;
+			if (!Array.isArray(state.levels) || !state.levels.length) continue;
 			const subscriptions = JSON.parse(await fs.readFile(subscriptionsFile, 'utf8'));
 			if (!Array.isArray(subscriptions) || !subscriptions.length) continue;
 			const cursorFile = path.join(PUSH_DIR, venueId + '.state.json');
 			let cursor = { level: Number(state.currentLevel) || 0 };
 			try { cursor = JSON.parse(await fs.readFile(cursorFile, 'utf8')); } catch {}
 			let index = Math.max(0, Number(state.currentLevel) || 0);
-			let remaining = Math.max(0, Number(state.remainingMs) || 0) - Math.max(0, Date.now() - Number(state.updatedAt || Date.now()));
+			let remaining = state.running
+				? Math.max(0, Number(state.remainingMs) || 0) - Math.max(0, Date.now() - Number(state.updatedAt || Date.now()))
+				: Math.max(0, Number(state.remainingMs) || 0);
 			while (remaining <= 0 && index < state.levels.length - 1) {
 				index += 1;
 				remaining += Math.max(1, Number(state.levels[index]?.minutes) || 1) * 60000;
