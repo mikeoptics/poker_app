@@ -2279,7 +2279,6 @@ function startCasting() {
 				<div class="players-roster">
 					<div class="players-roster-heading">
 						<h3>Player list</h3>
-						<span>Swipe left to eliminate · swipe right to toggle payment</span>
 					</div>
 					{#if players.length === 0}
 						<p class="empty players-empty">No players added yet.</p>
@@ -2290,7 +2289,7 @@ function startCasting() {
 							</div>
 							{#each players as player (player.id)}
 								<div class="players-roster-row" class:player-eliminated={player.eliminated}>
-									<input class="players-name-input" aria-label="Player name" value={player.name} onchange={(e) => updatePlayerName(player.id, e.currentTarget.value)} />
+									<input class="players-name-input" aria-label="Player name" value={player.name} disabled={player.redtoothId != null} title={player.redtoothId != null ? "Linked player names are managed by Redtooth" : "Edit player name"} onchange={(e) => updatePlayerName(player.id, e.currentTarget.value)} />
 									<span class="roster-status">
 										{#if player.redtoothId != null}<span class="roster-tag tag-linked">Linked</span>{:else if !player.guest}<span class="roster-tag tag-unlinked">Not linked</span>{:else}<span class="roster-tag">Guest</span>{/if}
 									</span>
