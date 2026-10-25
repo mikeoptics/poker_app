@@ -24,6 +24,7 @@
 	"dependencies": {
 		"kokoro-js": "^1.2.1",
 		"ws": "^8.21.3",
-		"web-push": "^3.6.7"
+		"web-push": "^3.6.7",
+		"@lucide/svelte": "^0.542.0"
 	}
 }
