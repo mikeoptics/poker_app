@@ -386,6 +386,13 @@ export async function POST({ params, request }) {
 				if (!player) return json({ error: 'Player not found.' }, { status: 404 });
 				if (player.eliminated) return json({ error: 'Eliminated players cannot be deleted.' }, { status: 409 });
 				s.players = s.players.filter((/** @type {any} */ item) => Number(item.id) !== playerId);
+				// Compact remaining active seats without moving players between tables.
+				const remainingActive = s.players.filter((/** @type {any} */ item) => !item.eliminated);
+				const tableIds = [...new Set(remainingActive.map((/** @type {any} */ item) => Number(item.table)).filter((/** @type {number} */ table) => Number.isInteger(table) && table > 0))].sort((a, b) => a - b);
+				for (const table of tableIds) {
+					const seated = remainingActive.filter((/** @type {any} */ item) => Number(item.table) === table).sort((a, b) => Number(a.seat) - Number(b.seat));
+					seated.forEach((/** @type {any} */ item, index) => { item.seat = index + 1; });
+				}
 				s.updatedAt = Date.now();
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 				return json({ ok: true, players: s.players, updatedAt: s.updatedAt });
@@ -522,6 +529,43 @@ export async function POST({ params, request }) {
 				s.updatedAt = Date.now();
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 				return json({ ok: true, players: s.players, tableNames: s.tableNames ?? {}, tableMoveEvent: s.tableMoveEvent ?? null, updatedAt: s.updatedAt });
+			}
+			if (action === 'saveRedtoothState') {
+				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				if (!Array.isArray(body.players) || body.players.length > 500) return json({ error: 'Invalid Redtooth player state.' }, { status: 400 });
+				const seen = new Set();
+				for (const item of body.players) {
+					const id = Number(item?.id);
+					if (!Number.isInteger(id) || id <= 0 || seen.has(id) ||
+						(item.redtoothId !== null && (!Number.isInteger(Number(item.redtoothId)) || Number(item.redtoothId) <= 0 || Number(item.redtoothId) > 1000000000)) ||
+						!Number.isInteger(Number(item.redtoothGames)) || Number(item.redtoothGames) < 0 || Number(item.redtoothGames) > 1000000 ||
+						!Number.isInteger(Number(item.redtoothPoints)) || Number(item.redtoothPoints) < 0 || Number(item.redtoothPoints) > 100000000 ||
+						!Number.isInteger(Number(item.redtoothPendingPoints)) || Number(item.redtoothPendingPoints) < 0 || Number(item.redtoothPendingPoints) > 100000000 ||
+						typeof item.redtoothConfirmed !== 'boolean') return json({ error: 'Invalid Redtooth player state.' }, { status: 400 });
+					seen.add(id);
+				}
+				const playerById = new Map(s.players.map((/** @type {any} */ player) => [Number(player.id), player]));
+				for (const item of body.players) {
+					const player = playerById.get(Number(item.id));
+					if (!player) continue;
+					player.redtoothId = item.redtoothId == null ? null : Number(item.redtoothId);
+					player.redtoothGames = Number(item.redtoothGames);
+					player.redtoothPoints = Number(item.redtoothPoints);
+					player.redtoothPendingPoints = Number(item.redtoothPendingPoints);
+					player.redtoothConfirmed = item.redtoothConfirmed;
+				}
+				if (Array.isArray(body.redtoothPlayers) && body.redtoothPlayers.length <= 5000) {
+					s.redtoothPlayers = body.redtoothPlayers.slice(0, 5000).map((/** @type {any} */ row) => ({
+						...row,
+						redtoothId: Number(row.redtoothId),
+						localGames: Math.max(0, Math.min(1000000, Number(row.localGames) || 0)),
+						localPoints: Math.max(0, Math.min(100000000, Number(row.localPoints) || 0)),
+						pendingPoints: Math.max(0, Math.min(100000000, Number(row.pendingPoints) || 0))
+					})).filter((/** @type {any} */ row) => Number.isInteger(row.redtoothId) && row.redtoothId > 0);
+				}
+				s.updatedAt = Date.now();
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, updatedAt: s.updatedAt });
 			}
 			if (action === 'savePlayers') {
 				if (!s) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
