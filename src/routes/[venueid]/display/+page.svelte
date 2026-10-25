@@ -34,7 +34,24 @@
 	let kokoroTTS = null;
 	let kokoroLoading = null;
 	let announcementAudio = null;
+	let tableMoveSound = null;
+	let soundEnabled = $state(false);
 	let lastSpokenAnnouncementId = '';
+
+	function playTableMoveSound() {
+		if (!soundEnabled || !tableMoveSound) return;
+		tableMoveSound.pause();
+		tableMoveSound.currentTime = 0;
+		void tableMoveSound.play().catch((error) => {
+			console.error('Table move sound playback failed:', error);
+			soundEnabled = false;
+		});
+	}
+
+	function enableSound() {
+		soundEnabled = true;
+		playTableMoveSound();
+	}
 
 	async function getKokoro() {
 		if (kokoroTTS) return kokoroTTS;
@@ -65,6 +82,7 @@
 	async function speakAnnouncement(announcement) {
 		if (!announcement?.text || !announcement.id || announcement.id === lastSpokenAnnouncementId) return;
 		lastSpokenAnnouncementId = announcement.id;
+		playTableMoveSound();
 		try {
 			const tts = await getKokoro();
 			if (tts) {
@@ -121,6 +139,9 @@
 		}
 	}
 	onMount(() => {
+		tableMoveSound = new Audio('https://www.myinstants.com/media/sounds/obi-wan-hello-there.mp3');
+		tableMoveSound.preload = 'auto';
+		tableMoveSound.volume = 0.85;
 		refresh();
 		pollTimer = setInterval(refresh, 1000);
 		tickTimer = setInterval(() => {
@@ -142,7 +163,14 @@
 <div class="screen">
 	<header>
 		<div class="eyebrow">LIVE TOURNAMENT</div>
-		<h1>{tournamentState?.venueName || 'Tournament display'}</h1>
+		<div class="header-right">
+			{#if !soundEnabled}
+				<button class="sound-button" onclick={enableSound}>Enable sound</button>
+			{:else}
+				<span class="sound-enabled">SOUND ON</span>
+			{/if}
+			<h1>{tournamentState?.venueName || 'Tournament display'}</h1>
+		</div>
 	</header>
 	{#if error && !tournamentState}<div class="waiting">{error}</div>{:else}
 		{#if showAnnouncement}
@@ -211,9 +239,32 @@
 	}
 	header {
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		justify-content: space-between;
 		gap: 2rem;
+	}
+	.header-right {
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 1.25rem;
+	}
+	.sound-button {
+		border: 1px solid #8d7548;
+		border-radius: 8px;
+		padding: 0.55rem 0.9rem;
+		background: #242629;
+		color: #f5f6f7;
+		font: inherit;
+		font-size: 0.85rem;
+		font-weight: 700;
+		cursor: pointer;
+	}
+	.sound-enabled {
+		color: #62d394;
+		font-size: 0.75rem;
+		font-weight: 800;
+		letter-spacing: 0.1em;
 	}
 	.eyebrow {
 		color: #7e8c93;
