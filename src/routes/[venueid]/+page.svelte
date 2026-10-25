@@ -3940,17 +3940,32 @@ function startCasting() {
 
 
 .install-app-button {
+	flex: 0 1 auto;
+	width: auto;
+	min-width: 0;
+	max-width: 100%;
 	min-height: 36px;
-	padding: 0 11px;
+	padding: 0 clamp(7px, 1.2vw, 11px);
 	border: 1px solid #53645c;
 	border-radius: 8px;
 	background: #1b2922;
 	color: #f4f4f1;
 	font: inherit;
-	font-size: 12px;
+	font-size: clamp(10px, 0.9vw, 12px);
 	font-weight: 700;
+	line-height: 1.1;
 	white-space: nowrap;
 	cursor: pointer;
+}
+@media (max-width: 700px) {
+	.install-app-button {
+		flex: 0 1 auto !important;
+		width: auto !important;
+		min-width: 0 !important;
+		min-height: 40px !important;
+		padding: 7px 9px !important;
+		font-size: clamp(10px, 2.8vw, 12px) !important;
+	}
 }
 .install-app-status {
 	margin: 4px 14px 0;
