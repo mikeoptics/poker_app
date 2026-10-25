@@ -2025,7 +2025,12 @@ function startCasting() {
 		{#if activeTab === 'timer'}
 			<section
 				class="director-dashboard"
-				onscroll={(event) => (timerCompact = event.currentTarget.scrollTop > 48)}
+				onscroll={(event) => {
+					const scrollTop = event.currentTarget.scrollTop;
+					// Separate enter/exit thresholds prevent the changing header height
+					// from immediately reversing the compact-state decision.
+					timerCompact = timerCompact ? scrollTop > 24 : scrollTop > 80;
+				}}
 			>
 				<div class="director-sticky-timer" class:compact={timerCompact}>
 				<div class="director-level-bar">
