@@ -2027,10 +2027,17 @@ function startCasting() {
 			<section
 				class="director-dashboard"
 				onscroll={(event) => {
-					const scrollTop = event.currentTarget.scrollTop;
-					// Separate enter/exit thresholds prevent the changing header height
-					// from immediately reversing the compact-state decision.
-					timerCompact = timerCompact ? scrollTop > 24 : scrollTop > 80;
+					const fullProgress = event.currentTarget.querySelector('.director-sticky-timer .director-progress');
+					if (!fullProgress) return;
+					// The compact overlay's progress bar sits 75px from the viewport top:
+					// 8px top padding + 62px timer + 5px progress margin.
+					// Switch when the full-size progress bar reaches that same position.
+					const progressTop = fullProgress.getBoundingClientRect().top;
+					const alignedTop = 75;
+					const hysteresis = 8;
+					timerCompact = timerCompact
+						? progressTop < alignedTop + hysteresis
+						: progressTop <= alignedTop;
 				}}
 			>
 				<div class="director-sticky-timer">
