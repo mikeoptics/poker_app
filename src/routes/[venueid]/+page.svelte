@@ -1,6 +1,6 @@
 <script>
 	import { onMount } from 'svelte';
-	import { Settings } from '@lucide/svelte';
+	import { ClockArrowUp, Settings } from '@lucide/svelte';
 	import { page } from '$app/state';
 	import Tables from '$lib/components/Tables/Tables.svelte';
 	import {
@@ -186,7 +186,7 @@
 	let buyInAmount = $state(5);
 	let tournamentStarted = $state(false);
 	let mixedGames = $state(false);
-	// timer | tables | setup | payouts
+	// timer | tables | setup | blindlevels | payouts
 	let activeTab = $state('timer');
 	/** @type {{ id:string; playerName:string; createdAt:number } | null} */
 	let eliminationEvent = $state(null);
@@ -2005,8 +2005,11 @@ function startCasting() {
 		<button class:active={activeTab === 'tables'} type="button" aria-label="Seating" title="Seating" aria-current={activeTab === 'tables' ? 'page' : undefined} onclick={() => (activeTab = 'tables')}>
 			<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
 		</button>
-		<button class:active={activeTab === 'setup'} type="button" aria-label="Setup and players" title="Setup and players" aria-current={activeTab === 'setup' ? 'page' : undefined} onclick={() => (activeTab = 'setup')}>
+		<button class:active={activeTab === 'setup'} type="button" aria-label="Players" title="Players" aria-current={activeTab === 'setup' ? 'page' : undefined} onclick={() => (activeTab = 'setup')}>
 			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6m3-3h-6"/></svg>
+		</button>
+		<button class:active={activeTab === 'blindlevels'} type="button" aria-label="Blind levels" title="Blind levels" aria-current={activeTab === 'blindlevels' ? 'page' : undefined} onclick={() => (activeTab = 'blindlevels')}>
+			<ClockArrowUp size={21} strokeWidth={1.8} />
 		</button>
 		<button class:active={activeTab === 'payouts'} type="button" aria-label="Payouts" title="Payouts" aria-current={activeTab === 'payouts' ? 'page' : undefined} onclick={() => (activeTab = 'payouts')}>
 			<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h2m8 0h2"/></svg>
@@ -2109,10 +2112,8 @@ function startCasting() {
 				{applyBalance}
 				{randomiseSeats}
 			/>
-		{:else if activeTab === 'setup'}
-			<div class="setup-layout">
-				<!-- LEFT: BLIND STRUCTURE -->
-				<section class="levels-card compact-levels">
+		{:else if activeTab === 'blindlevels'}
+			<section class="levels-card compact-levels">
 					<div class="section-heading">
 						<div>
 							<span class="label">STRUCTURE</span>
@@ -2238,9 +2239,8 @@ function startCasting() {
 						{/each}
 					</div>
 				</section>
-
-				<!-- RIGHT: TOURNAMENT SETTINGS -->
-				<div class="setup-sidebar">
+		{:else if activeTab === 'setup'}
+			<div class="setup-sidebar">
 					<!-- PLAYERS -->
 					<section class="setup-card players-card">
 						<div class="section-heading setup-heading">
@@ -2418,7 +2418,6 @@ function startCasting() {
 						</div>
 					</section>
 				</div>
-			</div>
 		{:else if activeTab === 'payouts'}
 			<section class="payout-card">
 				<div class="section-heading">
