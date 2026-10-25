@@ -158,8 +158,38 @@ function publicState(s) {
 export async function GET({ params, url }) {
 	if (!valid(params.venueid)) return json({ error: 'Invalid venue ID.' }, { status: 400 });
 	try {
-		const s = await read(params.venueid);
-		return json({ ok: true, state: url.searchParams.get('public') === '1' ? publicState(s) : s });
+		return await withVenueWriteLock(params.venueid, async () => {
+			const s = await read(params.venueid);
+			if (s?.running && Array.isArray(s.levels) && s.levels.length) {
+				let level = Math.max(0, Math.min(Number(s.currentLevel) || 0, s.levels.length - 1));
+				let remaining = Math.max(0, Number(s.remainingMs) || 0) - Math.max(0, Date.now() - Number(s.updatedAt || Date.now()));
+				const previousLevel = level;
+				while (remaining <= 0 && level < s.levels.length - 1) {
+					level += 1;
+					remaining += Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60_000;
+				}
+				if (level !== previousLevel || remaining < 0) {
+					const now = Date.now();
+					s.currentLevel = level;
+					s.levelDurationMs = Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60_000;
+					s.remainingMs = Math.max(0, remaining);
+					s.updatedAt = now;
+					if (level >= s.levels.length - 1 && remaining <= 0) {
+						s.remainingMs = 0;
+						s.running = false;
+					}
+					if (level > previousLevel && s.announcementEnabled) {
+						const next = s.levels[level];
+						const text = next?.break
+							? 'The tournament is now on a break.'
+							: `Blinds are now ${next?.sb ?? 0} / ${next?.bb ?? 0}.`;
+						s.announcementEvent = { id: `level-${now}-${level}`, text, createdAt: now };
+					}
+					await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				}
+			}
+			return json({ ok: true, state: url.searchParams.get('public') === '1' ? publicState(s) : s });
+		});
 	} catch (e) {
 		console.error('Tournament load failed:', e);
 		return json({ ok: false, error: 'Unable to load tournament data.' }, { status: 500 });
@@ -185,14 +215,22 @@ export async function PUT({ params, request }) {
 		const eliminationEvent = preserveRecentEvent(v.eliminationEvent, existing?.eliminationEvent);
 		const announcementEvent = preserveRecentEvent(v.announcementEvent, existing?.announcementEvent);
 		const tableMoveEvent = preserveRecentEvent(v.tableMoveEvent, existing?.tableMoveEvent);
+		// A sleeping admin tab can submit an older running timer snapshot when it wakes.
+		// Do not let that stale snapshot roll back a level already advanced by the server.
+		const keepServerTimer = Boolean(
+			existing?.running && v.running &&
+			Number(existing.currentLevel) > Number(v.currentLevel)
+		);
 		const s = {
 			levels: v.levels,
 			players: v.players,
 			nextPlayerId: Number(v.nextPlayerId) || 1,
-			currentLevel: Math.max(0, Number(v.currentLevel) || 0),
-			remainingMs: Math.max(0, Number(v.remainingMs) || 0),
-			levelDurationMs: Math.max(0, Number(v.levelDurationMs) || 0),
-			running: Boolean(v.running),
+			currentLevel: keepServerTimer ? existing.currentLevel : Math.max(0, Number(v.currentLevel) || 0),
+			remainingMs: keepServerTimer
+				? Math.max(0, Number(existing.remainingMs) - Math.max(0, Date.now() - Number(existing.updatedAt || Date.now())))
+				: Math.max(0, Number(v.remainingMs) || 0),
+			levelDurationMs: keepServerTimer ? existing.levelDurationMs : Math.max(0, Number(v.levelDurationMs) || 0),
+			running: keepServerTimer ? true : Boolean(v.running),
 			tournamentStarted: Boolean(v.tournamentStarted || v.running),
 			soundEnabled: Boolean(v.soundEnabled),
 			announcementEnabled: Boolean(v.announcementEnabled),
