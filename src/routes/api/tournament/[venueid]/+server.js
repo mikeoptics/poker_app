@@ -314,6 +314,57 @@ export async function POST({ params, request }) {
 		const action = String(body?.action ?? '');
 		return await withVenueWriteLock(params.venueid, async () => {
 			const s = await read(params.venueid);
+			if (action === 'addPlayer') {
+				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				if (s.players.length >= 500) return json({ error: 'Player limit reached.' }, { status: 409 });
+				if (typeof body.name !== 'string' || !body.name.trim() || body.name.trim().length > 160)
+					return json({ error: 'Invalid player name.' }, { status: 400 });
+				const name = body.name.trim();
+				if (s.players.some((/** @type {any} */ player) => player.name.trim().toLowerCase() === name.toLowerCase()))
+					return json({ error: 'A player with that name already exists.' }, { status: 409 });
+				const redtoothId = body.redtoothId == null ? null : Number(body.redtoothId);
+				if (redtoothId !== null && (!Number.isInteger(redtoothId) || redtoothId <= 0 || redtoothId > 1000000000))
+					return json({ error: 'Invalid league player ID.' }, { status: 400 });
+				if (redtoothId !== null && s.players.some((/** @type {any} */ player) => Number(player.redtoothId) === redtoothId))
+					return json({ error: 'That league player is already entered.' }, { status: 409 });
+				const active = s.players.filter((/** @type {any} */ player) => !player.eliminated && Number(player.table) > 0);
+				const tableCounts = new Map();
+				for (const player of active) tableCounts.set(Number(player.table), (tableCounts.get(Number(player.table)) || 0) + 1);
+				const tableIds = [...tableCounts.keys()].sort((x, y) => x - y);
+				const table = tableIds.length
+					? tableIds.sort((x, y) => tableCounts.get(x) - tableCounts.get(y) || x - y)[0]
+					: 1;
+				const occupied = new Set(active.filter((/** @type {any} */ player) => Number(player.table) === table).map((/** @type {any} */ player) => Number(player.seat)));
+				let seat = 1;
+				while (occupied.has(seat) && seat <= 8) seat += 1;
+				if (seat > 8) return json({ error: 'No available seat. Rebalance tables first.' }, { status: 409 });
+				const id = Math.max(1, Number(s.nextPlayerId) || 1, ...s.players.map((/** @type {any} */ player) => Number(player.id) + 1));
+				const player = {
+					id, name, table, seat, buyIns: 1, rebuys: 0, topUps: 0, paid: false,
+					eliminated: false, eliminationPosition: null, redtoothId,
+					redtoothGames: Math.max(0, Number(body.redtoothGames) || 0),
+					redtoothPoints: Math.max(0, Number(body.redtoothPoints) || 0),
+					redtoothConfirmed: redtoothId !== null, redtoothPendingPoints: 0,
+					guest: Boolean(body.guest)
+				};
+				s.players.push(player);
+				s.nextPlayerId = id + 1;
+				s.updatedAt = Date.now();
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, player, nextPlayerId: s.nextPlayerId, updatedAt: s.updatedAt });
+			}
+			if (action === 'deletePlayer') {
+				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				const playerId = Number(body.playerId);
+				if (!Number.isInteger(playerId) || playerId <= 0) return json({ error: 'Invalid player ID.' }, { status: 400 });
+				const player = s.players.find((/** @type {any} */ item) => Number(item.id) === playerId);
+				if (!player) return json({ error: 'Player not found.' }, { status: 404 });
+				if (player.eliminated) return json({ error: 'Eliminated players cannot be deleted.' }, { status: 409 });
+				s.players = s.players.filter((/** @type {any} */ item) => Number(item.id) !== playerId);
+				s.updatedAt = Date.now();
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, players: s.players, updatedAt: s.updatedAt });
+			}
 			if (action === 'setPlayerPaid' || action === 'renamePlayer' || action === 'adjustPlayerEntry') {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 				const playerId = Number(body.playerId);
