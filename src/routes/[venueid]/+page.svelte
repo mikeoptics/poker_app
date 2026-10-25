@@ -1792,41 +1792,12 @@
 		};
 	}
 
-		function getBrowserSettingsKey() {
-			return `poker-timer-settings:${venueId}`;
-		}
-
-		function saveBrowserSettings() {
-			try {
-				localStorage.setItem(getBrowserSettingsKey(), JSON.stringify({
-					levels, soundEnabled, announcementEnabled, buyInAmount, mixedGames, maxRebuys, maxTopUps
-				}));
-			} catch (error) {
-				console.warn('Unable to save browser settings:', error);
-			}
-		}
-
-		function loadBrowserSettings() {
-			try {
-				const raw = localStorage.getItem(getBrowserSettingsKey());
-				if (!raw) return;
-				const saved = JSON.parse(raw);
-				soundEnabled = saved.soundEnabled ?? soundEnabled;
-				announcementEnabled = saved.announcementEnabled ?? announcementEnabled;
-				buyInAmount = Number(saved.buyInAmount ?? buyInAmount);
-				mixedGames = saved.mixedGames ?? mixedGames;
-				maxRebuys = Math.max(0, Number(saved.maxRebuys ?? maxRebuys));
-				maxTopUps = Math.max(0, Number(saved.maxTopUps ?? maxTopUps));
-			} catch (error) {
-				console.warn('Unable to restore browser settings:', error);
-			}
-		}
 
 	async function loadTournament() {
 		const response = await fetch(`/api/tournament/${venueId}`);
 		if (!response.ok) throw new Error('Unable to load this venue tournament.');
 		const { state } = await response.json();
-		if (!state) { loadBrowserSettings(); return; }
+		if (!state) return;
 		if (Array.isArray(state.levels) && state.levels.length) levels = state.levels;
 		if (Array.isArray(state.players)) players = state.players;
 		nextPlayerId = state.nextPlayerId ?? players.reduce((max, player) => Math.max(max, player.id), 0) + 1;
@@ -1851,7 +1822,6 @@
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
 		lastSavedSnapshot = JSON.stringify(state);
-		loadBrowserSettings();
 		if (running) {
 			tournamentMode = currentBlinds?.break ? 'break' : 'play';
 			frame = requestAnimationFrame(syncTimer);
@@ -1859,7 +1829,6 @@
 	}
 
 	async function saveTournament() {
-		saveBrowserSettings();
 		if (savingTournament) {
 			savePending = true;
 			return;
@@ -2051,7 +2020,6 @@ function startCasting() {
 		loadTournament()
 			.catch((error) => {
 				console.error('Tournament load failed:', error);
-				loadBrowserSettings();
 			})
 			.finally(() => refreshRedtooth());
 		// Persist periodically rather than rewriting the full tournament file every second.
