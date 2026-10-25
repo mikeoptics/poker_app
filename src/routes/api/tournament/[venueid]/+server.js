@@ -530,6 +530,17 @@ export async function POST({ params, request }) {
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 				return json({ ok: true, players: s.players, tableNames: s.tableNames ?? {}, tableMoveEvent: s.tableMoveEvent ?? null, updatedAt: s.updatedAt });
 			}
+			if (action === 'clearPlayers') {
+				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				s.players = [];
+				s.nextPlayerId = 1;
+				s.eliminationEvent = null;
+				s.tableMoveEvent = null;
+				s.announcementEvent = null;
+				s.updatedAt = Date.now();
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, updatedAt: s.updatedAt });
+			}
 			if (action === 'saveRedtoothState') {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 				if (!Array.isArray(body.players) || body.players.length > 500) return json({ error: 'Invalid Redtooth player state.' }, { status: 400 });
