@@ -3539,7 +3539,7 @@ function startCasting() {
 	.players-roster-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; padding-bottom:12px; border-bottom:1px solid #30353a; }
 	.players-roster-heading h3 { margin:0; color:#f2f3f4; font-size:1rem; }
 	.players-roster-heading > span { color:#858d95; font-size:.72rem; text-align:right; }
-	.players-roster-list { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+	.players-roster-list { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding-bottom:calc(76px + env(safe-area-inset-bottom)); scroll-padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
 	.players-roster-table-heading, .players-roster-row { display:grid; grid-template-columns:minmax(180px, 1fr) minmax(130px, 220px) 88px; align-items:center; column-gap:16px; padding:10px 8px; }
 	.players-roster-table-heading { position:sticky; top:0; z-index:1; background:#17191b; border-bottom:1px solid #3a4046; color:#858d95; font-size:.67rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
 	.players-roster-row { border-bottom:1px solid #292e34; }
