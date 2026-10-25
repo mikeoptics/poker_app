@@ -1,6 +1,7 @@
 <script>
 	import './tables.css';
 
+	/** @type {{ activePlayerCount:number, players:any[], eliminatedPlayers:any[], balanceMessage:string, balanceSuggestions:any[], activePlayers:any[], tableCount:number, tableNames:Record<string,string>, renameTable?:Function, seatRole:Function, applyBalance:Function, replacePlayer:Function, randomiseSeats:Function }} */
 	let {
 		activePlayerCount,
 		players,
@@ -37,17 +38,20 @@
 			: []
 	);
 
+	/** @param {number} tableNumber */
 	function startRename(tableNumber) {
 		editingTableNumber = tableNumber;
 		tableNameDraft = tableNames[tableNumber] || `Table ${tableNumber}`;
 	}
 
+	/** @param {number} tableNumber */
 	function saveRename(tableNumber) {
 		renameTable?.(tableNumber, tableNameDraft);
 		editingTableNumber = null;
 		tableNameDraft = '';
 	}
 
+	/** @param {any} player */
 	function openReplace(player) {
 		replacingPlayerId = player.id;
 		selectedReplacementId = '';
