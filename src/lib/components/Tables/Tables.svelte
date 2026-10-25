@@ -120,10 +120,10 @@
 			<p>Select an active player from another table to move into this seat.</p>
 			{#if replacementCandidates.length}
 				<label for="replacement-player-select">Player to move</label>
-				<select id="replacement-player-select" value={selectedReplacementId} onchange={(event) => (selectedReplacementId = event.currentTarget.value)}>
-					<option value="">Select a player</option>
+				<select id="replacement-player-select" class="replacement-player-select" style="color-scheme: dark; color: #f0f2f1; background-color: #111519;" value={selectedReplacementId} onchange={(event) => (selectedReplacementId = event.currentTarget.value)}>
+					<option value="" style="color: #f0f2f1; background: #111519;">Select a player</option>
 					{#each replacementCandidates as candidate (candidate.id)}
-						<option value={candidate.id}>{candidate.name} — Table {candidate.table}, Seat {candidate.seat}</option>
+						<option value={candidate.id} style="color: #f0f2f1; background: #111519;">{candidate.name} — Table {candidate.table}, Seat {candidate.seat}</option>
 					{/each}
 				</select>
 			{:else}
