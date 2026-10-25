@@ -758,3 +758,18 @@
 	.replace-modal { padding: 18px; }
 	.table-player-name { align-items: flex-start; flex-direction: column; }
 }
+
+
+.seat-player-labels {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+.seat-player-labels small.eliminated-name {
+	color: #92999f;
+	font-size: 10px;
+	font-weight: 650;
+	text-decoration: line-through;
+	text-decoration-thickness: 1.5px;
+}
