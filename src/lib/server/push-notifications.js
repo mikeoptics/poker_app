@@ -19,7 +19,7 @@ function configure() {
 	return true;
 }
 
-/** @param {string} venueId */
+/** @param {string} venueId @param {any} subscription */
 export async function savePushSubscription(venueId, subscription) {
 	await fs.mkdir(PUSH_DIR, { recursive: true });
 	const file = path.join(PUSH_DIR, venueId + '.json');
@@ -28,7 +28,7 @@ export async function savePushSubscription(venueId, subscription) {
 	if (!Array.isArray(subscriptions)) subscriptions = [];
 	const endpoint = subscription?.endpoint;
 	if (!endpoint || typeof endpoint !== 'string') throw new Error('Invalid push subscription');
-	subscriptions = subscriptions.filter((item) => item.endpoint !== endpoint);
+	subscriptions = subscriptions.filter(/** @param {any} item */ (item) => item.endpoint !== endpoint);
 	subscriptions.push(subscription);
 	await fs.writeFile(file, JSON.stringify(subscriptions, null, 2));
 	const stateFile = path.join(PUSH_DIR, venueId + '.state.json');
@@ -43,7 +43,7 @@ export async function removePushSubscription(venueId, endpoint) {
 	const file = path.join(PUSH_DIR, venueId + '.json');
 	try {
 		const subscriptions = JSON.parse(await fs.readFile(file, 'utf8'));
-		await fs.writeFile(file, JSON.stringify(subscriptions.filter((item) => item.endpoint !== endpoint), null, 2));
+		await fs.writeFile(file, JSON.stringify(subscriptions.filter(/** @param {any} item */ (item) => item.endpoint !== endpoint), null, 2));
 	} catch {}
 }
 
@@ -89,7 +89,7 @@ async function checkVenueFiles() {
 			}
 			await fs.writeFile(cursorFile, JSON.stringify({ level: index }));
 		} catch (error) {
-			if (error?.code !== 'ENOENT') console.error('Blind push check failed for venue', venueId, error);
+			if (!(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT')) console.error('Blind push check failed for venue', venueId, error);
 		}
 	}
 }
