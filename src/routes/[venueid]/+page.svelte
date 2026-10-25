@@ -1159,18 +1159,29 @@
 		// Too few tables or a table exceeding eight: recommend opening a new table.
 		if (tableIds.length < requiredTables || Math.max(...counts.values()) > 8) {
 			balanceAction = 'split';
-			const sourceTable = [...tableIds].sort((a, b) => counts.get(b) - counts.get(a))[0];
 			const newTable = Math.max(...tableIds) + 1;
-			const sourcePlayers = [...grouped.get(sourceTable)].sort((a, b) => b.seat - a.seat);
 			const targetSize = Math.ceil(active.length / requiredTables);
-			while (counts.get(sourceTable) > targetSize) {
-				const player = sourcePlayers.shift();
+			let newTableCount = 0;
+
+			// Take players from the fullest existing tables until the new table
+			// reaches its share. This keeps all tables within one player where possible.
+			while (newTableCount < targetSize) {
+				const sourceTable = [...tableIds]
+					.filter((id) => counts.get(id) > targetSize)
+					.sort((a, b) => counts.get(b) - counts.get(a))[0];
+				if (sourceTable === undefined) break;
+
+				const player = [...grouped.get(sourceTable)]
+					.filter((item) => !balanceSuggestions.some((move) => move.id === item.id))
+					.sort((a, b) => b.seat - a.seat)[0];
 				if (!player) break;
+
 				const seat = nextSeat(newTable, balanceSuggestions);
-				balanceSuggestions.push({ id: player.id, name: player.name, from: sourceTable, to: newTable, seat: seat ?? 1 });
+				balanceSuggestions.push({ id: player.id, name: player.name, from: sourceTable, to: newTable, seat: seat ?? newTableCount + 1 });
 				counts.set(sourceTable, counts.get(sourceTable) - 1);
+				newTableCount += 1;
 			}
-			if (balanceSuggestions.length) balanceMessage = `Split Table ${sourceTable} and open Table ${newTable}?`;
+			if (balanceSuggestions.length) balanceMessage = `Open Table ${newTable} and redistribute players across the tables?`;
 			return;
 		}
 
