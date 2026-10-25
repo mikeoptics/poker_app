@@ -18,6 +18,26 @@ async function read(id) {
 		throw e;
 	}
 }
+
+// Serialize writes per venue so simultaneous phone/laptop saves cannot race.
+const venueWriteQueues = new Map();
+/** @param {string | number} id @param {() => Promise<any>} operation */
+async function withVenueWriteLock(id, operation) {
+	const key = String(id);
+	const previous = venueWriteQueues.get(key) ?? Promise.resolve();
+	/** @type {() => void} */
+	let release = () => {};
+	const gate = new Promise((resolve) => { release = resolve; });
+	const queued = previous.then(() => gate);
+	venueWriteQueues.set(key, queued);
+	await previous;
+	try {
+		return await operation();
+	} finally {
+		release();
+		if (venueWriteQueues.get(key) === queued) venueWriteQueues.delete(key);
+	}
+}
 /** @param {any} s */
 function publicState(s) {
 	if (!s) return null;
@@ -152,11 +172,13 @@ export async function PUT({ params, request }) {
 			return json({ error: 'Invalid tournament state.' }, { status: 400 });
 		// Admin pages may be open on multiple devices. Never let a stale page
 		// replace a newer one-shot announcement with an older event or null.
+		return await withVenueWriteLock(params.venueid, async () => {
 		const existing = await read(params.venueid);
+		/** @param {any} incoming @param {any} previous */
 		const preserveRecentEvent = (incoming, previous) => {
 			const incomingAt = Number(incoming?.createdAt) || 0;
 			const previousAt = Number(previous?.createdAt) || 0;
-			if (previousAt > incomingAt && Date.now() - previousAt < 60_000) return previous;
+			if (previous && previousAt >= incomingAt && previous.id !== incoming?.id && Date.now() - previousAt < 60_000) return previous;
 			return incoming;
 		};
 		const eliminationEvent = preserveRecentEvent(v.eliminationEvent, existing?.eliminationEvent);
@@ -210,6 +232,7 @@ export async function PUT({ params, request }) {
 		await fs.mkdir(DATA_DIR, { recursive: true });
 		await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 		return json({ ok: true, updatedAt: s.updatedAt });
+		});
 	} catch (e) {
 		console.error('Tournament save failed:', e);
 		return json({ ok: false, error: 'Unable to save tournament data.' }, { status: 500 });
