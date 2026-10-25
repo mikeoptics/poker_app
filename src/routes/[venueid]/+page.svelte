@@ -169,6 +169,7 @@
 	let soundEnabled = $state(true);
 	let announcementEnabled = $state(true);
 	let notificationStatus = $state('');
+	/** @type {{ prompt: () => void, userChoice: Promise<{ outcome: string }> } | null} */
 	let installPrompt = $state(null);
 	let installStatus = $state('');
 	let appInstalled = $state(false);
@@ -522,6 +523,7 @@
 		frame = requestAnimationFrame(syncTimer);
 	}
 
+	/** @param {string} value */
 	function base64UrlToUint8Array(value) {
 		const padding = '='.repeat((4 - (value.length % 4)) % 4);
 		const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -1113,6 +1115,7 @@
 		const tableIds = [...grouped.keys()].sort((a, b) => a - b);
 		const requiredTables = Math.ceil(active.length / 8);
 		const counts = new Map(tableIds.map((id) => [id, grouped.get(id).length]));
+		/** @param {number} tableId @param {any[]} [plannedMoves] */
 		const nextSeat = (tableId, plannedMoves = []) => {
 			const occupied = new Set([
 				...active.filter((player) => player.table === tableId).map((player) => player.seat),
@@ -1199,8 +1202,10 @@
 			if (balanceSuggestions.length) balanceMessage = `Move ${balanceSuggestions.length} player(s) to balance the tables?`;
 		}
 	}
+	/** @param {number} tableNumber @param {string} name */
 	function renameTable(tableNumber, name) {
 		const cleanName = String(name ?? '').trim().slice(0, 32);
+		/** @type {Record<string, string>} */
 		const next = { ...tableNames };
 		if (!cleanName || cleanName === `Table ${tableNumber}`) delete next[tableNumber];
 		else next[tableNumber] = cleanName;
@@ -1965,6 +1970,7 @@ function startCasting() {
 			: 'Use your browser menu and select Install app or Add to Home Screen.';
 	}
 
+	/** @param {Event & { prompt: () => void, userChoice: Promise<{ outcome: string }> }} event */
 	function handleBeforeInstallPrompt(event) {
 		event.preventDefault();
 		installPrompt = event;
@@ -1989,7 +1995,7 @@ function startCasting() {
 			installPrompt = null;
 			installStatus = 'App installed.';
 		});
-		appInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+		appInstalled = window.matchMedia('(display-mode: standalone)').matches || /** @type {Navigator & { standalone?: boolean }} */ (window.navigator).standalone === true;
 		navigator.serviceWorker?.register('/service-worker.js').catch((error) => {
 			console.error('Service worker registration failed:', error);
 		});
