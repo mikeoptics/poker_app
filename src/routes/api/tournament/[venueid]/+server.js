@@ -304,3 +304,64 @@ export async function PUT({ params, request }) {
 		return json({ ok: false, error: 'Unable to save tournament data.' }, { status: 500 });
 	}
 }
+
+
+/**
+ * Apply an explicit timer command. Timer state is mutated only on the server;
+ * ordinary tournament PUTs remain responsible for player/settings data.
+ */
+export async function POST({ params, request }) {
+	if (!valid(params.venueid)) return json({ error: 'Invalid venue ID.' }, { status: 400 });
+	try {
+		const body = await request.json();
+		const action = String(body?.action ?? '');
+		return await withVenueWriteLock(params.venueid, async () => {
+			const s = await read(params.venueid);
+			if (!s || !Array.isArray(s.levels) || !s.levels.length)
+				return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+
+			const now = Date.now();
+			let level = Math.max(0, Math.min(Number(s.currentLevel) || 0, s.levels.length - 1));
+			let remaining = Math.max(0, Number(s.remainingMs) || 0);
+			if (s.running) remaining = Math.max(0, remaining - Math.max(0, now - Number(s.updatedAt || now)));
+
+			if (action === 'pause') {
+				s.remainingMs = remaining;
+				s.running = false;
+			} else if (action === 'start') {
+				if (!s.running) {
+					if (remaining <= 0) remaining = Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60000;
+					s.remainingMs = remaining;
+					s.running = true;
+					s.tournamentStarted = true;
+				}
+			} else if (action === 'nextLevel' || action === 'previousLevel' || action === 'selectLevel') {
+				if (action === 'nextLevel') level = Math.min(s.levels.length - 1, level + 1);
+				if (action === 'previousLevel') level = Math.max(0, level - 1);
+				if (action === 'selectLevel') {
+					const requested = Number(body.index);
+					if (!Number.isInteger(requested) || requested < 0 || requested >= s.levels.length)
+						return json({ error: 'Invalid level index.' }, { status: 400 });
+					level = requested;
+				}
+				s.currentLevel = level;
+				s.levelDurationMs = Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60000;
+				s.remainingMs = s.levelDurationMs;
+				if (s.running) s.tournamentStarted = true;
+			} else {
+				return json({ error: 'Unknown timer action.' }, { status: 400 });
+			}
+
+			s.currentLevel = level;
+			s.updatedAt = now;
+			if (action === 'pause') s.remainingMs = remaining;
+			if (action === 'start' && s.running) s.remainingMs = remaining;
+			if (level === s.levels.length - 1 && s.remainingMs <= 0) s.running = false;
+			await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+			return json({ ok: true, state: s });
+		});
+	} catch (e) {
+		console.error('Timer command failed:', e);
+		return json({ ok: false, error: 'Unable to apply timer command.' }, { status: 500 });
+	}
+}
