@@ -480,7 +480,7 @@ export async function POST({ params, request }) {
 				});
 				s.updatedAt = Date.now();
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
-				return json({ ok: true, players: s.players, updatedAt: s.updatedAt });
+				return json({ ok: true, players: s.players, redtoothPlayers: s.redtoothPlayers ?? [], updatedAt: s.updatedAt });
 			}
 			if (['randomiseSeats', 'applyTableBalance', 'replaceEliminatedSeat', 'renameTable'].includes(action)) {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
