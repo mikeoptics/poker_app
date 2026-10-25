@@ -2274,7 +2274,6 @@ function startCasting() {
 						</label>
 						<button class="primary add-player-submit" type="submit">+ Add player</button>
 					</form>
-					<button class="secondary players-randomise" type="button" onclick={randomiseSeats}>Randomise seating</button>
 				</div>
 
 				<div class="players-roster">
@@ -3553,7 +3552,6 @@ function startCasting() {
 	.players-add-form .redtooth-autocomplete { width:100%; }
 	.players-add-form input { box-sizing:border-box; width:100%; min-height:42px; margin:0; padding:10px 12px; border:1px solid #343a40; border-radius:8px; background:#111316; color:#f4f4f1; }
 	.players-add-form .add-player-submit, .players-randomise { min-height:42px; height:42px; padding:0 16px; white-space:nowrap; }
-	.players-randomise { flex:0 0 auto; }
 	.players-roster { display:flex; flex-direction:column; min-height:240px; max-height:calc(100dvh - 350px); padding:16px 18px; overflow:hidden; background:#17191b; border:1px solid #292d30; border-radius:14px; }
 	.players-roster-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; padding-bottom:12px; border-bottom:1px solid #30353a; }
 	.players-roster-heading h3 { margin:0; color:#f2f3f4; font-size:1rem; }
