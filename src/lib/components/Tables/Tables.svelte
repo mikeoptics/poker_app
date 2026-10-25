@@ -71,9 +71,8 @@
 		<div class="table-list-view">
 			{#each Array(tableCount) as _, ti}
 				{@const tableNumber = ti + 1}
-				{@const tablePlayers = players
-					.filter((player) => player.table === tableNumber && player.seat > 0)
-					.sort((a, b) => a.seat - b.seat || Number(a.eliminated) - Number(b.eliminated))}
+				{@const tablePlayers = players.filter((player) => player.table === tableNumber && player.seat > 0)}
+				{@const seatNumbers = [...new Set(tablePlayers.map((player) => player.seat))].sort((a, b) => a - b)}
 				<section class="table-list-card">
 					<div class="table-list-heading">
 						<strong>Table {tableNumber}</strong>
@@ -82,14 +81,20 @@
 					<div class="table-list-header">
 						<span>Seat</span><span>Position</span><span>Player</span>
 					</div>
-					{#each tablePlayers as player (player.id)}
-						<div class="table-list-row" class:eliminated-seat={player.eliminated}>
-							<strong>{player.seat}</strong>
-							<span>{seatRole(player.seat)}</span>
+					{#each seatNumbers as seat}
+						{@const seatPlayers = tablePlayers.filter((player) => player.seat === seat)}
+						{@const seatedPlayer = seatPlayers.find((player) => !player.eliminated)}
+						{@const eliminatedPlayer = seatPlayers.find((player) => player.eliminated)}
+						<div class="table-list-row" class:eliminated-seat={!seatedPlayer && Boolean(eliminatedPlayer)}>
+							<strong>{seat}</strong>
+							<span>{seatRole(seat)}</span>
 							<div class="table-player-name">
-								<b class:eliminated-name={player.eliminated}>{player.name}</b>
-								{#if player.eliminated}
-									<button class="replace-seat-button" type="button" onclick={() => openReplace(player)}>Replace</button>
+								<div class="seat-player-labels">
+									{#if seatedPlayer}<b>{seatedPlayer.name}</b>{/if}
+									{#if eliminatedPlayer}<small class="eliminated-name">{eliminatedPlayer.name} — eliminated</small>{/if}
+								</div>
+								{#if eliminatedPlayer}
+									<button class="replace-seat-button" type="button" onclick={() => openReplace(eliminatedPlayer)}>Replace</button>
 								{/if}
 							</div>
 						</div>
