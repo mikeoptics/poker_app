@@ -1153,7 +1153,12 @@
 				counts.set(sourceTable, counts.get(sourceTable) - 1);
 				counts.set(destination, counts.get(destination) + 1);
 			}
-			if (balanceSuggestions.length) balanceMessage = `Merge Table ${sourceTable} into the other tables?`;
+			if (balanceSuggestions.length) {
+				const destinationTables = [...new Set(balanceSuggestions.map((move) => move.to))];
+				balanceMessage = destinationTables.length === 1
+					? `Merge Table ${sourceTable} into Table ${destinationTables[0]}?`
+					: `Merge Table ${sourceTable} and distribute its players across Tables ${destinationTables.join(', ')}?`;
+			}
 			return;
 		}
 
