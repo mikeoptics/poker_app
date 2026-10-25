@@ -580,6 +580,30 @@ export async function POST({ params, request }) {
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 				return json({ ok: true, updatedAt: s.updatedAt });
 			}
+			if (action === 'saveSettings') {
+				if (!s) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				const settings = body.settings;
+				if (!settings || typeof settings !== 'object' || Array.isArray(settings)) return json({ error: 'Invalid tournament settings.' }, { status: 400 });
+				if (typeof settings.soundEnabled !== 'boolean' || typeof settings.announcementEnabled !== 'boolean' || typeof settings.mixedGames !== 'boolean') return json({ error: 'Invalid tournament settings.' }, { status: 400 });
+				const buyInAmount = Number(settings.buyInAmount);
+				const maxRebuys = Number(settings.maxRebuys);
+				const maxTopUps = Number(settings.maxTopUps);
+				if (!Number.isFinite(buyInAmount) || buyInAmount < 0 || buyInAmount > 100000 || !Number.isInteger(maxRebuys) || maxRebuys < 0 || maxRebuys > 1000 || !Number.isInteger(maxTopUps) || maxTopUps < 0 || maxTopUps > 1000) return json({ error: 'Invalid tournament settings.' }, { status: 400 });
+				s.soundEnabled = settings.soundEnabled;
+				s.announcementEnabled = settings.announcementEnabled;
+				s.buyInAmount = buyInAmount;
+				s.maxRebuys = maxRebuys;
+				s.maxTopUps = maxTopUps;
+				s.mixedGames = settings.mixedGames;
+				if (['timer', 'tables', 'setup', 'payouts'].includes(settings.activeTab)) s.activeTab = settings.activeTab;
+				if (settings.tableNames && typeof settings.tableNames === 'object' && !Array.isArray(settings.tableNames)) {
+					s.tableNames = Object.fromEntries(Object.entries(settings.tableNames).slice(0, 30).map(([key, value]) => [String(Number(key)), String(value ?? '').trim().slice(0, 32)]).filter(([key, value]) => Number(key) > 0 && value));
+				}
+				if (typeof settings.venueName === 'string') s.venueName = settings.venueName.trim().slice(0, 160);
+				s.updatedAt = Date.now();
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, settings: { soundEnabled: s.soundEnabled, announcementEnabled: s.announcementEnabled, buyInAmount: s.buyInAmount, maxRebuys: s.maxRebuys, maxTopUps: s.maxTopUps, mixedGames: s.mixedGames, activeTab: s.activeTab, tableNames: s.tableNames ?? {}, venueName: s.venueName ?? '' }, updatedAt: s.updatedAt });
+			}
 			if (action === 'saveRedtoothState') {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 				if (!Array.isArray(body.players) || body.players.length > 500) return json({ error: 'Invalid Redtooth player state.' }, { status: 400 });
