@@ -70,12 +70,18 @@ async function checkVenueFiles() {
 				remaining += Math.max(1, Number(state.levels[index]?.minutes) || 1) * 60000;
 			}
 			if (index <= Number(cursor.level ?? -1)) continue;
-			for (let level = Number(cursor.level ?? -1) + 1; level <= index; level += 1) {
+			let deliveredLevel = Number(cursor.level ?? -1);
+			for (let level = deliveredLevel + 1; level <= index; level += 1) {
 				const blind = state.levels[level];
 				const isBreak = Boolean(blind?.break);
+				const game = state.mixedGames ? String(blind?.game ?? '') : '';
+				const speechGame = game.replace(/\\bPLO5\\b/g, 'P L O five').replace(/\\bPLO4\\b/g, 'P L O four').replace(/\\bNLH\\b/g, 'N L H');
+				const body = isBreak
+					? `Break. ${blind.minutes} minutes.`
+					: `Next level. ${game ? speechGame + '. ' : ''}Blinds ${blind.sb} ${blind.bb}.`;
 				const payload = JSON.stringify({
 					title: isBreak ? 'Break time' : 'Blinds increased',
-					body: isBreak ? `Level ${level + 1}: ${blind.minutes} minute break` : `Level ${level + 1}: ${blind.sb} / ${blind.bb}`,
+					body,
 					tag: `blind-level-${venueId}-${level}`,
 					url: `/${venueId}`
 				});
@@ -86,8 +92,11 @@ async function checkVenueFiles() {
 					await fs.writeFile(subscriptionsFile, JSON.stringify(active, null, 2));
 					subscriptions.splice(0, subscriptions.length, ...active);
 				}
+				const transientFailure = results.some((result) => result.status === 'rejected' && ![404, 410].includes(result.reason?.statusCode));
+				if (transientFailure) break;
+				deliveredLevel = level;
 			}
-			await fs.writeFile(cursorFile, JSON.stringify({ level: index }));
+			await fs.writeFile(cursorFile, JSON.stringify({ level: deliveredLevel }));
 		} catch (error) {
 			if (!(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT')) console.error('Blind push check failed for venue', venueId, error);
 		}
