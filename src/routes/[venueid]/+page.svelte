@@ -1735,7 +1735,7 @@
 			levels, players, nextPlayerId, currentLevel, remainingMs, levelDurationMs, running,
 			soundEnabled, announcementEnabled, buyInAmount, mixedGames, activeTab, redtoothPlayers,
 			maxRebuys, maxTopUps, tournamentStarted,
-			eliminationEvent, announcementEvent, tableNames, venueName, updatedAt: Date.now()
+			eliminationEvent, announcementEvent, tableNames, venueName
 		};
 	}
 
@@ -1986,10 +1986,13 @@ function startCasting() {
 				loadBrowserSettings();
 			})
 			.finally(() => refreshRedtooth());
+		// Persist periodically rather than rewriting the full tournament file every second.
+		// The display derives its clock from updatedAt, so this reduces disk writes
+		// while retaining regular timer recovery snapshots.
 		syncInterval = setInterval(() => {
 			if (running) remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
 			saveTournament();
-		}, 1000);
+		}, 5000);
 		startRedtoothViewTimer();
 		const handleVisibilityChange = async () => {
 			if (document.visibilityState === 'visible') {
