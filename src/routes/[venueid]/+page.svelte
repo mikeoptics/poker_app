@@ -1989,15 +1989,9 @@ function startCasting() {
 			<button class="clock-button icon-action" type="button" onclick={() => (showClock ? closeClock() : startClock())} aria-label="Call the clock" title="Call the clock">
 				<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6m17-3 3 3M12 2v3"/></svg>
 			</button>
-			<button
-				class="settings-button icon-action"
-				type="button"
-				onclick={() => (showSettings = true)}
-				aria-label="Tournament settings"
-				title="Tournament settings"
-				aria-haspopup="dialog"
-				aria-expanded={showSettings}
-			><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2Z"/></svg></button>
+			<button class="icon-action" type="button" onclick={() => (showSettings = true)} aria-label="Tournament settings" title="Tournament settings" aria-haspopup="dialog" aria-expanded={showSettings}>
+				<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06-1.7 2.94-.08-.03a1.65 1.65 0 0 0-1.78.33l-.06.06h-3.4l-.02-.09a1.65 1.65 0 0 0-1.17-1.17l-.09-.02-2.94 1.7-.06-.08a1.65 1.65 0 0 0-1.82-.33l-.08.03-1.7-2.94.06-.06A1.65 1.65 0 0 0 5.4 15l-.03-.08v-3.4l.09-.02a1.65 1.65 0 0 0 1.17-1.17l.02-.09-1.7-2.94.08-.06a1.65 1.65 0 0 0 .33-1.82l-.03-.08 2.94-1.7.06.06a1.65 1.65 0 0 0 1.82.33l.08-.03h3.4l.02.09a1.65 1.65 0 0 0 1.17 1.17l.09.02 2.94-1.7.06.08a1.65 1.65 0 0 0 1.82.33l.08-.03 1.7 2.94-.06.06A1.65 1.65 0 0 0 18.6 9l.03.08v3.4l-.09.02a1.65 1.65 0 0 0-1.17 1.17l-.02.09Z"/></svg>
+			</button>
 			{#if notificationStatus}<span class="cast-status">{notificationStatus}</span>{/if}
 			{#if castStatus}<span class="cast-status">{castStatus}</span>{/if}
 		</div>
