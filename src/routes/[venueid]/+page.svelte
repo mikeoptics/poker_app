@@ -2455,12 +2455,6 @@ function startCasting() {
 						</strong>
 					</div>
 
-					<div class="money-stat">
-						<span>BUY-IN</span>
-						<strong>
-							£{buyInAmount}
-						</strong>
-					</div>
 				</div>
 
 				<div class="payout-section">
