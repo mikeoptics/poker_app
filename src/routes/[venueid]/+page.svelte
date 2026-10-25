@@ -3668,12 +3668,20 @@ function startCasting() {
 		content: none !important;
 		display: none !important;
 	}
+	/* Let the timer dashboard escape the app's padded, max-width content column. */
+	.director-dashboard {
+		width: 100vw !important;
+		max-width: none !important;
+		margin-left: calc(50% - 50vw) !important;
+		margin-right: calc(50% - 50vw) !important;
+	}
 	/* Full-width, square-edged player list and swipe action panels. */
 	.director-players {
 		width: 100% !important;
 		max-width: none !important;
-		margin-left: 0 !important;
-		margin-right: 0 !important;
+		margin: 0 !important;
+		padding-left: 0 !important;
+		padding-right: 0 !important;
 		box-sizing: border-box !important;
 	}
 	.director-player-list,
