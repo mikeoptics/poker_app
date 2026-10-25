@@ -3224,13 +3224,13 @@ function startCasting() {
 	}.director-level-bar { gap: 4px !important; }.director-progress { height: 3px !important; }/* Replace individual player boxes with quiet separators. */
 	.director-players {
 		border: 0 !important;
-		background: #181b1f !important;
+		background: #101214 !important;
 		box-shadow: none !important;
 	}.director-player-row {
 		border: 0 !important;
 		border-bottom: 1px solid rgba(255,255,255,.07) !important;
 		border-radius: 0 !important;
-		background: #181b1f !important;
+		background: #101214 !important;
 	}.director-player-row:last-child { border-bottom: 0 !important; }.order-button {
 		border: 0 !important;
 		background: transparent !important;
