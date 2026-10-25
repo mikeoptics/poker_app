@@ -54,20 +54,6 @@
 			<button class="randomise-seating" type="button" onclick={randomiseSeats}>Randomise seating</button>
 		</div>
 
-		{#if balanceMessage}
-			<div class="balance-alert">
-				<strong>{balanceMessage}</strong>
-				{#if balanceSuggestions.length}
-					<div class="balance-list">
-						{#each balanceSuggestions as move}
-							<div><span>{move.name}</span><b>Table {move.from} → Table {move.to}, Seat {move.seat}</b></div>
-						{/each}
-					</div>
-					<button class="apply-balance" onclick={() => applyBalance(balanceSuggestions[0])}>Apply balance</button>
-				{/if}
-			</div>
-		{/if}
-
 		<div class="table-list-view">
 			{#each Array(tableCount) as _, ti}
 				{@const tableNumber = ti + 1}
