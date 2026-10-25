@@ -3823,7 +3823,12 @@ function startCasting() {
 .director-sticky-timer .level-arrow,
 .director-sticky-timer .director-progress,
 .director-sticky-timer .director-level-context {
-	transition: min-height .22s ease, height .22s ease, margin .22s ease, padding .22s ease, font-size .22s ease, gap .22s ease;
+	/* Avoid animating layout dimensions while the scroll container is moving. */
+	transition: none;
+}
+.director-sticky-timer .director-eyebrow,
+.director-sticky-timer .director-hint {
+	transition: opacity .12s ease;
 }
 .director-sticky-timer.compact .director-level-bar {
 	grid-template-columns: 38px minmax(0, 1fr) 38px;
