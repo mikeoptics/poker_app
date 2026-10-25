@@ -509,18 +509,66 @@
 		return typeof performance !== 'undefined' ? performance.now() : Date.now();
 	}
 
+	async function refreshServerTimer() {
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, { cache: 'no-store' });
+			const result = await response.json();
+			const state = result?.state;
+			if (!response.ok || !state) return;
+			const previousLevel = currentLevel;
+			currentLevel = Math.min(Number(state.currentLevel) || 0, levels.length - 1);
+			levelDurationMs = Math.max(1, Number(levels[currentLevel]?.minutes) || 1) * 60_000;
+			remainingMs = Math.max(0, Number(state.remainingMs) || 0);
+			running = Boolean(state.running);
+			tournamentStarted = Boolean(state.tournamentStarted || state.running);
+			announcementEvent = state.announcementEvent ?? announcementEvent;
+			levelStartedAt = now() - (levelDurationMs - remainingMs);
+			tournamentMode = running ? (currentBlinds?.break ? 'break' : 'play') : 'paused';
+			if (previousLevel !== currentLevel && soundEnabled) playAlarm();
+			if (frame !== null) cancelAnimationFrame(frame);
+			frame = running ? requestAnimationFrame(syncTimer) : null;
+		} catch (error) {
+			console.warn('Unable to refresh server timer:', error);
+		}
+	}
+
 	function syncTimer() {
 		if (!running) return;
-
 		remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
-
 		if (remainingMs <= 0) {
 			remainingMs = 0;
-			finishLevel();
+			frame = null;
+			void refreshServerTimer();
 			return;
 		}
-
 		frame = requestAnimationFrame(syncTimer);
+	}
+
+	async function sendTimerCommand(action, index) {
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ action, ...(index === undefined ? {} : { index }) })
+			});
+			const result = await response.json();
+			if (!response.ok || !result?.state) throw new Error(result?.error || 'Timer command failed.');
+			const state = result.state;
+			currentLevel = Math.min(Number(state.currentLevel) || 0, levels.length - 1);
+			levelDurationMs = Math.max(1, Number(levels[currentLevel]?.minutes) || 1) * 60_000;
+			remainingMs = Math.max(0, Number(state.remainingMs) || 0);
+			running = Boolean(state.running);
+			tournamentStarted = Boolean(state.tournamentStarted || state.running);
+			levelStartedAt = now() - (levelDurationMs - remainingMs);
+			tournamentMode = running ? (currentBlinds?.break ? 'break' : 'play') : 'paused';
+			if (frame !== null) cancelAnimationFrame(frame);
+			frame = running ? requestAnimationFrame(syncTimer) : null;
+			if (running) warmNextAnnouncement();
+			lastSavedSnapshot = '';
+		} catch (error) {
+			console.error('Timer command failed:', error);
+			await refreshServerTimer();
+		}
 	}
 
 	/** @param {string} value */
@@ -571,28 +619,14 @@
 
 	function start() {
 		if (running || !currentBlinds) return;
-
-		tournamentStarted = true;
-		running = true;
-		tournamentMode = currentBlinds?.break ? 'break' : 'play';
-
-		levelStartedAt = now() - (levelDurationMs - remainingMs);
-
-		frame = requestAnimationFrame(syncTimer);
-
-		warmNextAnnouncement();
+		void sendTimerCommand('start');
 	}
 
 	function pause() {
-		running = false;
-		tournamentMode = 'paused';
-
-		if (frame !== null) {
-			cancelAnimationFrame(frame);
-		}
-
-		frame = null;
+		if (!running) return;
+		void sendTimerCommand('pause');
 	}
+
 	function toggleTimer() {
 		running ? pause() : start();
 	}
@@ -618,53 +652,20 @@
 	}
 
 	function finishLevel() {
-		pause();
-		// Keep the persisted timer marked as running during the short level
-		// transition. The server can then advance it and send push alerts even
-		// if the phone suspends this tab before the transition timeout fires.
-		if (currentLevel < levels.length - 1) running = true;
-
-		if (soundEnabled) playAlarm();
-
-		if (announcementEnabled && currentLevel < levels.length - 1) {
-			announceNextLevel();
-		}
-
-		transitionTimer = setTimeout(() => {
-			transitionTimer = null;
-
-			const next = currentLevel + 1;
-
-			if (next < levels.length) {
-				running = false;
-				setLevel(next);
-				start();
-			} else {
-				running = false;
-			}
-		}, 1200);
+		void refreshServerTimer();
 	}
 
 	function nextLevel() {
-		pause();
-
-		if (currentLevel < levels.length - 1) {
-			setLevel(currentLevel + 1);
-		}
+		if (currentLevel < levels.length - 1) void sendTimerCommand('nextLevel');
 	}
 
 	function previousLevel() {
-		pause();
-
-		if (currentLevel > 0) {
-			setLevel(currentLevel - 1);
-		}
+		if (currentLevel > 0) void sendTimerCommand('previousLevel');
 	}
 
 	/** @param {number} index */
 	function selectLevel(index) {
-		pause();
-		setLevel(index);
+		void sendTimerCommand('selectLevel', index);
 	}
 
 	/** @param {number} index @param {'sb'|'bb'} field @param {string|number} value */
@@ -1759,7 +1760,7 @@
 
 	function tournamentSnapshot() {
 		return {
-			levels, players, nextPlayerId, currentLevel, remainingMs, levelDurationMs, running,
+			levels, players, nextPlayerId,
 			soundEnabled, announcementEnabled, buyInAmount, mixedGames, activeTab, redtoothPlayers,
 			maxRebuys, maxTopUps, tournamentStarted,
 			eliminationEvent, announcementEvent, tableMoveEvent, tableNames, venueName
@@ -1785,20 +1786,12 @@
 				const raw = localStorage.getItem(getBrowserSettingsKey());
 				if (!raw) return;
 				const saved = JSON.parse(raw);
-				if (Array.isArray(saved.levels) && saved.levels.length) levels = saved.levels;
 				soundEnabled = saved.soundEnabled ?? soundEnabled;
 				announcementEnabled = saved.announcementEnabled ?? announcementEnabled;
 				buyInAmount = Number(saved.buyInAmount ?? buyInAmount);
 				mixedGames = saved.mixedGames ?? mixedGames;
 				maxRebuys = Math.max(0, Number(saved.maxRebuys ?? maxRebuys));
 				maxTopUps = Math.max(0, Number(saved.maxTopUps ?? maxTopUps));
-				currentLevel = Math.min(currentLevel, levels.length - 1);
-				if (!running && levels[currentLevel]) {
-					levelDurationMs = levels[currentLevel].minutes * 60_000;
-					remainingMs = tournamentStarted
-						? Math.min(remainingMs, levelDurationMs)
-						: levelDurationMs;
-				}
 			} catch (error) {
 				console.warn('Unable to restore browser settings:', error);
 			}
@@ -2023,6 +2016,7 @@ function startCasting() {
 		// while retaining regular timer recovery snapshots.
 		syncInterval = setInterval(() => {
 			if (running) remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
+			void refreshServerTimer();
 			saveTournament();
 		}, 5000);
 		startRedtoothViewTimer();
@@ -2058,6 +2052,7 @@ function startCasting() {
 					}
 				}
 			}
+			if (document.visibilityState === 'visible') await refreshServerTimer();
 			saveTournament();
 		};
 		window.addEventListener('keydown', handleKeyboard);
