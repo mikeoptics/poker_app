@@ -4101,5 +4101,20 @@ function startCasting() {
 		.table-balance-toast-actions { align-self: flex-end; }
 	}
 
+
+	/* Allow the full blind structure to scroll independently of the fixed app shell. */
+	main:has(.compact-levels) {
+		overflow-y: auto !important;
+		overflow-x: hidden;
+		min-height: 0;
+		overscroll-behavior-y: contain;
+		-webkit-overflow-scrolling: touch;
+	}
+	main:has(.compact-levels) > .compact-levels {
+		flex: 0 0 auto;
+		min-height: min-content;
+		margin-bottom: 12px;
+	}
+
 </style>
 
