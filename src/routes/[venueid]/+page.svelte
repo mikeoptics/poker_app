@@ -3633,6 +3633,17 @@ function startCasting() {
 		box-shadow: none !important;
 	}
 
-	/* Remove the outer frame around the player table. */
-	.director-players { border: 0 !important; }
+	/* Timer page: remove the enclosing card/frame around the player list. */
+	.director-dashboard > .director-players,
+	.director-players {
+		border: none !important;
+		outline: none !important;
+		box-shadow: none !important;
+		background: transparent !important;
+	}
+	.director-players::before,
+	.director-players::after {
+		content: none !important;
+		display: none !important;
+	}
 </style>
