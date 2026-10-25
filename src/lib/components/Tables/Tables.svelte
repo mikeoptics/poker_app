@@ -106,9 +106,9 @@
 							<div class="table-player-name">
 								<div class="seat-player-labels">
 									{#if seatedPlayer}<b>{seatedPlayer.name}</b>{/if}
-									{#if eliminatedPlayer}<small class="eliminated-name">{eliminatedPlayer.name} — eliminated</small>{/if}
+									{#if eliminatedPlayer && !seatedPlayer}<small class="eliminated-name">{eliminatedPlayer.name} — eliminated</small>{/if}
 								</div>
-								{#if eliminatedPlayer}
+								{#if eliminatedPlayer && !seatedPlayer}
 									<button class="replace-seat-button" type="button" onclick={() => openReplace(eliminatedPlayer)}>Replace</button>
 								{/if}
 							</div>
