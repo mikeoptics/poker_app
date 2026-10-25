@@ -134,6 +134,54 @@
       font-size: 2vw;
     }
 
+    .table-move-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9998;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5vw;
+      background: rgba(0, 0, 0, 0.88);
+      pointer-events: none;
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .table-move-overlay.show {
+      opacity: 1;
+      visibility: visible;
+      animation: eliminationDisplay 5s ease forwards;
+    }
+
+    .table-move-card {
+      max-width: 90vw;
+      padding: 4vh 5vw;
+      border: 3px solid #c4a36a;
+      border-radius: 24px;
+      background: linear-gradient(135deg, #3a3020, #17191c);
+      box-shadow: 0 0 50px rgba(196, 163, 106, 0.35);
+      text-align: center;
+      animation: eliminationSlam 0.55s cubic-bezier(0.16, 1.35, 0.3, 1) forwards;
+    }
+
+    .table-move-heading {
+      margin-bottom: 2vh;
+      color: #e0c58f;
+      font-size: clamp(1.4rem, 3vw, 3rem);
+      font-weight: 900;
+      letter-spacing: 0.2em;
+    }
+
+    .table-move-message {
+      color: #fff2d2;
+      font-size: clamp(2rem, 5vw, 5rem);
+      font-weight: 950;
+      line-height: 1.08;
+      overflow-wrap: anywhere;
+      text-shadow: 0 0 22px rgba(196, 163, 106, 0.35);
+    }
+
     .elimination-overlay {
       position: fixed;
       inset: 0;
@@ -261,6 +309,13 @@
     <div class="announcement-banner" id="announcement-banner" role="status" aria-live="assertive"></div>
   </div>
 
+  <div class="table-move-overlay" id="table-move-overlay" role="status" aria-live="assertive" aria-hidden="true">
+    <div class="table-move-card">
+      <div class="table-move-heading">TABLE MOVE</div>
+      <div class="table-move-message" id="table-move-message"></div>
+    </div>
+  </div>
+
   <div class="elimination-overlay" id="elimination-overlay" aria-hidden="true">
     <div class="elimination-impact"></div>
     <div class="elimination-card">
@@ -324,19 +379,26 @@
       }
 
       function showTableMoveAnnouncement(event) {
-        if (!event || typeof event.id !== "string" || !event.text) return;
+        if (!event || typeof event.id !== 'string' || !event.text) return;
         if (event.id === lastDisplayedAnnouncementEventId) return;
+
         lastDisplayedAnnouncementEventId = event.id;
-        const banner = el("announcement-banner");
-        banner.textContent = event.text;
-        banner.classList.remove("show");
-        void banner.offsetWidth;
-        banner.classList.add("show");
+        const overlay = el('table-move-overlay');
+        el('table-move-message').textContent = event.text;
+
+        // Use the same forced-reflow/replay pattern as the working elimination
+        // overlay so every new move event visibly animates on the Cast receiver.
         if (announcementHideTimer !== null) clearTimeout(announcementHideTimer);
+        overlay.classList.remove('show');
+        void overlay.offsetWidth;
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+
         announcementHideTimer = setTimeout(() => {
-          banner.classList.remove("show");
+          overlay.classList.remove('show');
+          overlay.setAttribute('aria-hidden', 'true');
           announcementHideTimer = null;
-        }, 15000);
+        }, 5200);
       }
 
       function speakAnnouncement(event) {
