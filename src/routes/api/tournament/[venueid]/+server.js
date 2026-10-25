@@ -240,11 +240,11 @@ export async function PUT({ params, request }) {
 			levels: v.levels,
 			players: v.players,
 			nextPlayerId: Number(v.nextPlayerId) || 1,
-			currentLevel: keepServerTimer ? existing.currentLevel : Math.max(0, Number(v.currentLevel) || 0),
-			remainingMs: keepServerTimer ? existingRemaining : Math.max(0, Number(v.remainingMs) || 0),
-			levelDurationMs: keepServerTimer ? existing.levelDurationMs : Math.max(0, Number(v.levelDurationMs) || 0),
-			running: keepServerTimer ? true : Boolean(v.running),
-			tournamentStarted: Boolean(v.tournamentStarted || v.running),
+			currentLevel: existing ? Math.max(0, Number(existing.currentLevel) || 0) : 0,
+			remainingMs: existing ? existingRemaining : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
+			levelDurationMs: existing ? Math.max(1, Number(existing.levelDurationMs) || Number(existing.levels?.[existing.currentLevel]?.minutes) * 60_000 || 60_000) : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
+			running: Boolean(existing?.running),
+			tournamentStarted: Boolean(existing?.tournamentStarted || existing?.running || v.tournamentStarted),
 			soundEnabled: Boolean(v.soundEnabled),
 			announcementEnabled: Boolean(v.announcementEnabled),
 			buyInAmount: Math.max(0, Number(v.buyInAmount) || 0),
@@ -292,9 +292,6 @@ export async function PUT({ params, request }) {
 			venueName: String(v.venueName ?? '').slice(0, 160),
 			updatedAt: Date.now()
 		};
-		if (keepServerTimer) {
-			s.levelDurationMs = Number(existing.levelDurationMs) || s.levelDurationMs;
-		}
 		await fs.mkdir(DATA_DIR, { recursive: true });
 		await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 		return json({ ok: true, updatedAt: s.updatedAt });
