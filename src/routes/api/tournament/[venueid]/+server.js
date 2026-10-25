@@ -150,6 +150,17 @@ export async function PUT({ params, request }) {
 		const v = await request.json();
 		if (!v || typeof v !== 'object' || !Array.isArray(v.levels) || !Array.isArray(v.players))
 			return json({ error: 'Invalid tournament state.' }, { status: 400 });
+		// Admin pages may be open on multiple devices. Never let a stale page
+		// replace a newer one-shot announcement with an older event or null.
+		const existing = await read(params.venueid);
+		const preserveRecentEvent = (incoming, previous) => {
+			const incomingAt = Number(incoming?.createdAt) || 0;
+			const previousAt = Number(previous?.createdAt) || 0;
+			if (previousAt > incomingAt && Date.now() - previousAt < 60_000) return previous;
+			return incoming;
+		};
+		const eliminationEvent = preserveRecentEvent(v.eliminationEvent, existing?.eliminationEvent);
+		const announcementEvent = preserveRecentEvent(v.announcementEvent, existing?.announcementEvent);
 		const s = {
 			levels: v.levels,
 			players: v.players,
@@ -170,24 +181,24 @@ export async function PUT({ params, request }) {
 				: 'timer',
 			redtoothPlayers: Array.isArray(v.redtoothPlayers) ? v.redtoothPlayers : [],
 			eliminationEvent:
-				v.eliminationEvent &&
-				typeof v.eliminationEvent.id === 'string' &&
-				typeof v.eliminationEvent.playerName === 'string' &&
-				Number.isFinite(Number(v.eliminationEvent.createdAt))
+				eliminationEvent &&
+				typeof eliminationEvent.id === 'string' &&
+				typeof eliminationEvent.playerName === 'string' &&
+				Number.isFinite(Number(eliminationEvent.createdAt))
 					? {
-							id: v.eliminationEvent.id.slice(0, 100),
-							playerName: v.eliminationEvent.playerName.slice(0, 160),
-							createdAt: Number(v.eliminationEvent.createdAt)
+							id: eliminationEvent.id.slice(0, 100),
+							playerName: eliminationEvent.playerName.slice(0, 160),
+							createdAt: Number(eliminationEvent.createdAt)
 						}
 					: null,
 			announcementEvent:
-				v.announcementEvent &&
-				typeof v.announcementEvent.id === 'string' &&
-				typeof v.announcementEvent.text === 'string'
+				announcementEvent &&
+				typeof announcementEvent.id === 'string' &&
+				typeof announcementEvent.text === 'string'
 					? {
-							id: v.announcementEvent.id.slice(0, 100),
-							text: v.announcementEvent.text.slice(0, 500),
-							createdAt: Number(v.announcementEvent.createdAt) || Date.now()
+							id: announcementEvent.id.slice(0, 100),
+							text: announcementEvent.text.slice(0, 500),
+							createdAt: Number(announcementEvent.createdAt) || Date.now()
 						}
 					: null,
 			tableNames: v.tableNames && typeof v.tableNames === 'object' && !Array.isArray(v.tableNames)
