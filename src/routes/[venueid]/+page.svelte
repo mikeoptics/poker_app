@@ -37,6 +37,18 @@
 	let syncInterval = null;
 	let savingTournament = false;
 	let savePending = false;
+	/** @type {ReturnType<typeof setTimeout> | null} */
+	let playerSaveTimer = null;
+
+	// Player changes are persisted shortly after the action rather than waiting
+	// for the five-second background sync. The existing save queue serializes writes.
+	function schedulePlayerSave() {
+		if (playerSaveTimer !== null) clearTimeout(playerSaveTimer);
+		playerSaveTimer = setTimeout(() => {
+			playerSaveTimer = null;
+			void saveTournament();
+		}, 250);
+	}
 	let lastSavedSnapshot = '';
 	let castStatus = $state('');
 	let timerCompact = $state(false);
@@ -50,6 +62,7 @@
 
 		if (p) {
 			p.paid = !p.paid;
+			schedulePlayerSave();
 		}
 	}
 
@@ -778,6 +791,7 @@
 		balanceMessage = '';
 		distributeAcrossTables();
 		rebalanceTables();
+		schedulePlayerSave();
 	}
 
 	function addPlayerFromForm() {
@@ -893,6 +907,7 @@
 		// Keep existing seats stable. If adding this player exceeds a table's
 		// capacity, offer a split rather than silently redistributing everyone.
 		rebalanceTables();
+		schedulePlayerSave();
 	}
 
 	/**
@@ -965,7 +980,10 @@
 	function updatePlayerName(id, name) {
 		const p = players.find((x) => x.id === id);
 
-		if (p) p.name = name;
+		if (p) {
+			p.name = name;
+			schedulePlayerSave();
+		}
 	}
 
 	/** @param {number} id @param {'rebuys'|'topUps'} field */
@@ -974,7 +992,10 @@
 
 		if (!p || p.eliminated) return;
 		const limit = field === 'rebuys' ? maxRebuys : maxTopUps;
-		if (limit > 0 && p[field] < limit) p[field] += 1;
+		if (limit > 0 && p[field] < limit) {
+			p[field] += 1;
+			schedulePlayerSave();
+		}
 	}
 
 	/** @param {number} id @param {'rebuys'|'topUps'} field */
@@ -983,6 +1004,7 @@
 
 		if (p && p[field] > 0) {
 			p[field] -= 1;
+			schedulePlayerSave();
 		}
 	}
 
@@ -1024,7 +1046,7 @@
 		// Keep the eliminated player in their original seat as a visible marker,
 		// then offer a table-balancing recommendation if the counts warrant it.
 		rebalanceTables();
-
+		schedulePlayerSave();
 	}
 
 	/** @param {number} playerId @param {number} direction */
@@ -1094,6 +1116,7 @@
 					: row
 			);
 		}
+		schedulePlayerSave();
 	}
 
 	function rebalanceTables() {
@@ -1359,6 +1382,7 @@
 		const restoredPosition = p.eliminationPosition;
 		p.eliminated = false;
 		p.eliminationPosition = null;
+		schedulePlayerSave();
 
 		// Close the finishing-position gap left by restoring this player.
 		for (const remainingPlayer of players) {
