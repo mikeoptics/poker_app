@@ -3797,4 +3797,9 @@ function startCasting() {
 	}
 }
 
+	/* Slightly lift the player-list surface from the page background. */
+	.director-player-list {
+		background: #15181c !important;
+	}
+
 </style>
