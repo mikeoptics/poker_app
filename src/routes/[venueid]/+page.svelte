@@ -683,6 +683,7 @@
 				...levels[index],
 				[field]: Math.max(0, Number(value) || 0)
 			};
+			schedulePlayerSave();
 		}
 	}
 
@@ -698,6 +699,7 @@
 		if (index === currentLevel && !running) {
 			setLevel(currentLevel);
 		}
+		schedulePlayerSave();
 	}
 
 	function addLevel() {
@@ -711,6 +713,7 @@
 			minutes: p.minutes,
 			game: p.game ?? games[0]
 		});
+		schedulePlayerSave();
 	}
 
 	/** @param {number} afterIndex */
@@ -725,6 +728,7 @@
 		if (currentLevel > afterIndex) {
 			currentLevel += 1;
 		}
+		schedulePlayerSave();
 	}
 
 	function randomiseSeats() {
@@ -768,6 +772,7 @@
 		}
 
 		setLevel(currentLevel);
+		schedulePlayerSave();
 	}
 
 	/** @param {number} seat */
@@ -2332,7 +2337,7 @@ function startCasting() {
 						<div class="section-actions">
 							<button class="add" onclick={addLevel}> + Add level </button>
 
-							<button class="sound mixed-toggle" onclick={() => (mixedGames = !mixedGames)}>
+							<button class="sound mixed-toggle" onclick={() => { mixedGames = !mixedGames; schedulePlayerSave(); }}>
 								{mixedGames ? 'Mixed games: ON' : 'Mixed games: OFF'}
 							</button>
 						</div>
