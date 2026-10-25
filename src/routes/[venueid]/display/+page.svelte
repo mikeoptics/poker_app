@@ -39,9 +39,16 @@
 			if (!result.ok || !result.state) throw new Error('Waiting for tournament data.');
 			const nextAnnouncement = result.state.announcementEvent;
 			if (!announcementInitialized) {
-				lastAnnouncementId = nextAnnouncement?.id ?? '';
+				// If the display starts or reconnects just after a table move, do not
+				// discard that fresh announcement as the initial baseline.
 				announcementInitialized = true;
-			} else if (nextAnnouncement?.id && nextAnnouncement.id !== lastAnnouncementId) {
+				if (nextAnnouncement?.id && Date.now() - Number(nextAnnouncement.createdAt || 0) <= 30000) {
+					lastAnnouncementId = '';
+				} else {
+					lastAnnouncementId = nextAnnouncement?.id ?? '';
+				}
+			}
+			if (nextAnnouncement?.id && nextAnnouncement.id !== lastAnnouncementId) {
 				lastAnnouncementId = nextAnnouncement.id;
 				if (typeof window !== 'undefined' && 'speechSynthesis' in window && nextAnnouncement.text) {
 					let announcementSpoken = false;
