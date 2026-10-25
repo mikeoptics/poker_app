@@ -185,6 +185,9 @@
 	let soundEnabled = $state(true);
 	let announcementEnabled = $state(true);
 	let notificationStatus = $state('');
+	let installPrompt = $state(null);
+	let installStatus = $state('');
+	let appInstalled = $state(false);
 	let buyInAmount = $state(5);
 	let tournamentStarted = $state(false);
 	let mixedGames = $state(false);
@@ -1867,6 +1870,25 @@ function startCasting() {
 		redtoothSelectedPlayer = null;
 	}
 
+	async function installApp() {
+		if (installPrompt) {
+			installPrompt.prompt();
+			const choice = await installPrompt.userChoice;
+			installStatus = choice?.outcome === 'accepted' ? 'App installed.' : '';
+			installPrompt = null;
+			return;
+		}
+		installStatus = /iphone|ipad|ipod/i.test(navigator.userAgent)
+			? 'To install: tap Share, then Add to Home Screen.'
+			: 'Use your browser menu and select Install app or Add to Home Screen.';
+	}
+
+	function handleBeforeInstallPrompt(event) {
+		event.preventDefault();
+		installPrompt = event;
+		installStatus = '';
+	}
+
 	function addGuestPlayer() {
 		const name = newPlayerName.trim();
 
@@ -1879,6 +1901,16 @@ function startCasting() {
 	}
 
 	onMount(() => {
+		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+		window.addEventListener('appinstalled', () => {
+			appInstalled = true;
+			installPrompt = null;
+			installStatus = 'App installed.';
+		});
+		appInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+		navigator.serviceWorker?.register('/service-worker.js').catch((error) => {
+			console.error('Service worker registration failed:', error);
+		});
 		eliminationSound = new Audio(
 			'https://www.myinstants.com/media/sounds/fortnite-death-sound-not-knockout.mp3'
 		);
@@ -1938,6 +1970,7 @@ function startCasting() {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
 		return () => {
+			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 			window.removeEventListener('keydown', handleKeyboard);
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			if (syncInterval !== null) clearInterval(syncInterval);
@@ -1974,6 +2007,9 @@ function startCasting() {
 <svelte:head>
 	<title>Poker - {venueName}</title>
 	<meta name="description" content="Mixed poker tournament timer, table manager and payouts" />
+	<meta name="theme-color" content="#101214" />
+	<link rel="manifest" href={`/${venueId}/manifest.webmanifest?name=${encodeURIComponent(venueName)}`} />
+	<link rel="icon" href="/poker-app-icon.svg" type="image/svg+xml" />
 </svelte:head>
 
 <div
@@ -1984,6 +2020,9 @@ function startCasting() {
 >
 	<header class="header">
 		<div class="header-actions" aria-label="Tournament actions">
+			{#if !appInstalled}
+				<button class="install-app-button" type="button" onclick={installApp} aria-label="Install poker app">Install app</button>
+			{/if}
 			<button class="sound icon-action" type="button" onclick={startCasting} aria-label="Cast to TV" title="Cast to TV">
 				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16.1a5.9 5.9 0 0 1 5.9 5.9"/><path d="M2 11a11 11 0 0 1 11 11"/><path d="M2 6a16 16 0 0 1 16 16"/><path d="M22 18V5a2 2 0 0 0-2-2H4"/></svg>
 			</button>
@@ -2002,6 +2041,7 @@ function startCasting() {
 			{#if notificationStatus}<span class="cast-status">{notificationStatus}</span>{/if}
 			{#if castStatus}<span class="cast-status">{castStatus}</span>{/if}
 		</div>
+		{#if installStatus}<p class="install-app-status" role="status">{installStatus}</p>{/if}
 	</header>
 
 	<nav class="tabs icon-tabs" aria-label="Tournament sections">
@@ -3898,4 +3938,24 @@ function startCasting() {
 	.director-compact-overlay { padding: 8px 12px; }
 }
 
+
+.install-app-button {
+	min-height: 36px;
+	padding: 0 11px;
+	border: 1px solid #53645c;
+	border-radius: 8px;
+	background: #1b2922;
+	color: #f4f4f1;
+	font: inherit;
+	font-size: 12px;
+	font-weight: 700;
+	white-space: nowrap;
+	cursor: pointer;
+}
+.install-app-status {
+	margin: 4px 14px 0;
+	color: #b8c6bd;
+	font-size: 12px;
+	text-align: right;
+}
 </style>
