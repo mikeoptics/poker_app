@@ -1839,6 +1839,20 @@
 			const snapshot = tournamentSnapshot();
 			const serialised = JSON.stringify(snapshot);
 			if (serialised === lastSavedSnapshot) return;
+			const playerResponse = await fetch(`/api/tournament/${venueId}`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					action: 'savePlayers',
+					players,
+					nextPlayerId,
+					redtoothPlayers,
+					eliminationEvent,
+					tableMoveEvent,
+					announcementEvent
+				})
+			});
+			if (!playerResponse.ok) throw new Error('Unable to save player state.');
 			const response = await fetch(`/api/tournament/${venueId}`, {
 				method: 'PUT', headers: { 'content-type': 'application/json' }, body: serialised
 			});
