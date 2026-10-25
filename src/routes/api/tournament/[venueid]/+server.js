@@ -340,7 +340,7 @@ export async function POST({ params, request }) {
 					if (Array.isArray(s.redtoothPlayers)) {
 						s.redtoothPlayers = s.redtoothPlayers.map((/** @type {any} */ row) => {
 							const pending = results.get(Number(row.redtoothId)) ?? 0;
-							return { ...row, localGames: pending > 0 ? 1 : 0, localPoints: pending, pendingPoints: pending };
+							return { ...row, localGames: results.has(Number(row.redtoothId)) ? 1 : 0, localPoints: pending, pendingPoints: pending };
 						});
 					}
 				};
@@ -476,7 +476,7 @@ export async function POST({ params, request }) {
 				}
 				if (Array.isArray(s.redtoothPlayers)) s.redtoothPlayers = s.redtoothPlayers.map((/** @type {any} */ row) => {
 					const pending = pendingByRedtoothId.get(Number(row.redtoothId)) ?? 0;
-					return { ...row, localGames: pending > 0 ? 1 : 0, localPoints: pending, pendingPoints: pending };
+					return { ...row, localGames: pendingByRedtoothId.has(Number(row.redtoothId)) ? 1 : 0, localPoints: pending, pendingPoints: pending };
 				});
 				s.updatedAt = Date.now();
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
