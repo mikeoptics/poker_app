@@ -578,49 +578,6 @@ export async function POST({ params, request }) {
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 				return json({ ok: true, updatedAt: s.updatedAt });
 			}
-			if (action === 'savePlayers') {
-				if (!s) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
-				/** @param {unknown} value @param {number} [max] */
-				const isCount = (value, max = 10000) => Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= max;
-				/** @param {any} p */
-				const validPlayer = (p) => p &&
-					isCount(p.id, 1000000000) && Number(p.id) > 0 &&
-					typeof p.name === 'string' && p.name.trim().length > 0 && p.name.length <= 160 &&
-					isCount(p.table, 1000) && isCount(p.seat, 8) &&
-					isCount(p.buyIns, 1000) && isCount(p.rebuys, 1000) && isCount(p.topUps, 1000) &&
-					typeof p.paid === 'boolean' && typeof p.eliminated === 'boolean' &&
-					(p.eliminationPosition === null || isCount(p.eliminationPosition, 100000)) &&
-					(p.redtoothId === null || (isCount(p.redtoothId, 1000000000) && Number(p.redtoothId) > 0)) &&
-					isCount(p.redtoothGames, 1000000) && isCount(p.redtoothPoints, 100000000) &&
-					typeof p.redtoothConfirmed === 'boolean' && isCount(p.redtoothPendingPoints, 100000000) &&
-					typeof p.guest === 'boolean';
-				if (!Array.isArray(body.players) || body.players.length > 500 || !body.players.every(validPlayer))
-					return json({ error: 'Invalid player list.' }, { status: 400 });
-				const ids = body.players.map((/** @type {any} */ p) => Number(p.id));
-				if (new Set(ids).size !== ids.length) return json({ error: 'Duplicate player IDs.' }, { status: 400 });
-				s.players = body.players.map((/** @type {any} */ p) => ({
-					id: Number(p.id), name: p.name.trim(), table: Number(p.table), seat: Number(p.seat),
-					buyIns: Number(p.buyIns), rebuys: Number(p.rebuys), topUps: Number(p.topUps),
-					paid: p.paid, eliminated: p.eliminated,
-					eliminationPosition: p.eliminationPosition === null ? null : Number(p.eliminationPosition),
-					redtoothId: p.redtoothId === null ? null : Number(p.redtoothId),
-					redtoothGames: Number(p.redtoothGames), redtoothPoints: Number(p.redtoothPoints),
-					redtoothConfirmed: p.redtoothConfirmed, redtoothPendingPoints: Number(p.redtoothPendingPoints),
-					guest: p.guest
-				}));
-				s.nextPlayerId = Math.max(Number(s.nextPlayerId) || 1, Number(body.nextPlayerId) || 1, ...ids.map((/** @type {number} */ id) => id + 1));
-				if (Array.isArray(body.redtoothPlayers) && body.redtoothPlayers.length <= 5000) s.redtoothPlayers = body.redtoothPlayers;
-				for (const key of ['eliminationEvent', 'tableMoveEvent', 'announcementEvent']) {
-					const event = body[key];
-					if (event && typeof event.id === 'string' && event.id.length <= 100 && typeof event.createdAt === 'number' && Number.isFinite(event.createdAt)) {
-						if (key === 'eliminationEvent' && typeof event.playerName === 'string') s[key] = { id: event.id, playerName: event.playerName.slice(0, 160), createdAt: event.createdAt };
-						else if (key !== 'eliminationEvent' && typeof event.text === 'string') s[key] = { id: event.id, text: event.text.slice(0, 500), createdAt: event.createdAt };
-					}
-				}
-				s.updatedAt = Date.now();
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
-				return json({ ok: true, players: s.players, updatedAt: s.updatedAt });
-			}
 			if (!s || !Array.isArray(s.levels) || !s.levels.length)
 				return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 
