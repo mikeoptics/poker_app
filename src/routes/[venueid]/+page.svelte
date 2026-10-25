@@ -428,9 +428,13 @@
 		swipedPlayerId = null;
 		playerSwipeOffset = 0;
 
+		const player = players.find((item) => item.id === playerId);
+		if (!player) return;
+
 		if (swipeDistance <= -82) {
-			removePlayer(playerId);
-		} else if (swipeDistance >= 82) {
+			if (player.eliminated) restorePlayer(playerId);
+			else removePlayer(playerId);
+		} else if (swipeDistance >= 82 && !player.eliminated) {
 			togglePaid(playerId);
 		}
 	}
@@ -2055,47 +2059,36 @@ function startCasting() {
 						<div class="director-empty">No players have been added to this tournament yet.</div>
 					{:else}
 						<div class="director-player-list">
-							{#each activePlayers as player (player.id)}
+							{#each [...activePlayers, ...[...eliminatedPlayers].sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999))] as player (player.id)}
 								<div
 									class="director-player-swipe"
 									class:dragging={swipedPlayerId === player.id}
 									role="button"
 									tabindex="0"
-									aria-label={`Eliminate ${player.name}`}
-									onkeydown={(event) => event.key === "Enter" && removePlayer(player.id)}
+									aria-label={player.eliminated ? `Restore ${player.name}` : `Eliminate ${player.name}`}
+									onkeydown={(event) => event.key === "Enter" && (player.eliminated ? restorePlayer(player.id) : removePlayer(player.id))}
 									onpointerdown={(event) => startPlayerSwipe(event, player.id)}
 									onpointermove={(event) => movePlayerSwipe(event, player.id)}
 									onpointerup={() => endPlayerSwipe(player.id)}
 									onpointercancel={cancelPlayerSwipe}
 								>
-									<div class="swipe-payment-reveal"><span>{player.paid ? 'MARK UNPAID' : 'PAID'}</span></div>
-									<div class="swipe-trash-reveal"><icon name="trash-2" size="18"></icon><span>ELIMINATED</span></div>
-									<div class="director-player-row" style:transform={`translateX(${swipedPlayerId === player.id ? playerSwipeOffset : 0}px)`}>
+									{#if !player.eliminated}
+										<div class="swipe-payment-reveal"><span>{player.paid ? 'MARK UNPAID' : 'PAID'}</span></div>
+									{/if}
+									<div class="swipe-trash-reveal"><icon name={player.eliminated ? "undo-2" : "user-round-x"} size="18"></icon><span>{player.eliminated ? 'RESTORE' : 'ELIMINATE'}</span></div>
+									<div class="director-player-row" class:is-eliminated={player.eliminated} style:transform={`translateX(${swipedPlayerId === player.id ? playerSwipeOffset : 0}px)`}>
 										<div class="director-player-identity">
 											<strong>{player.name}</strong>
-											{#if !player.paid}<span class="payment-pill">UNPAID</span>{/if}
+											{#if player.eliminated}
+												<span>{player.eliminationPosition}{player.eliminationPosition === 1 ? 'ST' : player.eliminationPosition === 2 ? 'ND' : player.eliminationPosition === 3 ? 'RD' : 'TH'} PLACE</span>
+											{:else if !player.paid}
+												<span class="payment-pill">UNPAID</span>
+											{/if}
 										</div>
 									</div>
 								</div>
 							{/each}
 						</div>
-						{#if eliminatedPlayers.length > 0}
-							<div class="director-eliminated-heading">ELIMINATED · {eliminatedPlayers.length}</div>
-							<div class="director-player-list eliminated-list">
-								{#each [...eliminatedPlayers].sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999)) as player (player.id)}
-									<div class="director-player-row is-eliminated">
-										<div class="director-player-identity"><strong>{player.name}</strong><span>{player.eliminationPosition}{player.eliminationPosition === 1 ? 'ST' : player.eliminationPosition === 2 ? 'ND' : player.eliminationPosition === 3 ? 'RD' : 'TH'} PLACE</span></div>
-										<div class="director-eliminated-actions">
-											<button class="restore-button" onclick={() => restorePlayer(player.id)}>UNDO ELIMINATION</button>
-											<div class="elimination-order-controls">
-												<button class="order-button" title="Improve finishing position" onclick={() => moveEliminatedPlayer(player.id, -1)}>▲</button>
-												<button class="order-button" title="Lower finishing position" onclick={() => moveEliminatedPlayer(player.id, 1)}>▼</button>
-											</div>
-										</div>
-									</div>
-								{/each}
-							</div>
-						{/if}
 					{/if}
 				</section>
 			</section>
