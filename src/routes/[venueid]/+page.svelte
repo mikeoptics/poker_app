@@ -3706,4 +3706,56 @@ function startCasting() {
 		content: none !important;
 		display: none !important;
 	}
+
+
+/* Keep dashboard headings and blind context inside narrow mobile screens. */
+.director-section-heading {
+	width: 100%;
+	min-width: 0;
+	gap: 8px;
+	box-sizing: border-box;
+}
+.director-section-heading > div:first-child {
+	min-width: 0;
+	flex: 1 1 auto;
+}
+.director-section-heading h1 {
+	font-size: clamp(18px, 5vw, 24px) !important;
+	line-height: 1.15;
+	margin: 0 !important;
+	white-space: nowrap;
+}
+.director-player-count {
+	flex: 0 0 auto;
+	min-width: 0;
+	gap: 5px;
+	letter-spacing: .06em;
+	white-space: nowrap;
+}
+.director-player-count strong {
+	font-size: clamp(20px, 6vw, 26px) !important;
+}
+.director-player-count span {
+	font-size: clamp(8px, 2.3vw, 10px);
+}
+.director-level-context {
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	display: grid !important;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	column-gap: 8px !important;
+	box-sizing: border-box;
+}
+.director-level-context span {
+	min-width: 0;
+	font-size: clamp(8px, 2.5vw, 10px);
+	letter-spacing: .035em;
+	white-space: normal;
+	overflow-wrap: anywhere;
+}
+.director-level-context span:last-child {
+	text-align: right;
+}
+
 </style>
