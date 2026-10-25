@@ -88,7 +88,7 @@
 						{:else}
 							<div class="table-title-group">
 								<strong>{tableNames[tableNumber] || `Table ${tableNumber}`}</strong>
-								<button class="table-rename-button" type="button" aria-label={`Rename ${tableNames[tableNumber] || `Table ${tableNumber}`}`} title="Rename table" onclick={() => startRename(tableNumber)}>Edit</button>
+								<button class="table-rename-button" type="button" aria-label={`Rename ${tableNames[tableNumber] || `Table ${tableNumber}`}`} title="Rename table" onclick={() => startRename(tableNumber)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg></button>
 							</div>
 						{/if}
 						<span>{tablePlayers.filter((player) => !player.eliminated).length} / 8 players</span>
