@@ -4105,5 +4105,46 @@ function startCasting() {
 		margin-bottom: 12px;
 	}
 
+
+	/* Players tab: keep the roster as the scrolling area and the add form anchored below it. */
+	.players-workspace {
+		height: 100%;
+		max-height: 100%;
+		min-height: 0;
+		gap: 12px;
+	}
+	.players-roster {
+		flex: 1 1 0;
+		height: auto;
+		max-height: none;
+		min-height: 0;
+	}
+	.players-roster-list {
+		min-height: 0;
+	}
+	.players-add-panel {
+		position: relative;
+		z-index: 2;
+		flex: 0 0 auto;
+		margin-top: 0;
+		box-shadow: 0 -8px 20px rgba(0, 0, 0, .12);
+	}
+	@media (max-width: 760px) {
+		.players-workspace {
+			height: 100%;
+			max-height: 100%;
+			gap: 10px;
+		}
+		.players-roster {
+			flex: 1 1 0;
+			height: auto;
+			max-height: none;
+			min-height: 0;
+		}
+		.players-add-panel {
+			flex: 0 0 auto;
+		}
+	}
+
 </style>
 
