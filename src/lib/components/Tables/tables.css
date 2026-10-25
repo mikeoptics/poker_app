@@ -828,3 +828,95 @@
 	background: #292f32;
 	color: #d5dcda;
 }
+
+
+/* Responsive table cards: keep each table full-width instead of squeezing
+   several tables into narrow columns. The list itself scrolls vertically. */
+.tables-page {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+.tables-panel {
+	width: 100%;
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 auto;
+	box-sizing: border-box;
+}
+.table-list-view {
+	display: flex;
+	flex: 1 1 0;
+	flex-direction: column;
+	align-items: stretch;
+	width: 100%;
+	min-width: 0;
+	min-height: 0;
+	gap: 12px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
+}
+.table-list-card {
+	flex: 0 0 auto;
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+.table-list-header,
+.table-list-row {
+	grid-template-columns: 38px 76px minmax(0, 1fr);
+	min-width: 0;
+}
+.table-list-row > *,
+.table-list-header > * {
+	min-width: 0;
+}
+.table-player-name,
+.seat-player-labels {
+	min-width: 0;
+	max-width: 100%;
+}
+.table-player-name b,
+.seat-player-labels b,
+.seat-player-labels small {
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: normal;
+}
+@media (max-width: 700px) {
+	.tables-panel {
+		padding: 10px;
+		border-radius: 10px;
+	}
+	.panel-heading {
+		flex-wrap: wrap;
+		row-gap: 8px;
+	}
+	.table-list-view {
+		gap: 9px;
+		margin-top: 9px;
+		padding-right: 1px;
+	}
+	.table-list-heading {
+		flex-wrap: wrap;
+		padding: 10px;
+	}
+	.table-list-header,
+	.table-list-row {
+		grid-template-columns: 32px 65px minmax(0, 1fr);
+		gap: 6px;
+		padding: 9px 8px;
+	}
+	.table-list-row {
+		min-height: 44px;
+	}
+	.table-list-row b {
+		font-size: 12px;
+	}
+}
