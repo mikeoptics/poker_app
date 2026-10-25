@@ -2289,7 +2289,11 @@ function startCasting() {
 							</div>
 							{#each players as player (player.id)}
 								<div class="players-roster-row">
-									<input class="players-name-input" aria-label="Player name" value={player.name} disabled={player.redtoothId != null} title={player.redtoothId != null ? "Linked player names are managed by Redtooth" : "Edit player name"} onchange={(e) => updatePlayerName(player.id, e.currentTarget.value)} />
+									{#if player.redtoothId != null}
+										<span class="players-name-label" title="Redtooth-linked player">{player.name}</span>
+									{:else}
+										<input class="players-name-input" aria-label="Player name" value={player.name} title="Edit player name" onchange={(e) => updatePlayerName(player.id, e.currentTarget.value)} />
+									{/if}
 									<span class="roster-status">
 										{#if player.redtoothId != null}<span class="roster-tag tag-linked">Linked</span>{:else if !player.guest}<span class="roster-tag tag-unlinked">Not linked</span>{:else}<span class="roster-tag">Guest</span>{/if}
 									</span>
@@ -3565,4 +3569,6 @@ function startCasting() {
 		.players-name-input { width:100%; min-width:0; }
 		.delete-player-button { padding:5px 7px; }
 	}
+
+	.players-name-label { display:flex; align-items:center; width:min(100%,360px); min-height:34px; padding:6px 9px; color:#f4f4f1; font-size:.9rem; overflow-wrap:anywhere; }
 </style>
