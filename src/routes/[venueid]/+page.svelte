@@ -1976,41 +1976,45 @@ function startCasting() {
 	class:mode-paused={!running}
 >
 	<header class="header">
-		<div class="header-actions">
-			<button class="sound" onclick={startCasting}>Cast to TV</button>
-			<button class="sound" onclick={enableBlindNotifications}>Enable blind alerts</button>
-			{#if notificationStatus}<span class="cast-status">{notificationStatus}</span>{/if}
-			<button class="sound" onclick={openDisplay}>Open Display</button>
-			<button class="clock-button" onclick={() => (showClock ? closeClock() : startClock())}>
-				⏱ Call the Clock
+		<div class="header-actions" aria-label="Tournament actions">
+			<button class="sound icon-action" type="button" onclick={startCasting} aria-label="Cast to TV" title="Cast to TV">
+				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16.1a5.9 5.9 0 0 1 5.9 5.9"/><path d="M2 11a11 11 0 0 1 11 11"/><path d="M2 6a16 16 0 0 1 16 16"/><path d="M22 18V5a2 2 0 0 0-2-2H4"/></svg>
+			</button>
+			<button class="sound icon-action" type="button" onclick={enableBlindNotifications} aria-label="Enable blind alerts" title="Enable blind alerts">
+				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+			</button>
+			<button class="sound icon-action" type="button" onclick={openDisplay} aria-label="Open display" title="Open display">
+				<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8m-4-4v4"/></svg>
+			</button>
+			<button class="clock-button icon-action" type="button" onclick={() => (showClock ? closeClock() : startClock())} aria-label="Call the clock" title="Call the clock">
+				<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M5 3 2 6m17-3 3 3M12 2v3"/></svg>
 			</button>
 			<button
-				class="settings-button"
+				class="settings-button icon-action"
 				type="button"
 				onclick={() => (showSettings = true)}
 				aria-label="Tournament settings"
+				title="Tournament settings"
 				aria-haspopup="dialog"
 				aria-expanded={showSettings}
-			>⚙</button>
+			><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.7 1l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.7-1l-1.7.7-1.4-2.4 1.4-1.1a7 7 0 0 1 0-2l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.7-1l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.7 1l1.7-.7 1.4 2.4-1.4 1.1a7 7 0 0 1 0 2Z"/></svg></button>
+			{#if notificationStatus}<span class="cast-status">{notificationStatus}</span>{/if}
 			{#if castStatus}<span class="cast-status">{castStatus}</span>{/if}
 		</div>
 	</header>
 
-	<nav class="tabs" aria-label="Tournament sections">
-		<button class:active={activeTab === 'timer'} onclick={() => (activeTab = 'timer')}>
-			Timer
+	<nav class="tabs icon-tabs" aria-label="Tournament sections">
+		<button class:active={activeTab === 'timer'} type="button" aria-label="Timer" title="Timer" aria-current={activeTab === 'timer' ? 'page' : undefined} onclick={() => (activeTab = 'timer')}>
+			<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6m-3 0v3"/></svg>
 		</button>
-
-		<button class:active={activeTab === 'tables'} onclick={() => (activeTab = 'tables')}>
-			Seating
+		<button class:active={activeTab === 'tables'} type="button" aria-label="Seating" title="Seating" aria-current={activeTab === 'tables' ? 'page' : undefined} onclick={() => (activeTab = 'tables')}>
+			<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
 		</button>
-
-		<button class:active={activeTab === 'setup'} onclick={() => (activeTab = 'setup')}>
-			Setup & Players
+		<button class:active={activeTab === 'setup'} type="button" aria-label="Setup and players" title="Setup and players" aria-current={activeTab === 'setup' ? 'page' : undefined} onclick={() => (activeTab = 'setup')}>
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6m3-3h-6"/></svg>
 		</button>
-
-		<button class:active={activeTab === 'payouts'} onclick={() => (activeTab = 'payouts')}>
-			Payouts
+		<button class:active={activeTab === 'payouts'} type="button" aria-label="Payouts" title="Payouts" aria-current={activeTab === 'payouts' ? 'page' : undefined} onclick={() => (activeTab = 'payouts')}>
+			<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h2m8 0h2"/></svg>
 		</button>
 	</nav>
 
@@ -3599,3 +3603,45 @@ function startCasting() {
 	}
 
 </style>
+
+/* Compact Lucide-style icon toolbar and section navigation. */
+.icon-action {
+	width: 40px !important;
+	min-width: 40px !important;
+	height: 40px !important;
+	min-height: 40px !important;
+	padding: 0 !important;
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	border-radius: 9px !important;
+}
+.icon-action svg, .icon-tabs svg {
+	width: 20px;
+	height: 20px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+	flex: 0 0 auto;
+}
+.icon-tabs {
+	gap: 14px !important;
+}
+.icon-tabs button {
+	width: 42px;
+	min-width: 42px;
+	height: 42px;
+	padding: 0 !important;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+}
+.icon-tabs svg { width: 21px; height: 21px; }
+@media (max-width: 700px) {
+	.header-actions { flex: 0 0 auto !important; width: auto !important; }
+	.header-actions > button { flex: 0 0 40px !important; }
+	.icon-tabs { justify-content: space-around; gap: 8px !important; }
+	.icon-tabs button { flex: 1 1 0 !important; max-width: 56px; }
+}
