@@ -2070,8 +2070,8 @@ function startCasting() {
 									class:dragging={swipedPlayerId === player.id}
 									role="button"
 									tabindex="0"
-									aria-label={player.eliminated ? `Restore ${player.name}` : `Eliminate ${player.name}`}
-									onkeydown={(event) => event.key === "Enter" && (player.eliminated ? restorePlayer(player.id) : removePlayer(player.id))}
+									aria-label={`${player.name}, ${player.paid ? "paid" : "unpaid"}. ${player.eliminated ? "Restore player" : "Eliminate player"}. Press right arrow to toggle payment status.`}
+									onkeydown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); player.eliminated ? restorePlayer(player.id) : removePlayer(player.id); } else if (event.key === "ArrowRight") { event.preventDefault(); togglePaid(player.id); } }}
 									onpointerdown={(event) => startPlayerSwipe(event, player.id)}
 									onpointermove={(event) => movePlayerSwipe(event, player.id)}
 									onpointerup={() => endPlayerSwipe(player.id)}
