@@ -2100,6 +2100,10 @@ function startCasting() {
 			window.removeEventListener('keydown', handleKeyboard);
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			if (syncInterval !== null) clearInterval(syncInterval);
+			if (playerSaveTimer !== null) {
+				clearTimeout(playerSaveTimer);
+				playerSaveTimer = null;
+			}
 			if (redtoothViewTimer !== null) {
 				clearInterval(redtoothViewTimer);
 				redtoothViewTimer = null;
