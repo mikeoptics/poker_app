@@ -27,7 +27,8 @@ async function withVenueWriteLock(id, operation) {
 	const previous = venueWriteQueues.get(key) ?? Promise.resolve();
 	/** @type {() => void} */
 	let release = () => {};
-	const gate = new Promise((resolve) => { release = () => resolve(); });
+	/** @type {Promise<void>} */
+	const gate = new Promise((resolve) => { release = resolve; });
 	const queued = previous.then(() => gate);
 	venueWriteQueues.set(key, queued);
 	await previous;
