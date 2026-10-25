@@ -1766,11 +1766,13 @@
 		};
 	}
 
-		const browserSettingsKey = `poker-timer-settings:${venueId}`;
+		function getBrowserSettingsKey() {
+			return `poker-timer-settings:${venueId}`;
+		}
 
 		function saveBrowserSettings() {
 			try {
-				localStorage.setItem(browserSettingsKey, JSON.stringify({
+				localStorage.setItem(getBrowserSettingsKey(), JSON.stringify({
 					levels, soundEnabled, announcementEnabled, buyInAmount, mixedGames, maxRebuys, maxTopUps
 				}));
 			} catch (error) {
@@ -1780,7 +1782,7 @@
 
 		function loadBrowserSettings() {
 			try {
-				const raw = localStorage.getItem(browserSettingsKey);
+				const raw = localStorage.getItem(getBrowserSettingsKey());
 				if (!raw) return;
 				const saved = JSON.parse(raw);
 				if (Array.isArray(saved.levels) && saved.levels.length) levels = saved.levels;
