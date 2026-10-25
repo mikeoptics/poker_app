@@ -805,16 +805,26 @@
 	}
 
 	/** @param {number} id */
-	function deletePlayer(id) {
+	async function deletePlayer(id) {
 		const player = players.find((item) => item.id === id);
 		// Undo an elimination first so finishing positions and league points remain valid.
 		if (!player || player.eliminated) return;
-		players = players.filter((item) => item.id !== id);
-		balanceSuggestions = [];
-		balanceMessage = '';
-		distributeAcrossTables();
-		rebalanceTables();
-		schedulePlayerSave();
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, {
+				method: 'POST', headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ action: 'deletePlayer', playerId: id })
+			});
+			if (!response.ok) throw new Error((await response.json()).error || 'Unable to delete player.');
+			players = players.filter((item) => item.id !== id);
+			balanceSuggestions = [];
+			balanceMessage = '';
+			distributeAcrossTables();
+			rebalanceTables();
+			schedulePlayerSave();
+		} catch (error) {
+			console.error('Player deletion failed:', error);
+			await loadTournament();
+		}
 	}
 
 	function addPlayerFromForm() {
@@ -891,46 +901,29 @@
 	 * @param {RedtoothRow | null} redtoothPlayer
 	 * @param {boolean} guest
 	 */
-	function addPlayer(name, redtoothPlayer = null, guest = false) {
-		const id = nextPlayerId++;
-		console.log('ADDING:', name, redtoothPlayer?.redtoothId);
-		const seatedPlayers = players.filter((player) => !player.eliminated && Number(player.table) > 0);
-		const existingTables = [...new Set(seatedPlayers.map((player) => player.table))].sort((a, b) => a - b);
-		const targetTable = existingTables.length
-			? existingTables.sort((a, b) =>
-				seatedPlayers.filter((player) => player.table === a).length -
-				seatedPlayers.filter((player) => player.table === b).length
-			)[0]
-			: 1;
-		const occupiedSeats = seatedPlayers.filter((player) => player.table === targetTable).map((player) => player.seat);
-		let targetSeat = 1;
-		while (occupiedSeats.includes(targetSeat)) targetSeat += 1;
-
-		players.push({
-			id,
-			name,
-			table: targetTable,
-			seat: targetSeat,
-			buyIns: 1,
-			rebuys: 0,
-			topUps: 0,
-			paid: false,
-			eliminated: false,
-			eliminationPosition: null,
-
-			redtoothId: redtoothPlayer?.redtoothId ?? null,
-			redtoothGames: redtoothPlayer?.games ?? 0,
-			redtoothPoints: redtoothPlayer?.points ?? 0,
-			redtoothConfirmed: redtoothPlayer !== null,
-			redtoothPendingPoints: 0,
-
-			guest
-		});
-		console.log('STORED:', players[players.length - 1].redtoothId);
-		// Keep existing seats stable. If adding this player exceeds a table's
-		// capacity, offer a split rather than silently redistributing everyone.
-		rebalanceTables();
-		schedulePlayerSave();
+	async function addPlayer(name, redtoothPlayer = null, guest = false) {
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, {
+				method: 'POST', headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({
+					action: 'addPlayer', name, guest,
+					redtoothId: redtoothPlayer?.redtoothId ?? null,
+					redtoothGames: redtoothPlayer?.games ?? 0,
+					redtoothPoints: redtoothPlayer?.points ?? 0
+				})
+			});
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Unable to add player.');
+			players = [...players, result.player];
+			nextPlayerId = result.nextPlayerId;
+			// Keep existing seats stable. If adding this player exceeds a table's
+			// capacity, offer a split rather than silently redistributing everyone.
+			rebalanceTables();
+			schedulePlayerSave();
+		} catch (error) {
+			console.error('Player addition failed:', error);
+			await loadTournament();
+		}
 	}
 
 	/**
