@@ -3603,19 +3603,27 @@ function startCasting() {
 		overflow: visible !important;
 	}
 	.director-player-swipe {
-		border: 0 !important;
-		border-bottom: 1px solid #343a40 !important;
+		border: none !important;
+		border-bottom: none !important;
+		outline: none !important;
+		box-shadow: none !important;
+		border-image: none !important;
 		border-radius: 0 !important;
 		background: #181b1f !important;
+		background-image: none !important;
 	}
 	.director-player-swipe:last-child {
 		border-bottom: 0 !important;
 	}
 	.director-player-row,
 	.director-player-list.eliminated-list .director-player-row {
-		border: 0 !important;
+		border: none !important;
+		outline: none !important;
+		box-shadow: none !important;
+		border-image: none !important;
 		border-radius: 0 !important;
 		background: #181b1f !important;
+		background-image: none !important;
 	}
 
 	/* Bottom icon navigation should sit directly on the app surface. */
