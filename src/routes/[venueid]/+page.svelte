@@ -1213,10 +1213,23 @@
 			: [];
 
 		for (const move of appliedMoves) {
-			const player = players.find((item) => item.id === move.id);
-			if (player) {
-				player.table = move.to;
-				player.seat = move.seat;
+			const player = players.find((item) => item.id === move.id && !item.eliminated);
+			if (!player) continue;
+
+			player.table = move.to;
+			player.seat = move.seat;
+
+			// The accepted move now occupies this seat. Remove any eliminated
+			// marker there so the table cannot show both players or a stale Replace button.
+			for (const eliminated of players) {
+				if (
+					eliminated.eliminated &&
+					eliminated.table === move.to &&
+					eliminated.seat === move.seat
+				) {
+					eliminated.table = 0;
+					eliminated.seat = 0;
+				}
 			}
 		}
 
