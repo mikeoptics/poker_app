@@ -1,0 +1,1108 @@
+
+> poker-blind-timer@0.1.0 check
+> svelte-kit sync && svelte-check --tsconfig ./jsconfig.json
+
+Loading svelte-check in workspace: /Users/admin/Downloads/poker-blind-timer-sveltekit
+Getting Svelte diagnostics...
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/server/push-notifications.js:23:53
+Error: Parameter 'subscription' implicitly has an 'any' type. 
+/** @param {string} venueId */
+export async function savePushSubscription(venueId, subscription) {
+	await fs.mkdir(PUSH_DIR, { recursive: true });
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/server/push-notifications.js:46:65
+Error: Parameter 'item' implicitly has an 'any' type. 
+		const subscriptions = JSON.parse(await fs.readFile(file, 'utf8'));
+		await fs.writeFile(file, JSON.stringify(subscriptions.filter((item) => item.endpoint !== endpoint), null, 2));
+	} catch {}
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/server/push-notifications.js:92:15
+Error: Property 'code' does not exist on type '{}'. 
+		} catch (error) {
+			if (error?.code !== 'ENOENT') console.error('Blind push check failed for venue', venueId, error);
+		}
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/notifications/[venueid]/+server.js:4:16
+Error: Parameter 'id' implicitly has an 'any' type. 
+
+const valid = (id) => /^\d{1,12}$/.test(String(id ?? ''));
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:30:42
+Error: Type '(value: any) => void' is not assignable to type '() => void'.
+  Target signature provides too few arguments. Expected 1 or more, but got 0. 
+	let release = () => {};
+	const gate = new Promise((resolve) => { release = resolve; });
+	const queued = previous.then(() => gate);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:127:3
+Warn: Non-interactive element `<section>` cannot have interactive role 'dialog'
+https://svelte.dev/e/a11y_no_noninteractive_element_to_interactive_role (svelte)
+	}}>
+		<section class="replace-modal" role="dialog" aria-modal="true" aria-labelledby="replace-modal-title">
+			<div class="replace-modal-heading">
+				<div>
+					<span class="replace-modal-eyebrow">TABLE {replacingPlayer.table} · SEAT {replacingPlayer.seat}</span>
+					<h2 id="replace-modal-title">Replace {replacingPlayer.name}</h2>
+				</div>
+				<button class="replace-modal-close" type="button" aria-label="Close" onclick={() => (replacingPlayerId = null)}>×</button>
+			</div>
+			<p>Select an active player from another table to move into this seat.</p>
+			{#if replacementCandidates.length}
+				<label for="replacement-player-select">Player to move</label>
+				<select id="replacement-player-select" class="replacement-player-select" style="color-scheme: dark; color: #f0f2f1; background-color: #111519;" bind:value={selectedReplacementId}>
+					<option value="" style="color: #f0f2f1; background: #111519;">Select a player</option>
+					{#each replacementCandidates as candidate (candidate.id)}
+						<option value={candidate.id} style="color: #f0f2f1; background: #111519;">{candidate.name} — {tableNames[candidate.table] || `Table ${candidate.table}`}, Seat {candidate.seat}</option>
+					{/each}
+				</select>
+			{:else}
+				<p class="replace-no-candidates">There are no active players at another table to move here.</p>
+			{/if}
+			<div class="replace-modal-actions">
+				<button class="replace-cancel" type="button" onclick={() => (replacingPlayerId = null)}>Cancel</button>
+				<button class="replace-confirm" type="button" disabled={!selectedReplacementId || !replacementCandidates.some((player) => player.id === Number(selectedReplacementId))} onclick={confirmReplacement}>Move player</button>
+			</div>
+		</section>
+	</div>
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:26:31
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+	const visibleTableNumbers = $derived(
+		[...new Set(players.filter((player) => Number(player.table) > 0 && Number(player.seat) > 0).map((player) => Number(player.table)))].sort((a, b) => a - b)
+	);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:26:100
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+	const visibleTableNumbers = $derived(
+		[...new Set(players.filter((player) => Number(player.table) > 0 && Number(player.seat) > 0).map((player) => Number(player.table)))].sort((a, b) => a - b)
+	);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:30:17
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+	const replacingPlayer = $derived(
+		players.find((player) => player.id === replacingPlayerId && player.eliminated) ?? null
+	);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:35:14
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+			? activePlayers
+				.filter((player) => player.table !== replacingPlayer.table)
+				.sort((a, b) => a.table - b.table || a.seat - b.seat)
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:36:12
+Error: Parameter 'a' implicitly has an 'any' type. (js)
+				.filter((player) => player.table !== replacingPlayer.table)
+				.sort((a, b) => a.table - b.table || a.seat - b.seat)
+			: []
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:36:15
+Error: Parameter 'b' implicitly has an 'any' type. (js)
+				.filter((player) => player.table !== replacingPlayer.table)
+				.sort((a, b) => a.table - b.table || a.seat - b.seat)
+			: []
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:40:23
+Error: Parameter 'tableNumber' implicitly has an 'any' type. (js)
+
+	function startRename(tableNumber) {
+		editingTableNumber = tableNumber;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:45:22
+Error: Parameter 'tableNumber' implicitly has an 'any' type. (js)
+
+	function saveRename(tableNumber) {
+		renameTable?.(tableNumber, tableNameDraft);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:51:23
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+
+	function openReplace(player) {
+		replacingPlayerId = player.id;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:78:44
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+			{#each visibleTableNumbers as tableNumber (tableNumber)}
+				{@const tablePlayers = players.filter((player) => player.table === tableNumber && player.seat > 0)}
+				{@const seatNumbers = [...new Set(tablePlayers.map((player) => player.seat))].sort((a, b) => a - b)}
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:79:57
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+				{@const tablePlayers = players.filter((player) => player.table === tableNumber && player.seat > 0)}
+				{@const seatNumbers = [...new Set(tablePlayers.map((player) => player.seat))].sort((a, b) => a - b)}
+				<section class="table-list-card">
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:94:35
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+						{/if}
+						<span>{tablePlayers.filter((player) => !player.eliminated).length} / 8 players</span>
+					</div>
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:100:50
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+					{#each seatNumbers as seat}
+						{@const seatPlayers = tablePlayers.filter((player) => player.seat === seat)}
+						{@const seatedPlayer = seatPlayers.find((player) => !player.eliminated)}
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:101:48
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+						{@const seatPlayers = tablePlayers.filter((player) => player.seat === seat)}
+						{@const seatedPlayer = seatPlayers.find((player) => !player.eliminated)}
+						{@const eliminatedPlayer = seatPlayers.find((player) => player.eliminated)}
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:102:52
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+						{@const seatedPlayer = seatPlayers.find((player) => !player.eliminated)}
+						{@const eliminatedPlayer = seatPlayers.find((player) => player.eliminated)}
+						<div class="table-list-row" class:eliminated-seat={!seatedPlayer && Boolean(eliminatedPlayer)}>
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/components/Tables/Tables.svelte:149:116
+Error: Parameter 'player' implicitly has an 'any' type. (js)
+				<button class="replace-cancel" type="button" onclick={() => (replacingPlayerId = null)}>Cancel</button>
+				<button class="replace-confirm" type="button" disabled={!selectedReplacementId || !replacementCandidates.some((player) => player.id === Number(selectedReplacementId))} onclick={confirmReplacement}>Move player</button>
+			</div>
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1764:54
+Warn: This reference only captures the initial value of `venueId`. Did you mean to reference it inside a closure instead?
+https://svelte.dev/e/state_referenced_locally (svelte)
+
+		const browserSettingsKey = `poker-timer-settings:${venueId}`;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2762:2
+Warn: Unused CSS selector ".setup-layout"
+https://svelte.dev/e/css_unused_selector (svelte)
+
+	.setup-layout {
+		height: 100%;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2768:3
+Warn: Unused CSS selector ".setup-sidebar"
+https://svelte.dev/e/css_unused_selector (svelte)
+		min-height: 0;
+	}.setup-sidebar {
+		display: flex;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2773:17
+Warn: Unused CSS selector ".setup-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+		min-width: 0;
+	}.levels-card, .setup-card, .payout-card {
+		background: #17191b;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2785:3
+Warn: Unused CSS selector ".setup-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+		overflow: hidden;
+	}.setup-card {
+		padding: 20px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2792:3
+Warn: Unused CSS selector ".setup-layout .levels-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+		justify-content: flex-start;
+	}.setup-layout .levels-card {
+		overflow: hidden;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2795:2
+Warn: Unused CSS selector ".setup-sidebar .players-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}/* Make the players card substantially wider */
+	.setup-sidebar .players-card {
+		display: flex;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2803:2
+Warn: Unused CSS selector ".setup-sidebar .players-card .player-list"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}
+	.setup-sidebar .players-card .player-list {
+		flex: 1 1 0;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2810:3
+Warn: Unused CSS selector ".setup-layout .table"
+https://svelte.dev/e/css_unused_selector (svelte)
+		-webkit-overflow-scrolling: touch;
+	}.setup-layout .table {
+		overflow: auto;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2815:3
+Warn: Unused CSS selector ".setup-layout"
+https://svelte.dev/e/css_unused_selector (svelte)
+	@media (max-width: 1100px) {
+		.setup-layout {
+			grid-template-columns: 1fr;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2818:3
+Warn: Unused CSS selector ".setup-sidebar"
+https://svelte.dev/e/css_unused_selector (svelte)
+		}
+		.setup-sidebar {
+			display: grid;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2823:3
+Warn: Unused CSS selector ".players-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+		}
+		.players-card {
+			grid-column: 1 / -1;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2827:29
+Warn: Unused CSS selector ".setup-sidebar"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}
+	@media (max-width: 700px) {.setup-sidebar {
+			display: flex;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2831:4
+Warn: Unused CSS selector ".setup-layout"
+https://svelte.dev/e/css_unused_selector (svelte)
+			gap: 18px;
+		}.setup-layout {
+			display: flex;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2836:3
+Warn: Unused CSS selector ".players-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+		}
+	}.players-card {
+		padding: 18px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2913:3
+Warn: Unused CSS selector ".add-player-form label"
+https://svelte.dev/e/css_unused_selector (svelte)
+		font-size: 1.1rem;
+	}.add-player-form label {
+		display: block;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2920:3
+Warn: Unused CSS selector ".add-player-form input"
+https://svelte.dev/e/css_unused_selector (svelte)
+		flex: 1;
+	}.add-player-form input, .player-row input {
+		display: block;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2920:27
+Warn: Unused CSS selector ".player-row input"
+https://svelte.dev/e/css_unused_selector (svelte)
+		flex: 1;
+	}.add-player-form input, .player-row input {
+		display: block;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2929:3
+Warn: Unused CSS selector ".add-player-form label"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #f4f4f1;
+	}.add-player-form label {
+		min-width: 0;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2931:3
+Warn: Unused CSS selector ".add-player-form input"
+https://svelte.dev/e/css_unused_selector (svelte)
+		min-width: 0;
+	}.add-player-form input {
+		min-width: 0;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2941:3
+Warn: Unused CSS selector ".randomise-seats"
+https://svelte.dev/e/css_unused_selector (svelte)
+		border-radius: 9px;
+	}.randomise-seats {
+		font-size: 1rem;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2946:3
+Warn: Unused CSS selector ".player-list"
+https://svelte.dev/e/css_unused_selector (svelte)
+		flex: 1 0 auto;
+	}.player-list {
+		flex: 1 1 auto;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2952:3
+Warn: Unused CSS selector ".list-header"
+https://svelte.dev/e/css_unused_selector (svelte)
+		padding: 0 8px 24px 0;
+	}.list-header {
+		display: flex;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2957:3
+Warn: Unused CSS selector ".list-header span"
+https://svelte.dev/e/css_unused_selector (svelte)
+		margin-bottom: 6px;
+	}.list-header span {
+		color: #8f969d;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2960:3
+Warn: Unused CSS selector ".player-row"
+https://svelte.dev/e/css_unused_selector (svelte)
+		font-size: 0.75rem;
+	}.player-row {
+		display: grid;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2976:3
+Warn: Unused CSS selector ".player-row input"
+https://svelte.dev/e/css_unused_selector (svelte)
+		border-top: 1px solid #292e34;
+	}.player-row input {
+		margin: 0;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2980:3
+Warn: Unused CSS selector ".player-row span"
+https://svelte.dev/e/css_unused_selector (svelte)
+		max-width: 170px;
+	}.player-row span {
+		color: #8f969d;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2984:3
+Warn: Unused CSS selector ".paid-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+		white-space: nowrap;
+	}.paid-button {
+		padding: 5px 8px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2992:3
+Warn: Unused CSS selector ".paid-button.paid"
+https://svelte.dev/e/css_unused_selector (svelte)
+		white-space: nowrap;
+	}.paid-button.paid {
+		background: #214b36;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2995:3
+Warn: Unused CSS selector ".player-row.eliminated"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #a8e6be;
+	}.player-row.eliminated {
+		opacity: 0.45;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:2997:3
+Warn: Unused CSS selector ".player-row.eliminated input"
+https://svelte.dev/e/css_unused_selector (svelte)
+		opacity: 0.45;
+	}.player-row.eliminated input {
+		text-decoration: line-through;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3053:3
+Warn: Unused CSS selector ".redtooth-linked"
+https://svelte.dev/e/css_unused_selector (svelte)
+		text-align: right;
+	}.redtooth-linked {
+		color: #63b982 !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3055:3
+Warn: Unused CSS selector ".redtooth-unlinked"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #63b982 !important;
+	}.redtooth-unlinked {
+		color: #d46b6b !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3117:3
+Warn: Unused CSS selector ".setup-layout"
+https://svelte.dev/e/css_unused_selector (svelte)
+	@media (max-width: 1050px) {
+		.setup-layout {
+			grid-template-columns: 1fr;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3132:4
+Warn: Unused CSS selector ".player-row"
+https://svelte.dev/e/css_unused_selector (svelte)
+			grid-template-columns: repeat(2, 1fr);
+		}.player-row {
+			grid-template-columns:
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3137:4
+Warn: Unused CSS selector ".player-row span"
+https://svelte.dev/e/css_unused_selector (svelte)
+				80px;
+		}.player-row span, .player-row .tiny {
+			font-size: 0.6rem;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3137:22
+Warn: Unused CSS selector ".player-row .tiny"
+https://svelte.dev/e/css_unused_selector (svelte)
+				80px;
+		}.player-row span, .player-row .tiny {
+			font-size: 0.6rem;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3144:18
+Warn: Unused CSS selector ".setup-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+			font-size: 1.65rem;
+		}.levels-card, .setup-card, .payout-card {
+			padding: 13px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3146:4
+Warn: Unused CSS selector ".player-row"
+https://svelte.dev/e/css_unused_selector (svelte)
+			padding: 13px;
+		}.player-row {
+			grid-template-columns: 1fr 1fr;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3148:4
+Warn: Unused CSS selector ".player-row input"
+https://svelte.dev/e/css_unused_selector (svelte)
+			grid-template-columns: 1fr 1fr;
+		}.player-row input {
+			grid-column: 1 / -1;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3154:3
+Warn: Unused CSS selector ".add-player-form"
+https://svelte.dev/e/css_unused_selector (svelte)
+
+	}.add-player-form {
+		display: flex;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3225:3
+Warn: Unused CSS selector ".player-position"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #d37a80;
+	}.player-position {
+		display: flex;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3229:3
+Warn: Unused CSS selector ".elimination-order-controls"
+https://svelte.dev/e/css_unused_selector (svelte)
+		gap: 6px;
+	}.elimination-order-controls {
+		display: flex;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3232:3
+Warn: Unused CSS selector ".order-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+		gap: 2px;
+	}.order-button {
+		width: 24px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3243:3
+Warn: Unused CSS selector ".order-button:hover:not(:disabled)"
+https://svelte.dev/e/css_unused_selector (svelte)
+		cursor: pointer;
+	}.order-button:hover:not(:disabled) {
+		background: #303438;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3246:3
+Warn: Unused CSS selector ".order-button:disabled"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #fff;
+	}.order-button:disabled {
+		opacity: 0.25;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3255:211
+Warn: Unused CSS selector ".setup-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+		background: #171717; color: #d8c49c; border: 1px solid #5a482b; border-radius: 8px;
+	}.clock-button, .tabs button.active { background: #c4a36a; color: #111; border-color: #c4a36a; }.tabs { border-color: rgba(196,163,106,.25); }.tabs button.active { border-bottom-color: #c4a36a; }.levels-card, .setup-card, .payout-card, .director-players {
+		background: #141414; border: 1px solid #403522; border-radius: 14px; color: #f4f0e7;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3263:1942
+Warn: Unused CSS selector ".payment-pill.paid"
+https://svelte.dev/e/css_unused_selector (svelte)
+	@media (prefers-reduced-motion: reduce) {.director-progress div.progress-ending { animation:none; filter:brightness(1.35); box-shadow:0 0 8px 2px rgba(196,163,106,.65); }
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3263:2527
+Warn: Unused CSS selector ".restore-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+	@media (prefers-reduced-motion: reduce) {.director-progress div.progress-ending { animation:none; filter:brightness(1.35); box-shadow:0 0 8px 2px rgba(196,163,106,.65); }
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3263:2741
+Warn: Unused CSS selector ".director-eliminated-heading"
+https://svelte.dev/e/css_unused_selector (svelte)
+	@media (prefers-reduced-motion: reduce) {.director-progress div.progress-ending { animation:none; filter:brightness(1.35); box-shadow:0 0 8px 2px rgba(196,163,106,.65); }
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3263:3029
+Warn: Unused CSS selector ".director-eliminated-actions"
+https://svelte.dev/e/css_unused_selector (svelte)
+	@media (prefers-reduced-motion: reduce) {.director-progress div.progress-ending { animation:none; filter:brightness(1.35); box-shadow:0 0 8px 2px rgba(196,163,106,.65); }
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3263:3104
+Warn: Unused CSS selector ".restore-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+	@media (prefers-reduced-motion: reduce) {.director-progress div.progress-ending { animation:none; filter:brightness(1.35); box-shadow:0 0 8px 2px rgba(196,163,106,.65); }
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3263:3272
+Warn: Unused CSS selector ".order-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+	@media (prefers-reduced-motion: reduce) {.director-progress div.progress-ending { animation:none; filter:brightness(1.35); box-shadow:0 0 8px 2px rgba(196,163,106,.65); }
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3264:982
+Warn: Unused CSS selector ".restore-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+	}/* Match the original Chromecast receiver colourway throughout the TDC */
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3264:1048
+Warn: Unused CSS selector ".director-eliminated-actions"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+	}/* Match the original Chromecast receiver colourway throughout the TDC */
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3264:1089
+Warn: Unused CSS selector ".director-eliminated-actions .order-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+	}/* Match the original Chromecast receiver colourway throughout the TDC */
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3264:1160
+Warn: Unused CSS selector ".setup-layout"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+	}/* Match the original Chromecast receiver colourway throughout the TDC */
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3264:1175
+Warn: Unused CSS selector ".setup-sidebar"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+	}/* Match the original Chromecast receiver colourway throughout the TDC */
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3264:1230
+Warn: Unused CSS selector ".setup-layout .table"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}.director-level-context { display:flex; justify-content:space-between; gap:12px; max-width:850px; margin:8px auto 18px; color:#8f8779; font-size:10px; font-weight:800; letter-spacing:.08em; }.director-players { max-width:900px; margin:0 auto; padding:16px; }.director-section-heading { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }.director-section-heading h1 { color:#f4f0e7; font-size:24px; margin-top:3px; }.director-player-count { display:flex; align-items:center; gap:7px; color:#c4a36a; font-size:10px; font-weight:800; letter-spacing:.12em; }.director-player-count strong { font-size:26px; }.director-player-list { display:flex; flex-direction:column; gap:6px; }.director-player-swipe { position:relative; overflow:hidden; isolation:isolate; border-radius:9px; touch-action:pan-y; user-select:none; }.director-player-swipe .director-player-row { position:relative; z-index:2; opacity:1 !important; background:#101214 !important; transition:transform .2s ease; }.director-player-swipe.dragging .director-player-row { transition:none; }.swipe-trash-reveal { position:absolute; inset:2px 2px 2px auto; width:112px; display:flex; align-items:center; justify-content:center; gap:7px; border-radius:0 !important; background:#b83c3c; color:#fff; } .swipe-trash-reveal span { color:#111; font-size:10px; font-weight:900; letter-spacing:.035em; white-space:nowrap; }.swipe-payment-reveal { position:absolute; inset:2px auto 2px 2px; width:112px; display:flex; align-items:center; justify-content:center; border-radius:0 !important; background:#397b58; color:#fff; font-size:10px; font-weight:900; letter-spacing:.06em; }.payment-pill { display:inline-flex; align-items:center; width:max-content; padding:4px 9px; border:1px solid #ef5350; border-radius:999px; background:#c62828; color:#fff !important; font-size:10px !important; font-weight:900; letter-spacing:.08em; box-shadow:0 0 0 1px #c62828; }.payment-pill.paid { border-color:rgba(105,169,130,.35); background:#234532; color:#9cc9aa !important; }.director-player-row { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:58px; padding:9px 10px; border:1px solid #30291e; border-radius:9px; background:#191817; }.director-player-identity { display:flex; flex-direction:column; min-width:0; gap:4px; }.director-player-identity strong { overflow-wrap:anywhere; color:#f2eee5; font-size:14px; }.director-player-identity span { color:#8f8779; font-size:9px; font-weight:800; letter-spacing:.08em; }.restore-button { min-height:38px; border-radius:7px; padding:0 12px; background:#3b2020; border:1px solid #704040; color:#f2b5a9; font-size:10px; font-weight:900; letter-spacing:.06em; touch-action:manipulation; }.director-eliminated-heading { margin:18px 0 8px; color:#c4a36a; font-size:10px; font-weight:900; letter-spacing:.16em; }.is-eliminated { opacity:1 !important; background:#101214 !important; }.is-eliminated .director-player-identity strong { text-decoration:line-through; color:#a49b8d; }.director-eliminated-actions { display:flex; align-items:center; gap:8px; }.restore-button { background:#1d2b22; border-color:#405c43; color:#b8d6a7; white-space:nowrap; }.director-empty { padding:26px 12px; text-align:center; color:#8f8779; }.order-button { width:30px; height:30px; border-radius:6px; background:#211e18; border-color:#5a482b; color:#c4a36a; touch-action:manipulation; }
+	@media (max-width:700px) {.app { height:100dvh; min-height:100dvh; padding:10px 10px max(8px, env(safe-area-inset-bottom)); }.header { align-items:flex-start; gap:8px; margin-bottom:8px; }.header-actions { justify-content:flex-end; gap:5px; }.header-actions .sound { display:none; }.clock-button { padding:7px 9px; font-size:11px; }.tabs { gap:2px; overflow-x:auto; white-space:nowrap; margin-top:6px; }.tabs button { flex:1 0 auto; padding:9px 10px; font-size:12px; }main { overflow:hidden; }.director-dashboard { padding-bottom:12px; }.director-level-bar { grid-template-columns:42px minmax(0,1fr) 42px; gap:6px; }.level-arrow { min-height:136px; font-size:17px; }.level-main { min-height:136px; padding:9px 5px; }.director-clock { font-size:clamp(38px,12vw,54px); }.director-level-context { font-size:9px; margin-bottom:12px; }.director-players { padding:11px; }.director-player-row { min-height:60px; padding:8px; gap:7px; }.director-player-identity strong { font-size:13px; }.restore-button { min-height:42px; padding:0 9px; font-size:9px; }.director-eliminated-actions { gap:5px; }.director-eliminated-actions .order-button { width:27px; height:30px; }.setup-layout, .setup-sidebar { display:flex; flex-direction:column; }.setup-layout .table { max-height:none; }
+	}/* Match the original Chromecast receiver colourway throughout the TDC */
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3269:17
+Warn: Unused CSS selector ".setup-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #f4f4f1 !important;
+	}.levels-card, .setup-card, .payout-card, .clock-modal {
+		background: #181b1f !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3277:64
+Warn: Unused CSS selector ".director-eliminated-heading"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #f4f4f1 !important;
+	}.director-eyebrow, .director-blinds, .director-player-count, .director-eliminated-heading {
+		color: #c4a36a !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3279:194
+Warn: Unused CSS selector ".order-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #c4a36a !important;
+	}.header { border-bottom-color: rgba(196,163,106,.2) !important; }.tabs { border-color: rgba(196,163,106,.25) !important; }.tabs button, .sound, .add, .secondary, .mixed-toggle, .level-arrow, .order-button {
+		background: #181b1f !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3293:284
+Warn: Unused CSS selector ".add-player-form input"
+https://svelte.dev/e/css_unused_selector (svelte)
+		border-color: #343a40 !important;
+	}.director-player-identity strong, .director-section-heading h1 { color: #f4f4f1 !important; }.director-player-identity span, .director-hint, .director-level-context, .director-empty { color: #8e969d !important; }.director-progress { background: #292e34 !important; }input, select, .add-player-form input, .player-row input {
+		background: #101214 !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3293:308
+Warn: Unused CSS selector ".player-row input"
+https://svelte.dev/e/css_unused_selector (svelte)
+		border-color: #343a40 !important;
+	}.director-player-identity strong, .director-section-heading h1 { color: #f4f4f1 !important; }.director-player-identity span, .director-hint, .director-level-context, .director-empty { color: #8e969d !important; }.director-progress { background: #292e34 !important; }input, select, .add-player-form input, .player-row input {
+		background: #101214 !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3298:96
+Warn: Unused CSS selector ".order-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}/* Refined receiver-led palette: gold is an accent, never a dominant surface */
+	.sound, .add, .clock-button, .tabs button, .secondary, .mixed-toggle, .primary, .level-arrow, .order-button {
+		background: #181b1f !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3303:139
+Warn: Unused CSS selector ".order-button:hover:not(:disabled)"
+https://svelte.dev/e/css_unused_selector (svelte)
+		box-shadow: none !important;
+	}.clock-button:hover, .sound:hover, .add:hover, .secondary:hover, .tabs button:hover, .primary:hover, .level-arrow:hover:not(:disabled), .order-button:hover:not(:disabled) {
+		background: #24282d !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3322:3
+Warn: Unused CSS selector ".director-eliminated-heading"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #f4f4f1 !important;
+	}.director-eliminated-heading {
+		color: #c4a36a !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3326:3
+Warn: Unused CSS selector ".order-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+		background: #c4a36a !important;
+	}.order-button {
+		background: #181b1f !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3409:67
+Warn: Unused CSS selector ".order-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+		background: #101214 !important;
+	}.director-player-row:last-child { border-bottom: 0 !important; }.order-button {
+		border: 0 !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3414:3
+Warn: Unused CSS selector ".order-button:hover:not(:disabled)"
+https://svelte.dev/e/css_unused_selector (svelte)
+		font-size: 16px !important;
+	}.order-button:hover:not(:disabled) {
+		background: #252a30 !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3417:3
+Warn: Unused CSS selector ".restore-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #f4f4f1 !important;
+	}.restore-button {
+		border: 0 !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3421:3
+Warn: Unused CSS selector ".restore-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+		color: #e1a09b !important;
+	}.restore-button {
+		background: #243d2c !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3433:47
+Warn: Unused CSS selector ".settings-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+		gap: 8px !important;
+	}.header-actions > button { flex: 0 0 auto; }.settings-button {
+		width: 40px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3442:3
+Warn: Unused CSS selector ".settings-button:hover"
+https://svelte.dev/e/css_unused_selector (svelte)
+		cursor: pointer;
+	}.settings-button:hover { background: #30363c; color: #fff; }.settings-backdrop { z-index: 110; padding: 16px; }.settings-modal {
+		width: min(440px, 100%);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3451:189
+Warn: Unused CSS selector ".settings-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}.settings-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; margin-bottom:18px; }.settings-heading h2 { margin:4px 0 0; color:#f4f4f1; font-size:20px; }.settings-eyebrow { color:#8e969d; font-size:9px; font-weight:800; letter-spacing:.16em; }.settings-option, .settings-danger { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:16px 0; border-top:1px solid rgba(255,255,255,.08); }.settings-number-option > div { min-width:0; }.settings-number { flex:0 0 76px; width:76px; min-height:40px; padding:7px 9px; text-align:center; font-size:16px; font-weight:800; }.settings-option strong, .settings-danger strong { display:block; font-size:14px; font-weight:650; }.settings-option span:not(.settings-switch span), .settings-danger span { display:block; margin-top:4px; color:#8e969d; font-size:11px; line-height:1.4; }.settings-switch { flex:0 0 auto; width:44px; height:26px; padding:3px; border:0; border-radius:20px; background:#454c53; cursor:pointer; transition:background .15s ease; }.settings-switch > span { display:block; width:20px; height:20px; border-radius:50%; background:#f4f4f1; transition:transform .15s ease; }.settings-switch.enabled { background:#8b754e; }.settings-switch.enabled > span { transform:translateX(18px); }.settings-venue-link { color:#d5d9dc; background:#292e34; border-radius:7px; padding:9px 12px; text-decoration:none; font-size:12px; font-weight:800; white-space:nowrap; }.settings-danger { margin-top:4px; }.settings-reset { flex:0 0 auto; padding:9px 13px; border:0; border-radius:7px; background:#452626; color:#e1a09b; font-size:12px; font-weight:750; cursor:pointer; }.settings-reset:hover { background:#603030; }
+	@media (max-width:700px) {.header-actions { flex:1 1 100% !important; display:flex !important; flex-wrap:nowrap; justify-content:flex-start; }.header-actions > button { min-height:40px; }.settings-button { width:40px; min-width:40px; }.settings-modal { padding:18px; }
+	}/* Timer hierarchy: prominent countdown, quieter blind information */
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3461:2
+Warn: Unused CSS selector ".settings-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}/* Timer refinements: larger settings control, email-style player rows and text tabs. */
+	.settings-button {
+		width: 48px !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3493:3
+Warn: Unused CSS selector ".director-player-list.eliminated-list .director-player-row"
+https://svelte.dev/e/css_unused_selector (svelte)
+		font-weight: 650 !important;
+	}.director-player-list.eliminated-list .director-player-row {
+		border-bottom: 1px solid #343a40 !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3495:3
+Warn: Unused CSS selector ".director-player-list.eliminated-list .director-player-row:last-child"
+https://svelte.dev/e/css_unused_selector (svelte)
+		border-bottom: 1px solid #343a40 !important;
+	}.director-player-list.eliminated-list .director-player-row:last-child {
+		border-bottom: 0 !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3526:29
+Warn: Unused CSS selector ".settings-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+
+	@media (max-width: 700px) {.settings-button {
+			width: 46px !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3540:2
+Warn: Unused CSS selector ".settings-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}/* Keep the settings control aligned with the other header actions. */
+	.settings-button {
+		width: 40px !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3551:29
+Warn: Unused CSS selector ".settings-button"
+https://svelte.dev/e/css_unused_selector (svelte)
+
+	@media (max-width: 700px) {.settings-button {
+			width: 40px !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3566:2
+Warn: Unused CSS selector ".setup-layout"
+https://svelte.dev/e/css_unused_selector (svelte)
+	}/* Setup page responsive layout and independent player-list scrolling */
+	.setup-layout {
+		min-width: 0;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3570:30
+Warn: Unused CSS selector "main:has(.setup-layout)"
+https://svelte.dev/e/css_unused_selector (svelte)
+
+	@media (max-width: 1100px) {main:has(.setup-layout) {
+			min-height: 0;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3575:4
+Warn: Unused CSS selector ".setup-layout"
+https://svelte.dev/e/css_unused_selector (svelte)
+			overscroll-behavior-y: contain;
+		}.setup-layout {
+			display: flex !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3583:4
+Warn: Unused CSS selector ".setup-layout > .levels-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+			overflow: visible;
+		}.setup-layout > .levels-card {
+			flex: 0 0 auto;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3589:4
+Warn: Unused CSS selector ".setup-layout .table"
+https://svelte.dev/e/css_unused_selector (svelte)
+			overflow: visible !important;
+		}.setup-layout .table {
+			max-height: none !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3593:4
+Warn: Unused CSS selector ".setup-layout .table-row"
+https://svelte.dev/e/css_unused_selector (svelte)
+			overflow-y: visible;
+		}.setup-layout .table-row {
+			min-width: 420px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3595:4
+Warn: Unused CSS selector ".setup-sidebar"
+https://svelte.dev/e/css_unused_selector (svelte)
+			min-width: 420px;
+		}.setup-sidebar {
+			display: flex !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3602:4
+Warn: Unused CSS selector ".setup-sidebar .players-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+			gap: 14px;
+		}.setup-sidebar .players-card {
+			display: flex;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3610:4
+Warn: Unused CSS selector ".setup-sidebar .players-card .player-list"
+https://svelte.dev/e/css_unused_selector (svelte)
+			overflow: hidden;
+		}.setup-sidebar .players-card .player-list {
+			flex: 1 1 0;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3620:29
+Warn: Unused CSS selector "main:has(.setup-layout)"
+https://svelte.dev/e/css_unused_selector (svelte)
+
+	@media (max-width: 700px) {main:has(.setup-layout) {
+			padding-bottom: 12px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3622:4
+Warn: Unused CSS selector ".setup-layout"
+https://svelte.dev/e/css_unused_selector (svelte)
+			padding-bottom: 12px;
+		}.setup-layout {
+			gap: 12px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3624:4
+Warn: Unused CSS selector ".setup-layout > .levels-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+			gap: 12px;
+		}.setup-layout > .levels-card {
+			padding: 14px 12px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3626:4
+Warn: Unused CSS selector ".setup-layout .section-heading"
+https://svelte.dev/e/css_unused_selector (svelte)
+			padding: 14px 12px;
+		}.setup-layout .section-heading {
+			align-items: flex-start;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3630:4
+Warn: Unused CSS selector ".setup-layout .section-actions"
+https://svelte.dev/e/css_unused_selector (svelte)
+			gap: 10px;
+		}.setup-layout .section-actions {
+			display: flex;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3635:4
+Warn: Unused CSS selector ".setup-layout .section-actions > button"
+https://svelte.dev/e/css_unused_selector (svelte)
+			width: 100%;
+		}.setup-layout .section-actions > button {
+			min-height: 38px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3637:4
+Warn: Unused CSS selector ".setup-layout .table-row"
+https://svelte.dev/e/css_unused_selector (svelte)
+			min-height: 38px;
+		}.setup-layout .table-row {
+			min-width: 410px;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3640:4
+Warn: Unused CSS selector ".setup-sidebar .players-card"
+https://svelte.dev/e/css_unused_selector (svelte)
+			gap: 5px;
+		}.setup-sidebar .players-card {
+			height: min(58dvh, 460px);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3644:4
+Warn: Unused CSS selector ".setup-sidebar .add-player-form"
+https://svelte.dev/e/css_unused_selector (svelte)
+			padding: 14px;
+		}.setup-sidebar .add-player-form {
+			flex-wrap: wrap;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3694:2
+Warn: Unused CSS selector ".players-panel-heading"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.players-workspace { display:flex; flex-direction:column; gap:18px; width:100%; max-width:1200px; min-height:0; margin:0 auto; }
+	.players-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:20px 22px; background:#17191b; border:1px solid #292d30; border-radius:14px; }
+	.players-panel-heading h2 { margin:4px 0 3px; color:#f2f3f4; font-size:1.55rem; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3695:2
+Warn: Unused CSS selector ".players-panel-heading h2"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.players-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:20px 22px; background:#17191b; border:1px solid #292d30; border-radius:14px; }
+	.players-panel-heading h2 { margin:4px 0 3px; color:#f2f3f4; font-size:1.55rem; }
+	.players-panel-heading p { margin:0; color:#8f969d; font-size:.82rem; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3696:2
+Warn: Unused CSS selector ".players-panel-heading p"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.players-panel-heading h2 { margin:4px 0 3px; color:#f2f3f4; font-size:1.55rem; }
+	.players-panel-heading p { margin:0; color:#8f969d; font-size:.82rem; }
+	.players-summary { display:flex; gap:10px; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3697:2
+Warn: Unused CSS selector ".players-summary"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.players-panel-heading p { margin:0; color:#8f969d; font-size:.82rem; }
+	.players-summary { display:flex; gap:10px; }
+	.players-summary > div { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:76px; padding:9px 13px; background:#111316; border:1px solid #30353a; border-radius:9px; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3698:2
+Warn: Unused CSS selector ".players-summary > div"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.players-summary { display:flex; gap:10px; }
+	.players-summary > div { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:76px; padding:9px 13px; background:#111316; border:1px solid #30353a; border-radius:9px; }
+	.players-summary strong { color:#f4f4f1; font-size:1.25rem; font-variant-numeric:tabular-nums; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3699:2
+Warn: Unused CSS selector ".players-summary strong"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.players-summary > div { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:76px; padding:9px 13px; background:#111316; border:1px solid #30353a; border-radius:9px; }
+	.players-summary strong { color:#f4f4f1; font-size:1.25rem; font-variant-numeric:tabular-nums; }
+	.players-summary span { color:#929aa1; font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3700:2
+Warn: Unused CSS selector ".players-summary span"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.players-summary strong { color:#f4f4f1; font-size:1.25rem; font-variant-numeric:tabular-nums; }
+	.players-summary span { color:#929aa1; font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+	.players-add-panel { display:flex; align-items:flex-end; gap:12px; padding:16px 18px; background:#17191b; border:1px solid #292d30; border-radius:14px; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3707:40
+Warn: Unused CSS selector ".players-randomise"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.players-add-form input { box-sizing:border-box; width:100%; min-height:42px; margin:0; padding:10px 12px; border:1px solid #343a40; border-radius:8px; background:#111316; color:#f4f4f1; }
+	.players-add-form .add-player-submit, .players-randomise { min-height:42px; height:42px; padding:0 16px; white-space:nowrap; }
+	.players-roster { display:flex; flex-direction:column; flex:1 1 auto; min-height:240px; height:calc(100dvh - 350px); max-height:calc(100dvh - 350px); box-sizing:border-box; padding:16px 18px; overflow:hidden; background:#17191b; border:1px solid #292d30; border-radius:14px; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3711:2
+Warn: Unused CSS selector ".players-roster-heading > span"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.players-roster-heading h3 { margin:0; color:#f2f3f4; font-size:1rem; }
+	.players-roster-heading > span { color:#858d95; font-size:.72rem; text-align:right; }
+	.players-roster-list { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; padding-bottom:calc(76px + env(safe-area-inset-bottom)); scroll-padding-bottom:calc(76px + env(safe-area-inset-bottom)); }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3723:104
+Warn: Unused CSS selector ".tag-place"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.roster-tag { display:inline-flex; align-items:center; padding:3px 7px; border-radius:5px; background:#252a2f; color:#aeb5bb; font-size:.62rem; font-weight:750; white-space:nowrap; }
+	.tag-linked { background:#1d3c2b; color:#8bd5a4; }.tag-unlinked { background:#422525; color:#e5a0a0; }.tag-place { background:#40351d; color:#e6c77f; }
+	.roster-status { display:flex; align-items:center; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3729:3
+Warn: Unused CSS selector ".players-panel-heading"
+https://svelte.dev/e/css_unused_selector (svelte)
+	@media (max-width:760px) {
+		.players-panel-heading { align-items:flex-start; flex-direction:column; padding:16px; }
+		.players-summary { width:100%; }.players-summary > div { flex:1; min-width:0; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3730:3
+Warn: Unused CSS selector ".players-summary"
+https://svelte.dev/e/css_unused_selector (svelte)
+		.players-panel-heading { align-items:flex-start; flex-direction:column; padding:16px; }
+		.players-summary { width:100%; }.players-summary > div { flex:1; min-width:0; }
+		.players-add-panel { align-items:stretch; flex-direction:column; padding:14px; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3730:35
+Warn: Unused CSS selector ".players-summary > div"
+https://svelte.dev/e/css_unused_selector (svelte)
+		.players-panel-heading { align-items:flex-start; flex-direction:column; padding:16px; }
+		.players-summary { width:100%; }.players-summary > div { flex:1; min-width:0; }
+		.players-add-panel { align-items:stretch; flex-direction:column; padding:14px; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3733:41
+Warn: Unused CSS selector ".players-randomise"
+https://svelte.dev/e/css_unused_selector (svelte)
+		.players-add-form { align-items:stretch; flex-direction:column; }
+		.players-add-form .add-player-submit, .players-randomise { width:100%; }
+		.players-roster { flex:0 0 auto; height:50vh; max-height:50vh; min-height:260px; padding:13px; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3736:3
+Warn: Unused CSS selector ".players-roster-heading > span"
+https://svelte.dev/e/css_unused_selector (svelte)
+		.players-roster-heading { align-items:flex-start; flex-direction:column; }
+		.players-roster-heading > span { text-align:left; }
+		.players-roster-table-heading, .players-roster-row { grid-template-columns:minmax(0, 1fr) minmax(100px, 130px) 68px; column-gap:8px; padding:9px 3px; }
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:3795:2
+Warn: Unused CSS selector ".director-player-list.eliminated-list .director-player-row"
+https://svelte.dev/e/css_unused_selector (svelte)
+	.director-player-row,
+	.director-player-list.eliminated-list .director-player-row {
+		border: none !important;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:525:33
+Error: Parameter 'value' implicitly has an 'any' type. (js)
+
+	function base64UrlToUint8Array(value) {
+		const padding = '='.repeat((4 - (value.length % 4)) % 4);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1116:21
+Error: Parameter 'tableId' implicitly has an 'any' type. (js)
+		const counts = new Map(tableIds.map((id) => [id, grouped.get(id).length]));
+		const nextSeat = (tableId, plannedMoves = []) => {
+			const occupied = new Set([
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1116:30
+Error: Parameter 'plannedMoves' implicitly has an 'any[]' type. (js)
+		const counts = new Map(tableIds.map((id) => [id, grouped.get(id).length]));
+		const nextSeat = (tableId, plannedMoves = []) => {
+			const occupied = new Set([
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1202:23
+Error: Parameter 'tableNumber' implicitly has an 'any' type. (js)
+	}
+	function renameTable(tableNumber, name) {
+		const cleanName = String(name ?? '').trim().slice(0, 32);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1202:36
+Error: Parameter 'name' implicitly has an 'any' type. (js)
+	}
+	function renameTable(tableNumber, name) {
+		const cleanName = String(name ?? '').trim().slice(0, 32);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1205:66
+Error: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{}'. (js)
+		const next = { ...tableNames };
+		if (!cleanName || cleanName === `Table ${tableNumber}`) delete next[tableNumber];
+		else next[tableNumber] = cleanName;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1206:8
+Error: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{}'. (js)
+		if (!cleanName || cleanName === `Table ${tableNumber}`) delete next[tableNumber];
+		else next[tableNumber] = cleanName;
+		tableNames = next;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1660:42
+Error: Parameter 'row' implicitly has an 'any' type. (js)
+					? data.players
+					: (data.playerDirectory ?? []).map((row) => ({
+							...row, position: 0, games: 0, points: 0,
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1957:18
+Error: Property 'prompt' does not exist on type 'never'. (js)
+		if (installPrompt) {
+			installPrompt.prompt();
+			const choice = await installPrompt.userChoice;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1958:39
+Error: Property 'userChoice' does not exist on type 'never'. (js)
+			installPrompt.prompt();
+			const choice = await installPrompt.userChoice;
+			installStatus = choice?.outcome === 'accepted' ? 'App installed.' : '';
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1968:37
+Error: Parameter 'event' implicitly has an 'any' type. (js)
+
+	function handleBeforeInstallPrompt(event) {
+		event.preventDefault();
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:1992:94
+Error: Property 'standalone' does not exist on type 'Navigator'. (js)
+		});
+		appInstalled = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+		navigator.serviceWorker?.register('/service-worker.js').catch((error) => {
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:34:6
+Error: Variable 'kokoroTTS' implicitly has type 'any' in some locations where its type cannot be determined. (js)
+	);
+	let kokoroTTS = null;
+	let kokoroLoading = null;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:35:6
+Error: Variable 'kokoroLoading' implicitly has type 'any' in some locations where its type cannot be determined. (js)
+	let kokoroTTS = null;
+	let kokoroLoading = null;
+	let announcementAudio = null;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:36:6
+Error: Variable 'announcementAudio' implicitly has type 'any' in some locations where its type cannot be determined. (js)
+	let kokoroLoading = null;
+	let announcementAudio = null;
+	let tableMoveSound = null;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:37:6
+Error: Variable 'tableMoveSound' implicitly has type 'any' in some locations where its type cannot be determined. (js)
+	let announcementAudio = null;
+	let tableMoveSound = null;
+	let soundEnabled = $state(false);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:43:25
+Error: Variable 'tableMoveSound' implicitly has an 'any' type. (js)
+	function playTableMoveSound() {
+		if (!soundEnabled || !tableMoveSound) return;
+		tableMoveSound.pause();
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:46:37
+Error: Parameter 'error' implicitly has an 'any' type. (js)
+		tableMoveSound.currentTime = 0;
+		void tableMoveSound.play().catch((error) => {
+			console.error('Table move sound playback failed:', error);
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:58:7
+Error: Variable 'kokoroTTS' implicitly has an 'any' type. (js)
+	async function getKokoro() {
+		if (kokoroTTS) return kokoroTTS;
+		if (kokoroLoading) return kokoroLoading;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:59:7
+Error: Variable 'kokoroLoading' implicitly has an 'any' type. (js)
+		if (kokoroTTS) return kokoroTTS;
+		if (kokoroLoading) return kokoroLoading;
+		kokoroLoading = (async () => {
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:83:35
+Error: Parameter 'announcement' implicitly has an 'any' type. (js)
+
+	async function speakAnnouncement(announcement) {
+		if (!announcement?.text || !announcement.id || announcement.id === lastSpokenAnnouncementId) return;
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:91:9
+Error: Variable 'announcementAudio' implicitly has an 'any' type. (js)
+				const url = URL.createObjectURL(audio.toBlob());
+				if (announcementAudio) {
+					announcementAudio.pause();
+
+/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/event-test/+page.svelte:8:30
+Error: Parameter 'type' implicitly has an 'any' type. (js)
+
+	async function triggerEvent(type) {
+		if (busy) return;
+
+====================================
+svelte-check found 44 errors and 116 warnings in 7 files
