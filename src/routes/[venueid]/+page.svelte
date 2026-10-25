@@ -434,7 +434,7 @@
 		if (swipeDistance <= -82) {
 			if (player.eliminated) restorePlayer(playerId);
 			else removePlayer(playerId);
-		} else if (swipeDistance >= 82 && !player.eliminated) {
+		} else if (swipeDistance >= 82) {
 			togglePaid(playerId);
 		}
 	}
@@ -2072,17 +2072,18 @@ function startCasting() {
 									onpointerup={() => endPlayerSwipe(player.id)}
 									onpointercancel={cancelPlayerSwipe}
 								>
-									{#if !player.eliminated}
-										<div class="swipe-payment-reveal"><span>{player.paid ? 'MARK UNPAID' : 'PAID'}</span></div>
-									{/if}
+									<div class="swipe-payment-reveal"><span>{player.paid ? 'MARK UNPAID' : 'PAID'}</span></div>
 									<div class="swipe-trash-reveal"><icon name={player.eliminated ? "undo-2" : "user-round-x"} size="18"></icon><span>{player.eliminated ? 'RESTORE' : 'ELIMINATE'}</span></div>
 									<div class="director-player-row" class:is-eliminated={player.eliminated} style:transform={`translateX(${swipedPlayerId === player.id ? playerSwipeOffset : 0}px)`}>
 										<div class="director-player-identity">
 											<strong>{player.name}</strong>
 											{#if player.eliminated}
 												<span>{player.eliminationPosition}{player.eliminationPosition === 1 ? 'ST' : player.eliminationPosition === 2 ? 'ND' : player.eliminationPosition === 3 ? 'RD' : 'TH'} PLACE</span>
-											{:else if !player.paid}
+											{/if}
+											{#if !player.paid}
 												<span class="payment-pill">UNPAID</span>
+											{:else}
+												<span class="payment-pill paid">PAID</span>
 											{/if}
 										</div>
 									</div>
