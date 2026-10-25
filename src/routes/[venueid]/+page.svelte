@@ -3632,4 +3632,7 @@ function startCasting() {
 		color: #c4a36a !important;
 		box-shadow: none !important;
 	}
+
+	/* Remove the outer frame around the player table. */
+	.director-players { border: 0 !important; }
 </style>
