@@ -418,6 +418,93 @@ export async function POST({ params, request }) {
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 				return json({ ok: true, player, updatedAt: s.updatedAt });
 			}
+			if (['randomiseSeats', 'applyTableBalance', 'replaceEliminatedSeat', 'renameTable'].includes(action)) {
+				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				const active = s.players.filter((/** @type {any} */ player) => !player.eliminated);
+				if (action === 'randomiseSeats') {
+					if (!active.length) return json({ error: 'There are no active players to seat.' }, { status: 409 });
+					for (let i = active.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[active[i], active[j]] = [active[j], active[i]];
+					}
+					const tableCount = Math.ceil(active.length / 8);
+					const base = Math.floor(active.length / tableCount);
+					const extra = active.length % tableCount;
+					let offset = 0;
+					for (let table = 1; table <= tableCount; table++) {
+						const count = base + (table <= extra ? 1 : 0);
+						for (let seat = 1; seat <= count; seat++) {
+							active[offset].table = table;
+							active[offset].seat = seat;
+							offset++;
+						}
+					}
+				} else if (action === 'replaceEliminatedSeat') {
+					const eliminatedId = Number(body.eliminatedPlayerId);
+					const replacementId = Number(body.replacementPlayerId);
+					const eliminated = s.players.find((/** @type {any} */ player) => Number(player.id) === eliminatedId && player.eliminated);
+					const replacement = s.players.find((/** @type {any} */ player) => Number(player.id) === replacementId && !player.eliminated);
+					if (!eliminated || !replacement) return json({ error: 'Invalid player selection.' }, { status: 400 });
+					const table = Number(eliminated.table), seat = Number(eliminated.seat);
+					if (!Number.isInteger(table) || table < 1 || !Number.isInteger(seat) || seat < 1 || seat > 8 || replacement.table === table)
+						return json({ error: 'That seat cannot be replaced.' }, { status: 409 });
+					for (const player of s.players) {
+						if (player.eliminated && Number(player.table) === table && Number(player.seat) === seat) {
+							player.table = 0; player.seat = 0;
+						}
+					}
+					replacement.table = table; replacement.seat = seat;
+					const now = Date.now();
+					s.tableMoveEvent = { id: `move-${now}-${replacement.id}`, text: `${replacement.name}, please move to position ${seat} on table ${table}`, createdAt: now };
+				} else if (action === 'applyTableBalance') {
+					if (!Array.isArray(body.moves) || body.moves.length > 100) return json({ error: 'Invalid table moves.' }, { status: 400 });
+					const moves = body.moves;
+					const ids = new Set();
+					const destinations = new Set();
+					for (const move of moves) {
+						const id = Number(move?.id), from = Number(move?.from), to = Number(move?.to), seat = Number(move?.seat);
+						const player = active.find((/** @type {any} */ item) => Number(item.id) === id);
+						const key = `${to}:${seat}`;
+						if (!player || ids.has(id) || !Number.isInteger(from) || from < 1 || !Number.isInteger(to) || to < 1 || to > 1000 || !Number.isInteger(seat) || seat < 1 || seat > 8 || Number(player.table) !== from || destinations.has(key))
+							return json({ error: 'Table balance is out of date. Refresh and try again.' }, { status: 409 });
+						ids.add(id); destinations.add(key);
+					}
+					for (const move of moves) {
+						const player = active.find((/** @type {any} */ item) => Number(item.id) === Number(move.id));
+						player.table = Number(move.to); player.seat = Number(move.seat);
+						for (const eliminated of s.players) {
+							if (eliminated.eliminated && Number(eliminated.table) === player.table && Number(eliminated.seat) === player.seat) {
+								eliminated.table = 0; eliminated.seat = 0;
+							}
+						}
+					}
+					if (body.mode === 'merge') {
+						const closed = new Set(moves.map((/** @type {any} */ move) => Number(move.from)));
+						for (const table of closed) {
+							if (!active.some((/** @type {any} */ player) => Number(player.table) === table && Number(player.seat) > 0)) {
+								for (const player of s.players) if (Number(player.table) === table) { player.table = 0; player.seat = 0; }
+							}
+						}
+					}
+					if (moves.length) {
+						const now = Date.now();
+						s.tableMoveEvent = { id: `table-move-${now}`, text: moves.map((move) => {
+							const player = active.find((/** @type {any} */ item) => Number(item.id) === Number(move.id));
+							return `${player?.name ?? 'Player'}, please move to position ${Number(move.seat)} on table ${Number(move.to)}`;
+						}).join('. '), createdAt: now };
+					}
+				} else {
+					const table = Number(body.tableNumber);
+					const name = String(body.name ?? '').trim().slice(0, 32);
+					if (!Number.isInteger(table) || table < 1 || table > 1000) return json({ error: 'Invalid table number.' }, { status: 400 });
+					s.tableNames = s.tableNames && typeof s.tableNames === 'object' ? s.tableNames : {};
+					if (!name || name === `Table ${table}`) delete s.tableNames[table];
+					else s.tableNames[table] = name;
+				}
+				s.updatedAt = Date.now();
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, players: s.players, tableNames: s.tableNames ?? {}, tableMoveEvent: s.tableMoveEvent ?? null, updatedAt: s.updatedAt });
+			}
 			if (action === 'savePlayers') {
 				if (!s) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 				/** @param {unknown} value @param {number} [max] */
