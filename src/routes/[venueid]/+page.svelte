@@ -3552,11 +3552,11 @@ function startCasting() {
 	.players-add-form .redtooth-autocomplete { width:100%; }
 	.players-add-form input { box-sizing:border-box; width:100%; min-height:42px; margin:0; padding:10px 12px; border:1px solid #343a40; border-radius:8px; background:#111316; color:#f4f4f1; }
 	.players-add-form .add-player-submit, .players-randomise { min-height:42px; height:42px; padding:0 16px; white-space:nowrap; }
-	.players-roster { display:flex; flex-direction:column; min-height:240px; max-height:calc(100dvh - 350px); padding:16px 18px; overflow:hidden; background:#17191b; border:1px solid #292d30; border-radius:14px; }
+	.players-roster { display:flex; flex-direction:column; flex:1 1 auto; min-height:240px; height:calc(100dvh - 350px); max-height:calc(100dvh - 350px); box-sizing:border-box; padding:16px 18px; overflow:hidden; background:#17191b; border:1px solid #292d30; border-radius:14px; }
 	.players-roster-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; padding-bottom:12px; border-bottom:1px solid #30353a; }
 	.players-roster-heading h3 { margin:0; color:#f2f3f4; font-size:1rem; }
 	.players-roster-heading > span { color:#858d95; font-size:.72rem; text-align:right; }
-	.players-roster-list { min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+	.players-roster-list { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
 	.players-roster-row { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:12px 2px; border-bottom:1px solid #292e34; }
 	.players-roster-main { display:flex; flex:1; flex-direction:column; gap:7px; min-width:160px; }
 	.players-name-input { box-sizing:border-box; width:min(100%,360px); min-height:34px; padding:6px 9px; border:1px solid #343a40; border-radius:7px; background:#111316; color:#f4f4f1; font-size:.9rem; }
@@ -3578,7 +3578,7 @@ function startCasting() {
 		.players-add-panel { align-items:stretch; flex-direction:column; padding:14px; }
 		.players-add-form { align-items:stretch; flex-direction:column; }
 		.players-add-form .add-player-submit, .players-randomise { width:100%; }
-		.players-roster { max-height:none; min-height:300px; padding:13px; }
+		.players-roster { flex:0 0 auto; height:50vh; max-height:50vh; min-height:260px; padding:13px; }
 		.players-roster-heading { align-items:flex-start; flex-direction:column; }
 		.players-roster-heading > span { text-align:left; }
 		.players-roster-row { align-items:stretch; flex-direction:column; gap:10px; }
