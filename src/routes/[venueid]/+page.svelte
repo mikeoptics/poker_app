@@ -2040,6 +2040,7 @@ function startCasting() {
 						remainingMs = Math.max(0, Number(state.remainingMs) || 0);
 						running = Boolean(state.running);
 						tournamentStarted = Boolean(state.tournamentStarted);
+						announcementEvent = state.announcementEvent ?? announcementEvent;
 						levelStartedAt = now() - (levelDurationMs - remainingMs);
 						if (frame !== null) cancelAnimationFrame(frame);
 						frame = running ? requestAnimationFrame(syncTimer) : null;
