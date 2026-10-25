@@ -236,7 +236,7 @@
 
 	const redtoothRegisteredPlayers = $derived(players.filter((p) => p.redtoothId !== null));
 	const activePlayerCount = $derived(activePlayers.length);
-	const unpaidPlayerCount = $derived(activePlayers.filter((p) => !p.paid).length);
+	const unpaidPlayerCount = $derived(players.filter((p) => !p.paid).length);
 	const currentBlinds = $derived(levels[currentLevel]);
 
 	const previousBlinds = $derived(currentLevel > 0 ? levels[currentLevel - 1] : null);
@@ -264,6 +264,7 @@
 	const displaySeconds = $derived(Math.max(0, Math.ceil(remainingMs / 1000)));
 
 	const formattedTime = $derived(formatTime(displaySeconds));
+	const timerCompleted = $derived(currentLevel === levels.length - 1 && displaySeconds === 0 && !running);
 
 	const isFinalTable = $derived(activePlayerCount > 0 && activePlayerCount <= 8);
 	const standardTableCount = $derived(activePlayerCount > 0 ? Math.ceil(activePlayerCount / 8) : 0);
@@ -2029,7 +2030,7 @@ function startCasting() {
 					<div class="level-main">
 						<div class="timer-state-line">
 							<span class="director-eyebrow">LEVEL {currentLevel + 1} OF {levels.length}</span>
-							<span class:state-running={running} class="timer-state" aria-live="polite">{running ? 'RUNNING' : 'PAUSED'}</span>
+							<span class:state-running={running} class:state-completed={timerCompleted} class="timer-state" aria-live="polite">{timerCompleted ? 'COMPLETED' : running ? 'RUNNING' : 'PAUSED'}</span>
 						</div>
 						<span class="director-clock" aria-label={`Time remaining ${formattedTime}`}>{formattedTime}</span>
 						{#if currentBlinds?.break}
@@ -2039,7 +2040,7 @@ function startCasting() {
 							{#if mixedGames}<strong>{currentBlinds?.game}</strong>{/if}
 							<span class="director-blinds">{currentBlinds?.sb} / {currentBlinds?.bb}</span>
 						{/if}
-						<button class="timer-primary-action" type="button" onclick={toggleTimer}>{running ? 'PAUSE TIMER' : 'START TIMER'}</button>
+						<button class="timer-primary-action" type="button" onclick={toggleTimer} disabled={timerCompleted}>{timerCompleted ? 'TOURNAMENT COMPLETE' : running ? 'PAUSE TIMER' : 'START TIMER'}</button>
 					</div>
 					<button class="level-arrow" aria-label="Next blind level" onclick={nextLevel} disabled={currentLevel >= levels.length - 1}>▶</button>
 				</div>
@@ -3668,6 +3669,8 @@ function startCasting() {
 	.director-eyebrow { color:var(--text-secondary) !important; font-size:11px !important; font-weight:700 !important; letter-spacing:.09em !important; }
 	.timer-state { padding:4px 8px; border:1px solid #55504a; border-radius:6px; color:#d7bd8a; font-size:10px; font-weight:800; letter-spacing:.08em; }
 	.timer-state.state-running { border-color:#365a46; color:#9dd1af; }
+	.timer-state.state-completed { border-color:#555b62; color:var(--text-secondary); }
+	.timer-primary-action:disabled { border-color:#454b51 !important; background:#292e34 !important; color:#aeb5bc !important; cursor:not-allowed; }
 	.director-clock { order:initial !important; max-width:100%; color:var(--text-primary) !important; font-size:clamp(58px, 13vw, 82px) !important; font-weight:750 !important; font-variant-numeric:tabular-nums; letter-spacing:-.055em !important; line-height:1 !important; white-space:nowrap; }
 	.level-main strong { order:initial !important; color:var(--text-secondary) !important; font-size:12px !important; letter-spacing:.1em !important; }
 	.director-blinds { order:initial !important; color:var(--text-secondary) !important; font-size:clamp(17px, 4vw, 22px) !important; font-weight:650 !important; }
