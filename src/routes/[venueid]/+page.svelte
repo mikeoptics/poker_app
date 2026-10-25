@@ -557,6 +557,7 @@
 		frame = requestAnimationFrame(syncTimer);
 	}
 
+	/** @param {'start'|'pause'|'nextLevel'|'previousLevel'|'selectLevel'|'reset'} action @param {number} [index] */
 	async function sendTimerCommand(action, index) {
 		try {
 			const response = await fetch(`/api/tournament/${venueId}`, {
