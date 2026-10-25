@@ -1,7 +1,7 @@
 <script>
 	import './tables.css';
 
-	/** @type {{ activePlayerCount:number, players:any[], eliminatedPlayers:any[], balanceMessage:string, balanceSuggestions:any[], activePlayers:any[], tableCount:number, tableNames:Record<string,string>, renameTable?:Function, seatRole:Function, applyBalance:Function, replacePlayer:Function, randomiseSeats:Function }} */
+	/** @type {{ activePlayerCount:number, players:any[], eliminatedPlayers:any[], balanceMessage:string, balanceSuggestions:any[], activePlayers:any[], tableCount:number, tableNames:Record<string,string>, renameTable?: (tableNumber:number, name:string) => void, seatRole: (seat:number) => string, applyBalance: () => void, replacePlayer: (playerId:number, replacementId:number) => void, randomiseSeats: () => void }} */
 	let {
 		activePlayerCount,
 		players,
@@ -20,6 +20,7 @@
 
 	let replacingPlayerId = $state(null);
 	let selectedReplacementId = $state('');
+	/** @type {number | null} */
 	let editingTableNumber = $state(null);
 	let tableNameDraft = $state('');
 
