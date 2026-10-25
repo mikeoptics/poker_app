@@ -316,7 +316,9 @@ export async function POST({ params, request }) {
 			const s = await read(params.venueid);
 			if (action === 'savePlayers') {
 				if (!s) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				/** @param {unknown} value @param {number} [max] */
 				const isCount = (value, max = 10000) => Number.isInteger(Number(value)) && Number(value) >= 0 && Number(value) <= max;
+				/** @param {any} p */
 				const validPlayer = (p) => p &&
 					isCount(p.id, 1000000000) && Number(p.id) > 0 &&
 					typeof p.name === 'string' && p.name.trim().length > 0 && p.name.length <= 160 &&
@@ -330,9 +332,9 @@ export async function POST({ params, request }) {
 					typeof p.guest === 'boolean';
 				if (!Array.isArray(body.players) || body.players.length > 500 || !body.players.every(validPlayer))
 					return json({ error: 'Invalid player list.' }, { status: 400 });
-				const ids = body.players.map((p) => Number(p.id));
+				const ids = body.players.map((/** @type {any} */ p) => Number(p.id));
 				if (new Set(ids).size !== ids.length) return json({ error: 'Duplicate player IDs.' }, { status: 400 });
-				s.players = body.players.map((p) => ({
+				s.players = body.players.map((/** @type {any} */ p) => ({
 					id: Number(p.id), name: p.name.trim(), table: Number(p.table), seat: Number(p.seat),
 					buyIns: Number(p.buyIns), rebuys: Number(p.rebuys), topUps: Number(p.topUps),
 					paid: p.paid, eliminated: p.eliminated,
@@ -342,7 +344,7 @@ export async function POST({ params, request }) {
 					redtoothConfirmed: p.redtoothConfirmed, redtoothPendingPoints: Number(p.redtoothPendingPoints),
 					guest: p.guest
 				}));
-				s.nextPlayerId = Math.max(Number(s.nextPlayerId) || 1, Number(body.nextPlayerId) || 1, ...ids.map((id) => id + 1));
+				s.nextPlayerId = Math.max(Number(s.nextPlayerId) || 1, Number(body.nextPlayerId) || 1, ...ids.map((/** @type {number} */ id) => id + 1));
 				if (Array.isArray(body.redtoothPlayers) && body.redtoothPlayers.length <= 5000) s.redtoothPlayers = body.redtoothPlayers;
 				for (const key of ['eliminationEvent', 'tableMoveEvent', 'announcementEvent']) {
 					const event = body[key];
