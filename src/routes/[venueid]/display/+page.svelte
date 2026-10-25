@@ -42,6 +42,8 @@
 	let soundEnabled = $state(false);
 	let lastSpokenAnnouncementId = '';
 	let lastTableMoveEventId = '';
+	let tableMoveInitialized = false;
+	const tableMoveStorageKey = `poker-last-table-move-${venueId}`;
 
 	function playTableMoveSound() {
 		if (!soundEnabled || !tableMoveSound) return;
@@ -126,8 +128,21 @@
 			if (!result.ok || !result.state) throw new Error('Waiting for tournament data.');
 			const nextAnnouncement = result.state.announcementEvent;
 			const nextTableMove = result.state.tableMoveEvent;
-			if (nextTableMove?.id && nextTableMove.id !== lastTableMoveEventId) {
+			if (!tableMoveInitialized) {
+				tableMoveInitialized = true;
+				let previouslyPlayedId = '';
+				try { previouslyPlayedId = localStorage.getItem(tableMoveStorageKey) ?? ''; } catch {}
+				const isRecent = nextTableMove?.id && Date.now() - Number(nextTableMove.createdAt || 0) <= 30000;
+				if (isRecent && nextTableMove.id !== previouslyPlayedId) {
+					lastTableMoveEventId = nextTableMove.id;
+					try { localStorage.setItem(tableMoveStorageKey, nextTableMove.id); } catch {}
+					playTableMoveSound();
+				} else {
+					lastTableMoveEventId = nextTableMove?.id ?? '';
+				}
+			} else if (nextTableMove?.id && nextTableMove.id !== lastTableMoveEventId) {
 				lastTableMoveEventId = nextTableMove.id;
+				try { localStorage.setItem(tableMoveStorageKey, nextTableMove.id); } catch {}
 				playTableMoveSound();
 			}
 			if (!announcementInitialized) {
