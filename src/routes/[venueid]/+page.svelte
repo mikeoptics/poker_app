@@ -56,13 +56,29 @@
 	const seats = [1, 2, 3, 4, 5, 6, 7, 8];
 	const finalSeats = [1, 2, 3, 4, 5, 6, 7, 8];
 
+	/** @param {string} action @param {number} playerId @param {Record<string, any>} fields */
+	async function sendPlayerCommand(action, playerId, fields = {}) {
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ action, playerId, ...fields })
+			});
+			if (!response.ok) throw new Error('Player update was rejected.');
+		} catch (error) {
+			console.error('Player command failed:', error);
+			void refreshServerTimer();
+			void loadTournament();
+		}
+	}
+
 	/** @param {number} id */
 	function togglePaid(id) {
 		const p = players.find((x) => x.id === id);
 
 		if (p) {
 			p.paid = !p.paid;
-			schedulePlayerSave();
+			void sendPlayerCommand('setPlayerPaid', id, { paid: p.paid });
 		}
 	}
 
@@ -989,7 +1005,7 @@
 
 		if (p) {
 			p.name = name;
-			schedulePlayerSave();
+			void sendPlayerCommand('renamePlayer', id, { name });
 		}
 	}
 
@@ -1001,7 +1017,7 @@
 		const limit = field === 'rebuys' ? maxRebuys : maxTopUps;
 		if (limit > 0 && p[field] < limit) {
 			p[field] += 1;
-			schedulePlayerSave();
+			void sendPlayerCommand('adjustPlayerEntry', id, { field, delta: 1 });
 		}
 	}
 
@@ -1011,7 +1027,7 @@
 
 		if (p && p[field] > 0) {
 			p[field] -= 1;
-			schedulePlayerSave();
+			void sendPlayerCommand('adjustPlayerEntry', id, { field, delta: -1 });
 		}
 	}
 
