@@ -129,7 +129,7 @@
 	<div class="replace-modal-backdrop" role="presentation" onclick={(event) => {
 		if (event.target === event.currentTarget) replacingPlayerId = null;
 	}}>
-		<section class="replace-modal" role="dialog" aria-modal="true" aria-labelledby="replace-modal-title">
+		<dialog open class="replace-modal" aria-labelledby="replace-modal-title">
 			<div class="replace-modal-heading">
 				<div>
 					<span class="replace-modal-eyebrow">TABLE {replacingPlayer.table} · SEAT {replacingPlayer.seat}</span>
