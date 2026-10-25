@@ -1662,7 +1662,7 @@
 			const seasonRows =
 				Array.isArray(data.players) && data.players.length > 0
 					? data.players
-					: (data.playerDirectory ?? []).map((row) => ({
+					: (data.playerDirectory ?? []).map((/** @type {RedtoothRow} */ row) => ({
 							...row, position: 0, games: 0, points: 0,
 							qualification: null, qualificationMarker: null
 						}));
@@ -1989,7 +1989,7 @@ function startCasting() {
 	}
 
 	onMount(() => {
-		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+		window.addEventListener('beforeinstallprompt', (event) => handleBeforeInstallPrompt(/** @type {Event & { prompt: () => void, userChoice: Promise<{ outcome: string }> }} */ (event)));
 		window.addEventListener('appinstalled', () => {
 			appInstalled = true;
 			installPrompt = null;
@@ -2061,7 +2061,7 @@ function startCasting() {
 		document.addEventListener('visibilitychange', handleVisibilityChange);
 
 		return () => {
-			window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+			window.removeEventListener('beforeinstallprompt', (event) => handleBeforeInstallPrompt(/** @type {Event & { prompt: () => void, userChoice: Promise<{ outcome: string }> }} */ (event)));
 			window.removeEventListener('keydown', handleKeyboard);
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			if (syncInterval !== null) clearInterval(syncInterval);
