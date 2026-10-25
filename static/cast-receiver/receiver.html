@@ -364,15 +364,29 @@
       }
 
       function showElimination(event) {
+        const storageKey = venueId ? 'poker-last-elimination-' + venueId : null;
         if (!hasReceivedInitialState) {
           hasReceivedInitialState = true;
-          lastEliminationEventId = typeof event?.id === 'string' ? event.id : null;
+          let previouslyPlayedId = null;
+          try {
+            previouslyPlayedId = storageKey ? localStorage.getItem(storageKey) : null;
+          } catch (error) {
+            console.warn('Unable to read elimination playback history:', error);
+          }
+          // Treat the current event as already handled on initial connection.
+          // A previously played ID survives receiver/page refreshes.
+          lastEliminationEventId = previouslyPlayedId || (typeof event?.id === 'string' ? event.id : null);
           return;
         }
 
         if (!event || typeof event.id !== 'string' || event.id === lastEliminationEventId) return;
 
         lastEliminationEventId = event.id;
+        try {
+          if (storageKey) localStorage.setItem(storageKey, event.id);
+        } catch (error) {
+          console.warn('Unable to persist elimination playback history:', error);
+        }
         el('elimination-name').textContent = event.playerName || 'PLAYER';
         playEliminationSound();
         const overlay = el('elimination-overlay');
