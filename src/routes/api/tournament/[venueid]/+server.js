@@ -340,7 +340,7 @@ export async function POST({ params, request }) {
 					if (Array.isArray(s.redtoothPlayers)) {
 						s.redtoothPlayers = s.redtoothPlayers.map((/** @type {any} */ row) => {
 							const pending = results.get(Number(row.redtoothId)) ?? 0;
-							return { ...row, localGames: results.has(Number(row.redtoothId)) ? 1 : 0, localPoints: pending, pendingPoints: pending };
+							return { ...row, localGames: results.has(Number(row.redtoothId)) ? 1 : 0, localPoints: pending, pendingPoints: pending, qualification: results.has(Number(row.redtoothId)) ? null : (row.qualification ?? null) };
 						});
 					}
 				};
@@ -605,13 +605,23 @@ export async function POST({ params, request }) {
 					player.redtoothConfirmed = item.redtoothConfirmed;
 				}
 				if (Array.isArray(body.redtoothPlayers) && body.redtoothPlayers.length <= 5000) {
-					s.redtoothPlayers = body.redtoothPlayers.slice(0, 5000).map((/** @type {any} */ row) => ({
-						...row,
-						redtoothId: Number(row.redtoothId),
-						localGames: Math.max(0, Math.min(1000000, Number(row.localGames) || 0)),
-						localPoints: Math.max(0, Math.min(100000000, Number(row.localPoints) || 0)),
-						pendingPoints: Math.max(0, Math.min(100000000, Number(row.pendingPoints) || 0))
-					})).filter((/** @type {any} */ row) => Number.isInteger(row.redtoothId) && row.redtoothId > 0);
+					const existingRows = new Map((s.redtoothPlayers ?? []).map((/** @type {any} */ row) => [Number(row.redtoothId), row]));
+					s.redtoothPlayers = body.redtoothPlayers.map((/** @type {any} */ row) => {
+						const redtoothId = Number(row?.redtoothId);
+						const existingRow = existingRows.get(redtoothId) ?? {};
+						return {
+							position: Math.max(1, Math.min(1000000, Number(row.position) || 1)),
+						name: String(row.name ?? '').slice(0, 160),
+						games: Math.max(0, Math.min(1000000, Number(row.games) || 0)),
+						points: Math.max(0, Math.min(100000000, Number(row.points) || 0)),
+						redtoothId,
+						qualificationMarker: ['regional', 'playoff'].includes(row.qualificationMarker) ? row.qualificationMarker : null,
+						qualification: existingRow.qualification ?? (['regional', 'playoff'].includes(row.qualification) ? row.qualification : null),
+						localGames: Math.max(0, Math.min(1000000, Number(existingRow.localGames) || 0)),
+						localPoints: Math.max(0, Math.min(100000000, Number(existingRow.localPoints) || 0)),
+						pendingPoints: Math.max(0, Math.min(100000000, Number(existingRow.pendingPoints) || 0))
+						};
+					}).filter((/** @type {any} */ row) => Number.isInteger(row.redtoothId) && row.redtoothId > 0);
 				}
 				s.updatedAt = Date.now();
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
