@@ -3958,13 +3958,15 @@ function startCasting() {
 	cursor: pointer;
 }
 @media (max-width: 700px) {
-	.install-app-button {
-		flex: 0 1 auto !important;
-		width: auto !important;
-		min-width: 0 !important;
+	.header-actions > .install-app-button {
+		flex: 0 0 auto !important;
+		width: max-content !important;
+		min-width: max-content !important;
+		max-width: none !important;
 		min-height: 40px !important;
-		padding: 7px 9px !important;
-		font-size: clamp(10px, 2.8vw, 12px) !important;
+		padding: 7px 12px !important;
+		font-size: 12px !important;
+		justify-self: start;
 	}
 }
 .install-app-status {
