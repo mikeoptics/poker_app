@@ -1054,8 +1054,11 @@
 		/*
 		 * Reassign finishing positions.
 		 */
+		// Eliminated players occupy the places below the players still active.
+		// Never renumber this group from 1: that would incorrectly award first,
+		// second, etc. while those places are still being contested.
 		for (let index = 0; index < eliminated.length; index += 1) {
-			eliminated[index].eliminationPosition = index + 1;
+			eliminated[index].eliminationPosition = activePlayerCount + index + 1;
 		}
 
 		/*
@@ -2360,7 +2363,7 @@ function startCasting() {
 											<div class="elimination-order-controls">
 												<button
 													class="order-button"
-													disabled={player.eliminationPosition === 1}
+													disabled={player.eliminationPosition === activePlayerCount + 1}
 													title="Move one place earlier"
 													onclick={() => moveEliminatedPlayer(player.id, -1)}
 												>
@@ -2369,7 +2372,7 @@ function startCasting() {
 
 												<button
 													class="order-button"
-													disabled={player.eliminationPosition === eliminatedCount}
+													disabled={player.eliminationPosition === players.length}
 													title="Move one place later"
 													onclick={() => moveEliminatedPlayer(player.id, 1)}
 												>
