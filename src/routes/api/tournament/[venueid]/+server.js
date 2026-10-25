@@ -320,6 +320,30 @@ export async function POST({ params, request }) {
 				if (!Number.isInteger(playerId) || playerId <= 0) return json({ error: 'Invalid player ID.' }, { status: 400 });
 				const player = s.players.find((/** @type {any} */ item) => Number(item.id) === playerId);
 				if (!player) return json({ error: 'Player not found.' }, { status: 404 });
+				// Rebuild unpublished local league results from the authoritative finishing order.
+				const recalculateRedtoothResults = () => {
+					const pointsForPlace = (place) => ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 })[place] ?? 10;
+					const eliminated = s.players.filter((/** @type {any} */ item) => item.eliminated)
+						.sort((a, b) => Number(a.eliminationPosition ?? 999999) - Number(b.eliminationPosition ?? 999999));
+					const results = new Map();
+					for (const item of eliminated) {
+						if (item.guest || item.redtoothId == null) continue;
+						results.set(Number(item.redtoothId), Math.max(0, pointsForPlace(Number(item.eliminationPosition)) - 10));
+					}
+					for (const item of s.players) {
+						const previousPending = Math.max(0, Number(item.redtoothPendingPoints) || 0);
+						const confirmed = Math.max(0, (Number(item.redtoothPoints) || 0) - previousPending);
+						const pending = item.guest || item.redtoothId == null ? 0 : (results.get(Number(item.redtoothId)) ?? 0);
+						item.redtoothPendingPoints = pending;
+						item.redtoothPoints = confirmed + pending;
+					}
+					if (Array.isArray(s.redtoothPlayers)) {
+						s.redtoothPlayers = s.redtoothPlayers.map((/** @type {any} */ row) => {
+							const pending = results.get(Number(row.redtoothId)) ?? 0;
+							return { ...row, localGames: pending > 0 ? 1 : 0, localPoints: pending, pendingPoints: pending };
+						});
+					}
+				};
 				if (action === 'eliminatePlayer') {
 					if (player.eliminated) return json({ error: 'Player is already eliminated.' }, { status: 409 });
 					const finishPlace = s.players.filter((/** @type {any} */ item) => !item.eliminated).length;
@@ -335,9 +359,10 @@ export async function POST({ params, request }) {
 						if (other.eliminated && Number.isFinite(restoredPosition) && Number(other.eliminationPosition) > restoredPosition) other.eliminationPosition -= 1;
 					}
 				}
+				recalculateRedtoothResults();
 				s.updatedAt = Date.now();
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
-				return json({ ok: true, player, players: s.players, eliminationEvent: s.eliminationEvent ?? null, updatedAt: s.updatedAt });
+				return json({ ok: true, player, players: s.players, redtoothPlayers: s.redtoothPlayers ?? [], eliminationEvent: s.eliminationEvent ?? null, updatedAt: s.updatedAt });
 			}
 			if (action === 'addPlayer') {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
@@ -439,6 +464,20 @@ export async function POST({ params, request }) {
 				[eliminated[currentIndex], eliminated[nextIndex]] = [eliminated[nextIndex], eliminated[currentIndex]];
 				const activeCount = s.players.filter((/** @type {any} */ player) => !player.eliminated).length;
 				for (let index = 0; index < eliminated.length; index++) eliminated[index].eliminationPosition = activeCount + index + 1;
+				const pointsForPlace = (place) => ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 })[place] ?? 10;
+				const pendingByRedtoothId = new Map(eliminated.filter((/** @type {any} */ player) => !player.guest && player.redtoothId != null)
+					.map((/** @type {any} */ player) => [Number(player.redtoothId), Math.max(0, pointsForPlace(Number(player.eliminationPosition)) - 10)]));
+				for (const player of s.players) {
+					const previousPending = Math.max(0, Number(player.redtoothPendingPoints) || 0);
+					const confirmed = Math.max(0, (Number(player.redtoothPoints) || 0) - previousPending);
+					const pending = player.guest || player.redtoothId == null ? 0 : (pendingByRedtoothId.get(Number(player.redtoothId)) ?? 0);
+					player.redtoothPendingPoints = pending;
+					player.redtoothPoints = confirmed + pending;
+				}
+				if (Array.isArray(s.redtoothPlayers)) s.redtoothPlayers = s.redtoothPlayers.map((/** @type {any} */ row) => {
+					const pending = pendingByRedtoothId.get(Number(row.redtoothId)) ?? 0;
+					return { ...row, localGames: pending > 0 ? 1 : 0, localPoints: pending, pendingPoints: pending };
+				});
 				s.updatedAt = Date.now();
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 				return json({ ok: true, players: s.players, updatedAt: s.updatedAt });
