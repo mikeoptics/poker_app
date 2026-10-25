@@ -44,10 +44,30 @@
 			} else if (nextAnnouncement?.id && nextAnnouncement.id !== lastAnnouncementId) {
 				lastAnnouncementId = nextAnnouncement.id;
 				if (typeof window !== 'undefined' && 'speechSynthesis' in window && nextAnnouncement.text) {
-					window.speechSynthesis.cancel();
-					const utterance = new SpeechSynthesisUtterance(nextAnnouncement.text);
-					utterance.rate = 0.95;
-					window.speechSynthesis.speak(utterance);
+					const speakAnnouncement = () => {
+						window.speechSynthesis.cancel();
+						window.speechSynthesis.resume();
+						const utterance = new SpeechSynthesisUtterance(nextAnnouncement.text);
+						utterance.lang = 'en-GB';
+						utterance.rate = 0.95;
+						const voices = window.speechSynthesis.getVoices();
+						const preferredVoice = voices.find((voice) => voice.lang === 'en-GB') ||
+							voices.find((voice) => voice.lang.startsWith('en-'));
+						if (preferredVoice) utterance.voice = preferredVoice;
+						window.speechSynthesis.speak(utterance);
+					};
+					if (window.speechSynthesis.getVoices().length) {
+						speakAnnouncement();
+					} else {
+						window.speechSynthesis.addEventListener('voiceschanged', speakAnnouncement, { once: true });
+						// Some Cast browsers do not fire voiceschanged; retry with the
+						// browser's default voice after the initial voice list settles.
+						setTimeout(() => {
+							if (window.speechSynthesis.pending || window.speechSynthesis.speaking) return;
+						window.speechSynthesis.removeEventListener('voiceschanged', speakAnnouncement);
+						speakAnnouncement();
+						}, 700);
+					}
 				}
 			}
 			tournamentState = result.state;
