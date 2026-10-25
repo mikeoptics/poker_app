@@ -1817,6 +1817,13 @@ function startCasting() {
 
 		closeClock();
 		players = [];
+		void fetch(`/api/tournament/${venueId}`, {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ action: 'clearPlayers' })
+		}).then((response) => {
+			if (!response.ok) throw new Error('Unable to clear server player state.');
+		}).catch((error) => console.error('Tournament reset failed:', error));
 		tournamentStarted = false;
 		nextPlayerId = 1;
 		newPlayerName = '';
