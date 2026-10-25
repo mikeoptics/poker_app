@@ -748,34 +748,15 @@
 		schedulePlayerSave();
 	}
 
-	function randomiseSeats() {
-		const active = players.filter((p) => !p.eliminated).sort(() => Math.random() - 0.5);
-
-		if (active.length === 0) {
-			return;
-		}
-
-		const tables = Math.ceil(active.length / 8);
-
-		const baseSize = Math.floor(active.length / tables);
-		const extraPlayers = active.length % tables;
-
-		const counts = Array.from({ length: tables }, (_, i) => baseSize + (i < extraPlayers ? 1 : 0));
-
-		let offset = 0;
-
-		counts.forEach((count, tableIndex) => {
-			for (let seat = 1; seat <= count; seat += 1) {
-				const p = active[offset++];
-
-				p.table = tableIndex + 1;
-				p.seat = seat;
-			}
-		});
-
-		balanceSuggestions = [];
-		balanceMessage = '';
-		schedulePlayerSave();
+	async function randomiseSeats() {
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'randomiseSeats' }) });
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Unable to randomise seating.');
+			players = result.players;
+			balanceSuggestions = [];
+			balanceMessage = '';
+		} catch (error) { console.error('Random seating failed:', error); await loadTournament(); }
 	}
 
 	/** @param {number} index */
@@ -1229,101 +1210,41 @@
 		}
 	}
 	/** @param {number} tableNumber @param {string} name */
-	function renameTable(tableNumber, name) {
+	async function renameTable(tableNumber, name) {
 		const cleanName = String(name ?? '').trim().slice(0, 32);
-		/** @type {Record<string, string>} */
-		const next = { ...tableNames };
-		if (!cleanName || cleanName === `Table ${tableNumber}`) delete next[tableNumber];
-		else next[tableNumber] = cleanName;
-		tableNames = next;
-		void saveTournament();
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'renameTable', tableNumber, name: cleanName }) });
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Unable to rename table.');
+			tableNames = result.tableNames;
+		} catch (error) { console.error('Table rename failed:', error); await loadTournament(); }
 	}
 
-	function applyBalance() {
+	async function applyBalance() {
 		const appliedMoves = [...balanceSuggestions];
-		const closedTables = balanceAction === 'merge'
-			? [...new Set(appliedMoves.map((move) => move.from))]
-			: [];
-
-		for (const move of appliedMoves) {
-			const player = players.find((item) => item.id === move.id && !item.eliminated);
-			if (!player) continue;
-
-			player.table = move.to;
-			player.seat = move.seat;
-
-			// The accepted move now occupies this seat. Remove any eliminated
-			// marker there so the table cannot show both players or a stale Replace button.
-			for (const eliminated of players) {
-				if (
-					eliminated.eliminated &&
-					eliminated.table === move.to &&
-					eliminated.seat === move.seat
-				) {
-					eliminated.table = 0;
-					eliminated.seat = 0;
-				}
-			}
-		}
-
-		// A merge is only complete when every active player has left the source
-		// table. Clear its eliminated markers as well, so the table disappears.
-		for (const tableId of closedTables) {
-			const activeRemain = players.some((player) => !player.eliminated && player.table === tableId && player.seat > 0);
-			if (!activeRemain) {
-				for (const player of players) {
-					if (player.table === tableId) {
-						player.table = 0;
-						player.seat = 0;
-					}
-				}
-			}
-		}
-
-		if (appliedMoves.length) {
-			tableMoveEvent = {
-				id: `table-move-${Date.now()}`,
-				text: appliedMoves.map((move) => `${move.name}, please move to position ${move.seat} on table ${move.to}`).join('. '),
-				createdAt: Date.now()
-			};
-		}
-
-		balanceSuggestions = [];
-		balanceMessage = '';
-		balanceAction = 'move';
-		void saveTournament();
+		if (!appliedMoves.length) return;
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'applyTableBalance', mode: balanceAction, moves: appliedMoves.map(({ id, from, to, seat }) => ({ id, from, to, seat })) }) });
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Unable to apply table balance.');
+			players = result.players;
+			tableMoveEvent = result.tableMoveEvent;
+			balanceSuggestions = [];
+			balanceMessage = '';
+			balanceAction = 'move';
+		} catch (error) { console.error('Table balance failed:', error); await loadTournament(); }
 	}
 
 	/** @param {number} eliminatedPlayerId @param {number} replacementPlayerId */
-	function replaceEliminatedSeat(eliminatedPlayerId, replacementPlayerId) {
-		const eliminated = players.find((player) => player.id === eliminatedPlayerId && player.eliminated);
-		const replacement = players.find((player) => player.id === replacementPlayerId && !player.eliminated);
-		if (!eliminated || !replacement || replacement.table === eliminated.table) return;
-
-		const targetTable = Number(eliminated.table);
-		const targetSeat = Number(eliminated.seat);
-		if (!targetTable || !targetSeat) return;
-
-		// Clear every eliminated record attached to this seat. Older tournament
-		// state can contain more than one marker at the same table/seat.
-		for (const player of players) {
-			if (player.eliminated && Number(player.table) === targetTable && Number(player.seat) === targetSeat) {
-				player.table = 0;
-				player.seat = 0;
-			}
-		}
-
-		replacement.table = targetTable;
-		replacement.seat = targetSeat;
-
-	tableMoveEvent = {
-			id: `move-${Date.now()}-${replacement.id}`,
-			text: `${replacement.name}, please move to position ${targetSeat} on table ${targetTable}`,
-			createdAt: Date.now()
-		};
-		void saveTournament();
+	async function replaceEliminatedSeat(eliminatedPlayerId, replacementPlayerId) {
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ action: 'replaceEliminatedSeat', eliminatedPlayerId, replacementPlayerId }) });
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Unable to replace seat.');
+			players = result.players;
+			tableMoveEvent = result.tableMoveEvent;
+		} catch (error) { console.error('Seat replacement failed:', error); await loadTournament(); }
 	}
-
 	function playAlarm() {
 		try {
 			const AudioContextClass = window.AudioContext;
