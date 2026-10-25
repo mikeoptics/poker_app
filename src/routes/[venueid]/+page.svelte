@@ -37,6 +37,7 @@
 	let savingTournament = false;
 	let lastSavedSnapshot = '';
 	let castStatus = $state('');
+	let timerCompact = $state(false);
 	const games = ['NLH', 'PLO5', 'Pineapple', 'PLO4', 'Crazy Pineapple'];
 	const seats = [1, 2, 3, 4, 5, 6, 7, 8];
 	const finalSeats = [1, 2, 3, 4, 5, 6, 7, 8];
@@ -2022,7 +2023,11 @@ function startCasting() {
 
 	<main>
 		{#if activeTab === 'timer'}
-			<section class="director-dashboard">
+			<section
+				class="director-dashboard"
+				onscroll={(event) => (timerCompact = event.currentTarget.scrollTop > 48)}
+			>
+				<div class="director-sticky-timer" class:compact={timerCompact}>
 				<div class="director-level-bar">
 					<button class="level-arrow" aria-label="Previous blind level" onclick={previousLevel} disabled={currentLevel === 0}>◀</button>
 					<button class="level-main" onclick={toggleTimer} aria-label={running ? 'Pause tournament timer' : 'Resume tournament timer'}>
@@ -2048,6 +2053,7 @@ function startCasting() {
 				<div class="director-level-context">
 					<span>PREVIOUS: {#if previousBlinds}{previousBlinds.break ? 'BREAK' : `${previousBlinds.sb} / ${previousBlinds.bb}`}{:else}—{/if}</span>
 					<span>NEXT: {#if nextBlinds}{nextBlinds.break ? 'BREAK' : `${nextBlinds.sb} / ${nextBlinds.bb}`}{:else}—{/if}</span>
+				</div>
 				</div>
 				<section class="director-players">
 					<div class="director-section-heading">
@@ -3801,5 +3807,68 @@ function startCasting() {
 	.director-player-list {
 		background: #15181c !important;
 	}
+
+
+/* Collapsing sticky timer: the dashboard remains the single scroll container. */
+.director-sticky-timer {
+	position: sticky;
+	top: 0;
+	z-index: 20;
+	background: #101214;
+	padding: 0 0 8px;
+	transform-origin: top center;
+}
+.director-sticky-timer .director-level-bar,
+.director-sticky-timer .level-main,
+.director-sticky-timer .level-arrow,
+.director-sticky-timer .director-progress,
+.director-sticky-timer .director-level-context {
+	transition: min-height .22s ease, height .22s ease, margin .22s ease, padding .22s ease, font-size .22s ease, gap .22s ease;
+}
+.director-sticky-timer.compact .director-level-bar {
+	grid-template-columns: 38px minmax(0, 1fr) 38px;
+	gap: 6px;
+}
+.director-sticky-timer.compact .level-arrow,
+.director-sticky-timer.compact .level-main {
+	min-height: 62px;
+	height: 62px;
+	padding: 5px 8px;
+	border-radius: 9px;
+}
+.director-sticky-timer.compact .level-main {
+	gap: 2px;
+	flex-direction: row;
+	flex-wrap: wrap;
+	column-gap: 10px;
+}
+.director-sticky-timer.compact .director-eyebrow,
+.director-sticky-timer.compact .director-hint {
+	display: none;
+}
+.director-sticky-timer.compact .director-clock {
+	font-size: 27px !important;
+	line-height: 1;
+}
+.director-sticky-timer.compact .director-blinds {
+	font-size: 16px !important;
+}
+.director-sticky-timer.compact .level-main strong {
+	font-size: 14px !important;
+}
+.director-sticky-timer.compact .director-progress {
+	margin-top: 5px;
+}
+.director-sticky-timer.compact .director-level-context {
+	margin-top: 4px;
+	margin-bottom: 4px;
+	font-size: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.director-sticky-timer,
+	.director-sticky-timer * {
+		transition: none !important;
+	}
+}
 
 </style>
