@@ -270,9 +270,7 @@
 	const formattedTime = $derived(formatTime(displaySeconds));
 
 	const isFinalTable = $derived(activePlayerCount > 0 && activePlayerCount <= 8);
-	const standardTableCount = $derived(activePlayerCount > 0 ? Math.ceil(activePlayerCount / 8) : 0);
-
-	const tableCount = $derived(standardTableCount);
+	const tableCount = $derived(Math.max(0, ...players.map((player) => Number(player.table) || 0)));
 	const redtoothRegionalPlaces = $derived(
 		redtoothPlayers.filter((row) => row.qualification === 'regional').length
 	);
@@ -1026,14 +1024,10 @@
 
 		p.eliminationPosition = finishPlace;
 		p.eliminated = true;
-		p.table = 0;
-		p.seat = 0;
 
+		// Keep the eliminated player in their original seat as a visible marker.
 		balanceSuggestions = [];
 		balanceMessage = '';
-
-		distributeAcrossTables();
-		rebalanceTables();
 
 	}
 
@@ -1219,6 +1213,23 @@
 		balanceMessage = 'Tables balanced — no table differs by more than one player.';
 	}
 
+	/** @param {number} eliminatedPlayerId @param {number} replacementPlayerId */
+	function replaceEliminatedSeat(eliminatedPlayerId, replacementPlayerId) {
+		const eliminated = players.find((player) => player.id === eliminatedPlayerId && player.eliminated);
+		const replacement = players.find((player) => player.id === replacementPlayerId && !player.eliminated);
+		if (!eliminated || !replacement || replacement.table === eliminated.table) return;
+
+		const targetTable = eliminated.table;
+		const targetSeat = eliminated.seat;
+		replacement.table = targetTable;
+		replacement.seat = targetSeat;
+		announcementEvent = {
+			id: `move-${Date.now()}-${replacement.id}`,
+			text: `${replacement.name}, please move to position ${targetSeat} on table ${targetTable}`,
+			createdAt: Date.now()
+		};
+	}
+
 	function playAlarm() {
 		try {
 			const AudioContextClass = window.AudioContext;
@@ -1312,8 +1323,6 @@
 			);
 		}
 
-		distributeAcrossTables();
-		rebalanceTables();
 	}
 
 	/** @param {number} index */
@@ -2177,6 +2186,7 @@ function startCasting() {
 		{:else if activeTab === 'tables'}
 			<Tables
 				{activePlayerCount}
+				{players}
 				{eliminatedPlayers}
 				{balanceMessage}
 				{balanceSuggestions}
@@ -2184,6 +2194,7 @@ function startCasting() {
 				{tableCount}
 				{seatRole}
 				{applyBalance}
+				replacePlayer={replaceEliminatedSeat}
 				{randomiseSeats}
 			/>
 		{:else if activeTab === 'blindlevels'}
