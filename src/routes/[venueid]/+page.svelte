@@ -1983,6 +1983,7 @@ function startCasting() {
 	class:mode-paused={!running}
 >
 	<header class="header">
+		<div class="header-brand"><span class="header-brand-mark">♠</span><div><strong>{venueName}</strong><span>TOURNAMENT CONTROL</span></div></div>
 		<div class="header-actions" aria-label="Tournament actions">
 			<button class="sound icon-action" type="button" onclick={startCasting} aria-label="Cast to TV" title="Cast to TV">
 				<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16.1a5.9 5.9 0 0 1 5.9 5.9"/><path d="M2 11a11 11 0 0 1 11 11"/><path d="M2 6a16 16 0 0 1 16 16"/><path d="M22 18V5a2 2 0 0 0-2-2H4"/></svg>
@@ -2007,18 +2008,22 @@ function startCasting() {
 	<nav class="tabs icon-tabs" aria-label="Tournament sections">
 		<button class:active={activeTab === 'timer'} type="button" aria-label="Timer" title="Timer" aria-current={activeTab === 'timer' ? 'page' : undefined} onclick={() => (activeTab = 'timer')}>
 			<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6m-3 0v3"/></svg>
+			<span>Timer</span>
 		</button>
 		<button class:active={activeTab === 'tables'} type="button" aria-label="Seating" title="Seating" aria-current={activeTab === 'tables' ? 'page' : undefined} onclick={() => (activeTab = 'tables')}>
 			<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+			<span>Seating</span>
 		</button>
 		<button class:active={activeTab === 'setup'} type="button" aria-label="Players" title="Players" aria-current={activeTab === 'setup' ? 'page' : undefined} onclick={() => (activeTab = 'setup')}>
 			<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="10" cy="7" r="4"/><path d="M20 8v6m3-3h-6"/></svg>
+			<span>Players</span>
 		</button>
 		<button class:active={activeTab === 'blindlevels'} type="button" aria-label="Blind levels" title="Blind levels" aria-current={activeTab === 'blindlevels' ? 'page' : undefined} onclick={() => (activeTab = 'blindlevels')}>
-			<ClockArrowUp size={21} strokeWidth={1.8} />
+			<ClockArrowUp size={21} strokeWidth={1.8} /><span>Levels</span>
 		</button>
 		<button class:active={activeTab === 'payouts'} type="button" aria-label="Payouts" title="Payouts" aria-current={activeTab === 'payouts' ? 'page' : undefined} onclick={() => (activeTab = 'payouts')}>
 			<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/><path d="M6 15h2m8 0h2"/></svg>
+			<span>Payouts</span>
 		</button>
 	</nav>
 
@@ -2083,10 +2088,10 @@ function startCasting() {
 										<div class="director-player-identity">
 											<strong>{player.name}</strong>
 											{#if player.eliminated}
-												<span>{player.eliminationPosition}{player.eliminationPosition === 1 ? 'ST' : player.eliminationPosition === 2 ? 'ND' : player.eliminationPosition === 3 ? 'RD' : 'TH'} PLACE</span>
+												<span class="player-finish">{player.eliminationPosition}{player.eliminationPosition === 1 ? 'ST' : player.eliminationPosition === 2 ? 'ND' : player.eliminationPosition === 3 ? 'RD' : 'TH'} PLACE</span>
 											{/if}
-											<span class:paid={player.paid} class="payment-pill" aria-label={player.paid ? 'Paid' : 'Unpaid'}>{player.paid ? 'PAID' : 'UNPAID'}</span>
 										</div>
+										<span class:paid={player.paid} class="payment-pill" aria-label={player.paid ? 'Paid' : 'Unpaid'}>{player.paid ? 'PAID' : 'UNPAID'}</span>
 									</div>
 								</div>
 							{/each}
@@ -3754,5 +3759,95 @@ function startCasting() {
 		outline-offset:2px;
 	}
 	:global(button:disabled) { cursor:not-allowed; }
+
+
+	/* Second-pass composition: deliberate header, timer hero, roster and labelled dock. */
+	.app {
+		display:flex !important; flex-direction:column !important;
+		height:100dvh !important; min-height:100dvh !important;
+		padding: max(10px,env(safe-area-inset-top)) 0 0 !important;
+		background:#0f1113 !important; gap:0 !important;
+	}
+	.header {
+		width:100% !important; min-height:58px !important;
+		margin:0 !important; padding:0 20px 12px !important;
+		display:flex !important; align-items:center !important; justify-content:space-between !important;
+		border-bottom:1px solid #24292e;
+	}
+	.header-brand { display:flex; align-items:center; gap:10px; min-width:0; }
+	.header-brand-mark { display:grid; place-items:center; width:34px; height:34px; border:1px solid #55472d; border-radius:10px; color:#c5a15a; font-size:21px; }
+	.header-brand div { display:flex; flex-direction:column; gap:2px; min-width:0; }
+	.header-brand strong { max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#f5f5f5; font-size:14px; font-weight:700; }
+	.header-brand div span { color:#858c95; font-size:9px; font-weight:750; letter-spacing:.12em; }
+	.header-actions { display:flex !important; flex:0 0 auto !important; flex-wrap:nowrap !important; gap:5px !important; }
+	.icon-action { width:40px !important; min-width:40px !important; height:40px !important; min-height:40px !important; padding:0 !important; border:0 !important; border-radius:9px !important; background:transparent !important; color:#aeb5bc !important; }
+	.icon-action:hover { background:#202328 !important; color:#f5f5f5 !important; }
+	main { display:flex !important; flex:1 1 auto !important; width:100% !important; min-height:0 !important; overflow-x:hidden !important; overflow-y:auto !important; padding:18px 20px 26px !important; }
+	.director-dashboard { width:100% !important; max-width:620px !important; margin:0 auto !important; padding:0 0 18px !important; }
+	.director-level-bar { display:grid !important; grid-template-columns:42px minmax(0,1fr) 42px !important; gap:10px !important; align-items:center !important; }
+	.level-arrow { width:42px !important; min-width:42px !important; height:52px !important; min-height:52px !important; padding:0 !important; border:1px solid #30343a !important; border-radius:12px !important; background:#191b1e !important; color:#c5a15a !important; font-size:16px !important; }
+	.level-arrow:disabled { opacity:.28; }
+	.level-main {
+		min-height:0 !important; padding:23px 22px 20px !important; gap:11px !important;
+		border:1px solid #343940 !important; border-radius:20px !important;
+		background:#191b1e !important; box-shadow:0 12px 32px rgba(0,0,0,.18);
+	}
+	.timer-state-line { align-items:center !important; }
+	.director-eyebrow { font-size:11px !important; color:#aeb5bc !important; letter-spacing:.13em !important; }
+	.timer-state { border-radius:99px !important; padding:5px 10px !important; background:#24272b; font-size:10px !important; }
+	.director-clock { font-size:clamp(68px,17vw,92px) !important; line-height:.98 !important; font-weight:750 !important; letter-spacing:-.065em !important; }
+	.director-blinds { font-size:19px !important; color:#d2d5d8 !important; }
+	.timer-primary-action { width:100% !important; max-width:none !important; min-height:48px !important; margin-top:7px !important; border-radius:11px !important; font-size:14px !important; letter-spacing:.08em !important; }
+	.director-progress { height:5px !important; margin:14px 2px 0 !important; background:#292e34 !important; }
+	.director-level-context { display:grid !important; grid-template-columns:1fr 1fr !important; gap:12px !important; margin:12px 2px 28px !important; font-size:11px !important; }
+	.director-level-context span { padding:10px 12px; border:1px solid #292e34; border-radius:9px; background:#14171a; color:#aeb5bc !important; }
+	.director-level-context span:last-child { text-align:right; }
+	.director-players { padding:0 !important; }
+	.director-section-heading { margin:0 0 12px !important; padding:0 2px 13px !important; border-bottom:1px solid #30343a; }
+	.director-section-heading h1 { font-size:24px !important; letter-spacing:-.045em !important; }
+	.players-payment-summary { font-size:12px !important; color:#aeb5bc !important; }
+	.director-player-count { display:none !important; }
+	.director-player-list { background:transparent !important; }
+	.director-player-swipe { border-bottom:1px solid #292e34 !important; }
+	.director-player-row { min-height:68px !important; display:flex !important; align-items:center !important; justify-content:space-between !important; gap:12px !important; padding:10px 4px !important; background:transparent !important; }
+	.director-player-identity { display:flex !important; flex:1 1 auto !important; min-width:0 !important; flex-direction:column !important; align-items:flex-start !important; justify-content:center !important; gap:3px !important; }
+	.director-player-identity strong { max-width:100% !important; font-size:16px !important; font-weight:600 !important; }
+	.player-finish { color:#858c95 !important; font-size:10px !important; letter-spacing:.08em; }
+	.payment-pill { min-width:68px !important; min-height:28px !important; margin-left:auto !important; border-radius:7px !important; padding:4px 9px !important; font-size:10px !important; text-align:center; }
+	.tabs.icon-tabs {
+		order:10 !important; position:relative !important; inset:auto !important;
+		flex:0 0 auto !important; width:100% !important; max-width:none !important;
+		min-height:68px !important; margin:0 !important; padding:8px 12px max(8px,env(safe-area-inset-bottom)) !important;
+		display:flex !important; justify-content:space-around !important; align-items:center !important; gap:4px !important;
+		border:0 !important; border-top:1px solid #30343a !important; border-radius:0 !important;
+		background:#141619 !important;
+	}
+	.icon-tabs button {
+		flex:1 1 0 !important; display:flex !important; flex-direction:column !important;
+		align-items:center !important; justify-content:center !important; gap:4px !important;
+		width:auto !important; max-width:84px !important; min-width:48px !important; height:48px !important; min-height:48px !important;
+		padding:4px 2px !important; border:0 !important; border-radius:8px !important;
+		background:transparent !important; color:#858c95 !important;
+	}
+	.icon-tabs button span { font-size:10px !important; line-height:1 !important; font-weight:600 !important; }
+	.icon-tabs button.active { color:#c5a15a !important; background:#202328 !important; box-shadow:inset 0 -2px 0 #c5a15a !important; }
+	.icon-tabs button svg { width:21px !important; height:21px !important; }
+	@media (max-width:380px) {
+		.header { padding-left:12px !important; padding-right:12px !important; }
+		.header-brand strong { max-width:105px; font-size:12px; }
+		.header-actions { gap:0 !important; }
+		.icon-action { width:34px !important; min-width:34px !important; height:38px !important; min-height:38px !important; }
+		main { padding:14px 12px 20px !important; }
+		.level-main { padding:18px 12px 16px !important; }
+		.director-clock { font-size:clamp(58px,16vw,68px) !important; }
+		.icon-tabs { padding-left:5px !important; padding-right:5px !important; }
+		.icon-tabs button span { font-size:9px !important; }
+	}
+	@media (min-width:700px) {
+		main { padding-top:28px !important; }
+		.director-level-bar { grid-template-columns:52px minmax(0,1fr) 52px !important; }
+		.level-arrow { width:52px !important; min-width:52px !important; }
+		.level-main { padding:28px 34px 24px !important; }
+	}
 
 </style>
