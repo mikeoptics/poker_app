@@ -67,8 +67,8 @@
 	</div>
 	<p class="status">{status}</p>
 	{#if details}<pre>{details}</pre>{/if}
-	<p><a href="/{venueId}/display" target="_blank" rel="noreferrer">Open standalone display</a></p>
-	<p><a href="/{venueId}">Return to tournament admin</a></p>
+	<p><a href={`/${venueId}/display`} target="_blank" rel="noreferrer">Open standalone display</a></p>
+	<p><a href={`/${venueId}`}>Return to tournament admin</a></p>
 </main>
 
 <style>
