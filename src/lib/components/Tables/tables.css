@@ -984,3 +984,51 @@
 		opacity: .8;
 	}
 }
+
+
+/* Keep the title, player count and randomise action on one vertically centred row. */
+.panel-heading {
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	text-align: left;
+}
+.panel-heading > div {
+	display: flex;
+	align-items: center;
+	flex: 0 0 auto;
+}
+.panel-heading h2 {
+	margin: 0;
+	line-height: 1.2;
+	text-align: left;
+}
+.player-count {
+	flex: 1 1 auto;
+	margin: 0;
+	text-align: center;
+	line-height: 1.2;
+}
+.randomise-seating {
+	flex: 0 0 auto;
+	align-self: center;
+	margin: 0;
+	line-height: 1.2;
+}
+@media (max-width: 520px) {
+	.panel-heading {
+		gap: 7px;
+	}
+	.panel-heading h2 {
+		font-size: 1rem;
+	}
+	.player-count {
+		font-size: .68rem;
+	}
+	.randomise-seating {
+		padding: 7px 8px;
+		font-size: 10px;
+	}
+}
