@@ -50,6 +50,7 @@
 		}, 250);
 	}
 	let lastSavedSnapshot = '';
+	let lastSavedRedtoothSnapshot = '';
 	let castStatus = $state('');
 	let timerCompact = $state(false);
 	const games = ['NLH', 'PLO5', 'Pineapple', 'PLO4', 'Crazy Pineapple'];
@@ -1698,6 +1699,7 @@
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
 		lastSavedSnapshot = JSON.stringify(state);
+		lastSavedRedtoothSnapshot = JSON.stringify({ players: players.map((player) => ({ id: player.id, redtoothId: player.redtoothId, redtoothGames: player.redtoothGames, redtoothPoints: player.redtoothPoints, redtoothPendingPoints: player.redtoothPendingPoints, redtoothConfirmed: player.redtoothConfirmed })), redtoothPlayers });
 		if (running) {
 			tournamentMode = currentBlinds?.break ? 'break' : 'play';
 			frame = requestAnimationFrame(syncTimer);
@@ -1713,31 +1715,36 @@
 		try {
 			const snapshot = tournamentSnapshot();
 			const serialised = JSON.stringify(snapshot);
-			if (serialised === lastSavedSnapshot) return;
-			// Create/update the tournament configuration first. A new venue has no
-			// JSON record yet, so savePlayers would otherwise return 404.
-			const response = await fetch(`/api/tournament/${venueId}`, {
-				method: 'PUT', headers: { 'content-type': 'application/json' }, body: serialised
-			});
-			if (!response.ok) throw new Error('Unable to save tournament settings.');
-			const redtoothResponse = await fetch(`/api/tournament/${venueId}`, {
-				method: 'POST',
-				headers: { 'content-type': 'application/json' },
-				body: JSON.stringify({
-					action: 'saveRedtoothState',
-					players: players.map((player) => ({
-						id: player.id,
-						redtoothId: player.redtoothId,
-						redtoothGames: player.redtoothGames,
-						redtoothPoints: player.redtoothPoints,
-						redtoothPendingPoints: player.redtoothPendingPoints,
-						redtoothConfirmed: player.redtoothConfirmed
-					})),
-					redtoothPlayers
-				})
-			});
-			if (!redtoothResponse.ok) throw new Error('Unable to save Redtooth state.');
-			lastSavedSnapshot = serialised;
+			const redtoothState = {
+				players: players.map((player) => ({
+					id: player.id,
+					redtoothId: player.redtoothId,
+					redtoothGames: player.redtoothGames,
+					redtoothPoints: player.redtoothPoints,
+					redtoothPendingPoints: player.redtoothPendingPoints,
+					redtoothConfirmed: player.redtoothConfirmed
+				})),
+				redtoothPlayers
+			};
+			const redtoothSerialised = JSON.stringify(redtoothState);
+			if (serialised !== lastSavedSnapshot) {
+				const response = await fetch(`/api/tournament/${venueId}`, {
+					method: 'PUT',
+					headers: { 'content-type': 'application/json' },
+					body: serialised
+				});
+				if (!response.ok) throw new Error('Unable to save tournament settings.');
+				lastSavedSnapshot = serialised;
+			}
+			if (redtoothSerialised !== lastSavedRedtoothSnapshot) {
+				const response = await fetch(`/api/tournament/${venueId}`, {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ action: 'saveRedtoothState', ...redtoothState })
+				});
+				if (!response.ok) throw new Error('Unable to save Redtooth state.');
+				lastSavedRedtoothSnapshot = redtoothSerialised;
+			}
 		} catch (error) {
 			console.error('Tournament save failed:', error);
 		} finally {
@@ -1843,6 +1850,7 @@ function startCasting() {
 
 		// Keep redtoothPlayers intact so the league table remains visible on the TV.
 		lastSavedSnapshot = '';
+		lastSavedRedtoothSnapshot = JSON.stringify({ players: [], redtoothPlayers });
 		saveTournament();
 	}
 
