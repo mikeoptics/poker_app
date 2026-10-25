@@ -2073,8 +2073,7 @@ function startCasting() {
 									<div class="director-player-row" style:transform={`translateX(${swipedPlayerId === player.id ? playerSwipeOffset : 0}px)`}>
 										<div class="director-player-identity">
 											<strong>{player.name}</strong>
-											{#if player.guest}<span>GUEST</span>{:else if player.redtoothId === null}<span>UNLINKED</span>{/if}
-											<span class="payment-pill" class:paid={player.paid}>{player.paid ? 'PAID' : 'UNPAID'}</span>
+											{#if !player.paid}<span class="payment-pill">UNPAID</span>{/if}
 										</div>
 									</div>
 								</div>
