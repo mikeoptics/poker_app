@@ -12,9 +12,11 @@
 	let tickTimer;
 	let lastAnnouncementId = '';
 	let announcementInitialized = false;
+	// Keep the visual table-move banner on screen long enough to be read
+	// while the Cast receiver plays the matching spoken announcement.
 	const showAnnouncement = $derived(
 		Boolean(tournamentState?.announcementEvent?.text) &&
-		clockNow - Number(tournamentState.announcementEvent.createdAt || 0) < 15000
+		clockNow - Number(tournamentState.announcementEvent.createdAt || 0) < 30000
 	);
 	const remainingMs = $derived(
 		tournamentState
