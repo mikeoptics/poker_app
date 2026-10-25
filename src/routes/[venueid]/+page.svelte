@@ -3993,3 +3993,36 @@ function startCasting() {
 	text-align: right;
 }
 </style>
+
+
+/* Table-balancing recommendation toast */
+
+	.table-balance-toast {
+		position: fixed;
+		right: 22px;
+		bottom: 22px;
+		z-index: 1200;
+		width: min(440px, calc(100vw - 32px));
+		padding: 15px 16px;
+		border: 1px solid #59675e;
+		border-radius: 12px;
+		background: #20282a;
+		color: #edf1ee;
+		box-shadow: 0 14px 42px rgba(0, 0, 0, .42);
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 14px;
+	}
+	.table-balance-toast-copy { min-width: 0; display: grid; gap: 4px; }
+	.table-balance-toast-copy strong { color: #dce9df; font-size: 13px; }
+	.table-balance-toast-copy span { color: #e8ece9; font-size: 12px; line-height: 1.4; }
+	.table-balance-toast-copy small { color: #aab6ae; font-size: 10px; overflow-wrap: anywhere; }
+	.table-balance-toast-actions { display: flex; flex: 0 0 auto; gap: 7px; }
+	.table-balance-toast-actions button { min-height: 34px; padding: 7px 10px; border-radius: 7px; font-size: 11px; font-weight: 800; cursor: pointer; }
+	.balance-toast-dismiss { border: 1px solid #4b555a; background: #2b3337; color: #d6ddda; }
+	.balance-toast-accept { border: 1px solid #66816f; background: #365342; color: #f0f6f1; }
+	@media (max-width: 600px) {
+		.table-balance-toast { right: 12px; bottom: 12px; width: calc(100vw - 24px); align-items: flex-start; flex-direction: column; }
+		.table-balance-toast-actions { align-self: flex-end; }
+	}
