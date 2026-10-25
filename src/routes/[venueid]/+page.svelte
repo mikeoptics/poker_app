@@ -1223,6 +1223,11 @@
 		const targetSeat = eliminated.seat;
 		replacement.table = targetTable;
 		replacement.seat = targetSeat;
+
+		// The replacement now occupies this seat; remove the eliminated marker from the layout.
+		eliminated.table = 0;
+		eliminated.seat = 0;
+
 		announcementEvent = {
 			id: `move-${Date.now()}-${replacement.id}`,
 			text: `${replacement.name}, please move to position ${targetSeat} on table ${targetTable}`,
