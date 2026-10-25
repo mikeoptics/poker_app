@@ -3570,4 +3570,21 @@ function startCasting() {
 	}
 
 	.players-name-label { display:flex; align-items:center; width:min(100%,360px); min-height:34px; padding:6px 9px; color:#f4f4f1; font-size:.9rem; overflow-wrap:anywhere; }
+
+	/* Keep the unpaid indicator inline and aligned to the right of the name. */
+	.director-player-identity {
+		display:flex !important;
+		flex-direction:row !important;
+		align-items:center !important;
+		justify-content:space-between !important;
+		width:100%;
+		gap:12px !important;
+	}
+	.payment-pill {
+		flex:0 0 auto;
+		margin-left:auto;
+		border-color:rgba(217,75,80,.45) !important;
+		background:rgba(217,75,80,.16) !important;
+		color:#f08f92 !important;
+	}
 </style>
