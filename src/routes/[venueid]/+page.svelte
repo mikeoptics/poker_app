@@ -754,6 +754,7 @@
 
 		balanceSuggestions = [];
 		balanceMessage = '';
+		schedulePlayerSave();
 	}
 
 	/** @param {number} index */
