@@ -151,6 +151,7 @@ function publicState(s) {
 		activePlayerCount: activeCount,
 		eliminationEvent: s.eliminationEvent ?? null,
 		announcementEvent: s.announcementEvent ?? null,
+		tableMoveEvent: s.tableMoveEvent ?? null,
 		standings
 	};
 }
@@ -183,6 +184,7 @@ export async function PUT({ params, request }) {
 		};
 		const eliminationEvent = preserveRecentEvent(v.eliminationEvent, existing?.eliminationEvent);
 		const announcementEvent = preserveRecentEvent(v.announcementEvent, existing?.announcementEvent);
+		const tableMoveEvent = preserveRecentEvent(v.tableMoveEvent, existing?.tableMoveEvent);
 		const s = {
 			levels: v.levels,
 			players: v.players,
@@ -211,6 +213,16 @@ export async function PUT({ params, request }) {
 							id: eliminationEvent.id.slice(0, 100),
 							playerName: eliminationEvent.playerName.slice(0, 160),
 							createdAt: Number(eliminationEvent.createdAt)
+						}
+					: null,
+			tableMoveEvent:
+				tableMoveEvent &&
+				typeof tableMoveEvent.id === 'string' &&
+				typeof tableMoveEvent.text === 'string'
+					? {
+							id: tableMoveEvent.id.slice(0, 100),
+							text: tableMoveEvent.text.slice(0, 500),
+							createdAt: Number(tableMoveEvent.createdAt) || Date.now()
 						}
 					: null,
 			announcementEvent:
