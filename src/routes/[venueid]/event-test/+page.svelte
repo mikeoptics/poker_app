@@ -5,6 +5,7 @@
 	let details = $state('');
 	let busy = $state(false);
 
+	/** @param {'table-move' | 'announcement' | 'elimination'} type */
 	async function triggerEvent(type) {
 		if (busy) return;
 		busy = true;
