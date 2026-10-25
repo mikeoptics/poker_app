@@ -3802,35 +3802,4 @@ function startCasting() {
 		background: #15181c !important;
 	}
 
-/* Keep the timer controls and player heading fixed while the roster scrolls. */
-.director-dashboard {
-	display: flex !important;
-	flex-direction: column !important;
-	min-height: 0 !important;
-	overflow: hidden !important;
-}
-.director-level-bar,
-.director-progress,
-.director-level-context {
-	flex: 0 0 auto;
-}
-.director-players {
-	display: flex !important;
-	flex: 1 1 0 !important;
-	flex-direction: column !important;
-	min-height: 0 !important;
-	overflow: hidden !important;
-}
-.director-section-heading {
-	flex: 0 0 auto;
-}
-.director-player-list {
-	flex: 1 1 0 !important;
-	min-height: 0 !important;
-	overflow-x: hidden !important;
-	overflow-y: auto !important;
-	overscroll-behavior-y: contain;
-	-webkit-overflow-scrolling: touch;
-}
-
 </style>
