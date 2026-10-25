@@ -44,7 +44,10 @@
 			} else if (nextAnnouncement?.id && nextAnnouncement.id !== lastAnnouncementId) {
 				lastAnnouncementId = nextAnnouncement.id;
 				if (typeof window !== 'undefined' && 'speechSynthesis' in window && nextAnnouncement.text) {
+					let announcementSpoken = false;
 					const speakAnnouncement = () => {
+						if (announcementSpoken) return;
+						announcementSpoken = true;
 						window.speechSynthesis.cancel();
 						window.speechSynthesis.resume();
 						const utterance = new SpeechSynthesisUtterance(nextAnnouncement.text);
