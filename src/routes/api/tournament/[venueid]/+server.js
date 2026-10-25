@@ -224,7 +224,7 @@ export async function PUT({ params, request }) {
 		const incomingLevel = Number(v.currentLevel) || 0;
 		const existingRemaining = Math.max(
 			0,
-			Number(existing?.remainingMs) - Math.max(0, Date.now() - Number(existing?.updatedAt || Date.now()))
+			Number(existing?.remainingMs) - (existing?.running ? Math.max(0, Date.now() - Number(existing?.updatedAt || Date.now())) : 0)
 		);
 		const sameLevelStaleTimer = Boolean(
 			existing?.running && v.running &&
@@ -332,6 +332,9 @@ export async function POST({ params, request }) {
 					s.running = true;
 					s.tournamentStarted = true;
 				}
+			} else if (action === 'reset') {
+				s.running = false;
+				s.remainingMs = Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60000;
 			} else if (action === 'nextLevel' || action === 'previousLevel' || action === 'selectLevel') {
 				if (action === 'nextLevel') level = Math.min(s.levels.length - 1, level + 1);
 				if (action === 'previousLevel') level = Math.max(0, level - 1);
