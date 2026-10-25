@@ -55,28 +55,11 @@
 
 	/** @type {BlindLevel[]} */
 	const defaultLevels = [
-		{ sb: 100, bb: 100, minutes: 15, game: 'NLH' },
-		{ sb: 100, bb: 200, minutes: 15, game: 'PLO5' },
-		{ sb: 100, bb: 300, minutes: 15, game: 'Pineapple' },
-		{ sb: 200, bb: 400, minutes: 15, game: 'PLO4' },
-		{ sb: 0, bb: 0, minutes: 15, break: true },
-		{ sb: 300, bb: 600, minutes: 15, game: 'Crazy Pineapple' },
-		{ sb: 400, bb: 800, minutes: 15, game: 'NLH' },
-		{ sb: 500, bb: 1000, minutes: 10, game: 'PLO5' },
-		{ sb: 600, bb: 1200, minutes: 10, game: 'Pineapple' },
-		{ sb: 800, bb: 1600, minutes: 10, game: 'PLO4' },
-		{ sb: 0, bb: 0, minutes: 10, break: true },
-		{ sb: 1000, bb: 2000, minutes: 7, game: 'Crazy Pineapple' },
-		{ sb: 1500, bb: 3000, minutes: 7, game: 'NLH' },
-		{ sb: 2000, bb: 4000, minutes: 7, game: 'PLO5' },
-		{ sb: 3000, bb: 6000, minutes: 7, game: 'Pineapple' },
-		{ sb: 4000, bb: 8000, minutes: 7, game: 'PLO4' },
-		{ sb: 5000, bb: 10000, minutes: 7, game: 'Crazy Pineapple' },
-		{ sb: 6000, bb: 12000, minutes: 7, game: 'NLH' },
-		{ sb: 8000, bb: 16000, minutes: 7, game: 'PLO5' },
-		{ sb: 10000, bb: 20000, minutes: 7, game: 'Pineapple' },
-		{ sb: 15000, bb: 30000, minutes: 7, game: 'PLO4' },
-		{ sb: 20000, bb: 40000, minutes: 7, game: 'Crazy Pineapple' }
+		{ sb: 25, bb: 50, minutes: 15, game: 'NLH' },
+		{ sb: 50, bb: 100, minutes: 15, game: 'NLH' },
+		{ sb: 100, bb: 200, minutes: 15, game: 'NLH' },
+		{ sb: 200, bb: 400, minutes: 15, game: 'NLH' },
+		{ sb: 0, bb: 0, minutes: 15, break: true }
 	];
 
 	let levels = $state(defaultLevels.map((x) => ({ ...x })));
