@@ -18,6 +18,10 @@
 	let replacingPlayerId = $state(null);
 	let selectedReplacementId = $state('');
 
+	const visibleTableNumbers = $derived(
+		[...new Set(players.filter((player) => Number(player.table) > 0 && Number(player.seat) > 0).map((player) => Number(player.table)))].sort((a, b) => a - b)
+	);
+
 	const replacingPlayer = $derived(
 		players.find((player) => player.id === replacingPlayerId && player.eliminated) ?? null
 	);
@@ -55,8 +59,7 @@
 		</div>
 
 		<div class="table-list-view">
-			{#each Array(tableCount) as _, ti}
-				{@const tableNumber = ti + 1}
+			{#each visibleTableNumbers as tableNumber (tableNumber)}
 				{@const tablePlayers = players.filter((player) => player.table === tableNumber && player.seat > 0)}
 				{@const seatNumbers = [...new Set(tablePlayers.map((player) => player.seat))].sort((a, b) => a - b)}
 				<section class="table-list-card">
