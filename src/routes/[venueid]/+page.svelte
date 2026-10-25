@@ -2422,7 +2422,6 @@ function startCasting() {
 						</div>
 					{/if}
 				</div>
-			</section>
 
 				<div class="players-add-panel">
 					<form class="players-add-form" onsubmit={(e) => { e.preventDefault(); addPlayerFromForm(); }}>
