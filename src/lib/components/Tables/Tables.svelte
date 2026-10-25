@@ -153,6 +153,6 @@
 				<button class="replace-cancel" type="button" onclick={() => (replacingPlayerId = null)}>Cancel</button>
 				<button class="replace-confirm" type="button" disabled={!selectedReplacementId || !replacementCandidates.some((player) => player.id === Number(selectedReplacementId))} onclick={confirmReplacement}>Move player</button>
 			</div>
-		</section>
+		</dialog>
 	</div>
 {/if}
