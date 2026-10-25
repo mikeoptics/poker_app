@@ -245,14 +245,14 @@ export async function PUT({ params, request }) {
 			levelDurationMs: existing ? Math.max(1, Number(existing.levelDurationMs) || Number(existing.levels?.[existing.currentLevel]?.minutes) * 60_000 || 60_000) : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
 			running: Boolean(existing?.running),
 			tournamentStarted: Boolean(existing?.tournamentStarted || existing?.running || v.tournamentStarted),
-			soundEnabled: Boolean(v.soundEnabled),
-			announcementEnabled: Boolean(v.announcementEnabled),
-			buyInAmount: Math.max(0, Number(v.buyInAmount) || 0),
-			maxRebuys: Math.max(0, Number(v.maxRebuys) || 0),
-			maxTopUps: Math.max(0, Number(v.maxTopUps) || 0),
-			mixedGames: Boolean(v.mixedGames),
-			activeTab: ['timer', 'tables', 'setup', 'payouts'].includes(v.activeTab)
-				? v.activeTab
+			soundEnabled: existing ? Boolean(existing.soundEnabled) : true,
+			announcementEnabled: existing ? Boolean(existing.announcementEnabled) : true,
+			buyInAmount: existing ? Math.max(0, Number(existing.buyInAmount) || 0) : 5,
+			maxRebuys: existing ? Math.max(0, Number(existing.maxRebuys) || 0) : 0,
+			maxTopUps: existing ? Math.max(0, Number(existing.maxTopUps) || 0) : 0,
+			mixedGames: existing ? Boolean(existing.mixedGames) : false,
+			activeTab: ['timer', 'tables', 'setup', 'payouts'].includes(existing?.activeTab)
+				? existing.activeTab
 				: 'timer',
 			redtoothPlayers: Array.isArray(existing?.redtoothPlayers) ? existing.redtoothPlayers : (Array.isArray(v.redtoothPlayers) ? v.redtoothPlayers : []),
 			eliminationEvent:
@@ -286,10 +286,10 @@ export async function PUT({ params, request }) {
 							createdAt: Number(announcementEvent.createdAt) || Date.now()
 						}
 					: null,
-			tableNames: v.tableNames && typeof v.tableNames === 'object' && !Array.isArray(v.tableNames)
-				? Object.fromEntries(Object.entries(v.tableNames).slice(0, 30).map(([key, value]) => [String(Number(key)), String(value ?? '').trim().slice(0, 32)]).filter(([key, value]) => Number(key) > 0 && value))
+			tableNames: existing?.tableNames && typeof existing.tableNames === 'object' && !Array.isArray(existing.tableNames)
+				? existing.tableNames
 				: {},
-			venueName: String(v.venueName ?? '').slice(0, 160),
+			venueName: String(existing?.venueName ?? '').slice(0, 160),
 			updatedAt: Date.now()
 		};
 		await fs.mkdir(DATA_DIR, { recursive: true });
