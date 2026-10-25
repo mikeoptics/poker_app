@@ -1025,44 +1025,35 @@
 	}
 
 	/** @param {number} id */
-	function removePlayer(id) {
+	async function removePlayer(id) {
 		const p = players.find((player) => player.id === id);
-
 		if (!p || p.eliminated) return;
-
-		const finishPlace = activePlayerCount;
-
-		if (soundEnabled && eliminationSound) {
-			eliminationSound.currentTime = 0;
-			eliminationSound.play().catch(() => {});
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, {
+				method: 'POST', headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ action: 'eliminatePlayer', playerId: id })
+			});
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Unable to eliminate player.');
+			const finishPlace = result.player.eliminationPosition;
+			p.eliminated = true;
+			p.eliminationPosition = finishPlace;
+			eliminationEvent = result.eliminationEvent;
+			if (soundEnabled && eliminationSound) {
+				eliminationSound.currentTime = 0;
+				eliminationSound.play().catch(() => {});
+			}
+			if (p.redtoothId) {
+				const points = Math.max(0, pointsForPlace(finishPlace) - 10);
+				p.redtoothPendingPoints += points;
+				redtoothPlayers = applyLocalResult(redtoothPlayers, p, finishPlace);
+			}
+			rebalanceTables();
+			schedulePlayerSave();
+		} catch (error) {
+			console.error('Player elimination failed:', error);
+			await loadTournament();
 		}
-
-		/*
-		 * Registered Redtooth players get a locally calculated league result.
-		 * Guests are deliberately ignored.
-		 */
-		if (p.redtoothId) {
-			const points = Math.max(0, pointsForPlace(finishPlace) - 10);
-
-			p.redtoothPendingPoints += points;
-
-			redtoothPlayers = applyLocalResult(redtoothPlayers, p, finishPlace);
-		}
-
-		const eliminatedAt = Date.now();
-		eliminationEvent = {
-			id: `${Date.now()}-${p.id}`,
-			playerName: p.name,
-			createdAt: eliminatedAt
-		};
-
-		p.eliminationPosition = finishPlace;
-		p.eliminated = true;
-
-		// Keep the eliminated player in their original seat as a visible marker,
-		// then offer a table-balancing recommendation if the counts warrant it.
-		rebalanceTables();
-		schedulePlayerSave();
 	}
 
 	/** @param {number} playerId @param {number} direction */
@@ -1369,19 +1360,30 @@
 	}
 
 	/** @param {number} id */
-	function restorePlayer(id) {
+	async function restorePlayer(id) {
 		const p = players.find((player) => player.id === id);
-
-		if (!p) return;
+		if (!p || !p.eliminated) return;
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, {
+				method: 'POST', headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ action: 'restorePlayer', playerId: id })
+			});
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Unable to restore player.');
+			const restoredPosition = p.eliminationPosition;
+			players = result.players;
+			redtoothPlayers = redtoothPlayers;
+			const restoredPlayer = players.find((player) => player.id === id);
+			if (!restoredPlayer) return;
 
 		/*
 		 * If this was a locally recorded Redtooth result, remove it
 		 * from the projected league table before restoring the player.
 		 */
-		if (p.redtoothId && p.eliminationPosition !== null) {
-			const points = Math.max(0, pointsForPlace(p.eliminationPosition) - 10);
+		if (restoredPlayer.redtoothId && restoredPlayer.eliminationPosition !== null) {
+			const points = Math.max(0, pointsForPlace(restoredPlayer.eliminationPosition) - 10);
 
-			p.redtoothPendingPoints = Math.max(0, p.redtoothPendingPoints - points);
+			restoredPlayer.redtoothPendingPoints = Math.max(0, restoredPlayer.redtoothPendingPoints - points);
 
 			redtoothPlayers = redtoothPlayers.map((row) => {
 				if (row.redtoothId !== p.redtoothId) return row;
@@ -1426,7 +1428,7 @@
 					: row
 			);
 		}
-
+		schedulePlayerSave();
 	}
 
 	/** @param {number} index */
