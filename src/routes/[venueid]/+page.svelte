@@ -2476,7 +2476,7 @@ function startCasting() {
 	}.app {
 		height: 100dvh;
 		min-height: 100dvh;
-		padding: 18px 22px 8px;
+		padding: 0;
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
