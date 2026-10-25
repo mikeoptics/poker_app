@@ -238,8 +238,8 @@ export async function PUT({ params, request }) {
 		);
 		const s = {
 			levels: v.levels,
-			players: v.players,
-			nextPlayerId: Number(v.nextPlayerId) || 1,
+			players: existing?.players ?? v.players,
+			nextPlayerId: Number(existing?.nextPlayerId) || Number(v.nextPlayerId) || 1,
 			currentLevel: existing ? Math.max(0, Number(existing.currentLevel) || 0) : 0,
 			remainingMs: existing ? existingRemaining : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
 			levelDurationMs: existing ? Math.max(1, Number(existing.levelDurationMs) || Number(existing.levels?.[existing.currentLevel]?.minutes) * 60_000 || 60_000) : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
@@ -254,7 +254,7 @@ export async function PUT({ params, request }) {
 			activeTab: ['timer', 'tables', 'setup', 'payouts'].includes(v.activeTab)
 				? v.activeTab
 				: 'timer',
-			redtoothPlayers: Array.isArray(v.redtoothPlayers) ? v.redtoothPlayers : [],
+			redtoothPlayers: Array.isArray(existing?.redtoothPlayers) ? existing.redtoothPlayers : (Array.isArray(v.redtoothPlayers) ? v.redtoothPlayers : []),
 			eliminationEvent:
 				eliminationEvent &&
 				typeof eliminationEvent.id === 'string' &&
@@ -314,6 +314,25 @@ export async function POST({ params, request }) {
 		const action = String(body?.action ?? '');
 		return await withVenueWriteLock(params.venueid, async () => {
 			const s = await read(params.venueid);
+			if (action === 'savePlayers') {
+				if (!s) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				if (!Array.isArray(body.players) || !body.players.every((p) =>
+					p && Number.isInteger(Number(p.id)) && Number(p.id) > 0 &&
+					typeof p.name === 'string' && p.name.length <= 160
+				)) return json({ error: 'Invalid player list.' }, { status: 400 });
+				const ids = body.players.map((p) => Number(p.id));
+				if (new Set(ids).size !== ids.length) return json({ error: 'Duplicate player IDs.' }, { status: 400 });
+				s.players = body.players;
+				s.nextPlayerId = Math.max(Number(s.nextPlayerId) || 1, Number(body.nextPlayerId) || 1, ...ids.map((id) => id + 1));
+				if (Array.isArray(body.redtoothPlayers)) s.redtoothPlayers = body.redtoothPlayers;
+				for (const key of ['eliminationEvent', 'tableMoveEvent', 'announcementEvent']) {
+					const event = body[key];
+					if (event && typeof event.id === 'string' && typeof event.createdAt === 'number') s[key] = event;
+				}
+				s.updatedAt = Date.now();
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, players: s.players, updatedAt: s.updatedAt });
+			}
 			if (!s || !Array.isArray(s.levels) || !s.levels.length)
 				return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 
