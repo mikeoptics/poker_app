@@ -190,6 +190,9 @@ export async function PUT({ params, request }) {
 							createdAt: Number(v.announcementEvent.createdAt) || Date.now()
 						}
 					: null,
+			tableNames: v.tableNames && typeof v.tableNames === 'object' && !Array.isArray(v.tableNames)
+				? Object.fromEntries(Object.entries(v.tableNames).slice(0, 30).map(([key, value]) => [String(Number(key)), String(value ?? '').trim().slice(0, 32)]).filter(([key, value]) => Number(key) > 0 && value))
+				: {},
 			venueName: String(v.venueName ?? '').slice(0, 160),
 			updatedAt: Date.now()
 		};
