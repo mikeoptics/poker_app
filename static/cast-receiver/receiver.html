@@ -343,6 +343,7 @@
       let lastAnnouncementEventId = null;
       let hasReceivedInitialAnnouncementState = false;
       let lastDisplayedAnnouncementEventId = null;
+      let hasReceivedInitialTableMoveState = false;
       let announcementHideTimer = null;
       const eliminationSound = new Audio('https://www.myinstants.com/media/sounds/fortnite-death-sound-not-knockout.mp3');
       eliminationSound.volume = 0.8;
@@ -382,6 +383,11 @@
         if (event.id === lastDisplayedAnnouncementEventId) return;
 
         lastDisplayedAnnouncementEventId = event.id;
+        try {
+          if (venueId) localStorage.setItem('poker-last-table-move-' + venueId, event.id);
+        } catch (error) {
+          console.warn('Unable to persist table-move playback history:', error);
+        }
         if (receiverSoundEnabled) {
           tableMoveSound.currentTime = 0;
           tableMoveSound.play().catch(error => console.warn('Table move sound playback failed:', error));
@@ -528,7 +534,21 @@
         running = Boolean(d.running);
         renderStandings(d.standings);
         showElimination(d.eliminationEvent);
-        showTableMoveAnnouncement(d.tableMoveEvent);
+        if (!hasReceivedInitialTableMoveState) {
+          hasReceivedInitialTableMoveState = true;
+          const event = d.tableMoveEvent;
+          let previouslyPlayedId = null;
+          try {
+            previouslyPlayedId = venueId ? localStorage.getItem('poker-last-table-move-' + venueId) : null;
+          } catch (error) {
+            console.warn('Unable to read table-move playback history:', error);
+          }
+          const isRecent = event?.id && Date.now() - Number(event.createdAt || 0) <= 30000;
+          if (isRecent && event.id !== previouslyPlayedId) showTableMoveAnnouncement(event);
+          else lastDisplayedAnnouncementEventId = typeof event?.id === 'string' ? event.id : null;
+        } else {
+          showTableMoveAnnouncement(d.tableMoveEvent);
+        }
         speakAnnouncement(d.announcementEvent);
       }
 
