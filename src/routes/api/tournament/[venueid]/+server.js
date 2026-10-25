@@ -418,6 +418,24 @@ export async function POST({ params, request }) {
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 				return json({ ok: true, player, updatedAt: s.updatedAt });
 			}
+			if (action === 'reorderElimination') {
+				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				const playerId = Number(body.playerId), direction = Number(body.direction);
+				if (!Number.isInteger(playerId) || playerId <= 0 || (direction !== -1 && direction !== 1))
+					return json({ error: 'Invalid elimination reorder request.' }, { status: 400 });
+				const eliminated = s.players.filter((/** @type {any} */ player) => player.eliminated)
+					.sort((x, y) => Number(x.eliminationPosition ?? 999999) - Number(y.eliminationPosition ?? 999999));
+				const currentIndex = eliminated.findIndex((/** @type {any} */ player) => Number(player.id) === playerId);
+				const nextIndex = currentIndex + direction;
+				if (currentIndex < 0) return json({ error: 'Eliminated player not found.' }, { status: 404 });
+				if (nextIndex < 0 || nextIndex >= eliminated.length) return json({ error: 'Player is already at that end of the finishing order.' }, { status: 409 });
+				[eliminated[currentIndex], eliminated[nextIndex]] = [eliminated[nextIndex], eliminated[currentIndex]];
+				const activeCount = s.players.filter((/** @type {any} */ player) => !player.eliminated).length;
+				for (let index = 0; index < eliminated.length; index++) eliminated[index].eliminationPosition = activeCount + index + 1;
+				s.updatedAt = Date.now();
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, players: s.players, updatedAt: s.updatedAt });
+			}
 			if (['randomiseSeats', 'applyTableBalance', 'replaceEliminatedSeat', 'renameTable'].includes(action)) {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 				const active = s.players.filter((/** @type {any} */ player) => !player.eliminated);
