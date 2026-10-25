@@ -77,7 +77,7 @@ async function checkVenueFiles() {
 				const blind = state.levels[level];
 				const isBreak = Boolean(blind?.break);
 				const game = state.mixedGames ? String(blind?.game ?? '') : '';
-				const speechGame = game.replace(/\\bPLO5\\b/g, 'P L O five').replace(/\\bPLO4\\b/g, 'P L O four').replace(/\\bNLH\\b/g, 'N L H');
+				const speechGame = game.replace(/\bPLO5\b/g, 'P L O five').replace(/\bPLO4\b/g, 'P L O four').replace(/\bNLH\b/g, 'N L H');
 				const body = isBreak
 					? `Break. ${blind.minutes} minutes.`
 					: `Next level. ${game ? speechGame + '. ' : ''}Blinds ${blind.sb} ${blind.bb}.`;
