@@ -1038,73 +1038,35 @@
 	}
 
 	/** @param {number} playerId @param {number} direction */
-	function moveEliminatedPlayer(playerId, direction) {
-		const eliminated = players
-			.filter((player) => player.eliminated)
-			.sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999));
-
-		const currentIndex = eliminated.findIndex((player) => player.id === playerId);
-
-		if (currentIndex === -1) return;
-
-		const newIndex = currentIndex + direction;
-
-		if (newIndex < 0 || newIndex >= eliminated.length) {
-			return;
-		}
-
-		/*
-		 * Swap the two players in the finishing order.
-		 */
-		[eliminated[currentIndex], eliminated[newIndex]] = [
-			eliminated[newIndex],
-			eliminated[currentIndex]
-		];
-
-		/*
-		 * Reassign finishing positions.
-		 */
-		// Eliminated players occupy the places below the players still active.
-		// Never renumber this group from 1: that would incorrectly award first,
-		// second, etc. while those places are still being contested.
-		for (let index = 0; index < eliminated.length; index += 1) {
-			eliminated[index].eliminationPosition = activePlayerCount + index + 1;
-		}
-
-		/*
-		 * Recalculate locally pending Redtooth points.
-		 *
-		 * The confirmed server total is preserved. Only the unpublished
-		 * tournament result is changed.
-		 */
-		for (const player of eliminated) {
-			if (player.guest || player.redtoothId === null) {
-				continue;
+	async function moveEliminatedPlayer(playerId, direction) {
+		try {
+			const response = await fetch(`/api/tournament/${venueId}`, {
+				method: 'POST', headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ action: 'reorderElimination', playerId, direction })
+			});
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Unable to reorder finishing position.');
+			players = result.players;
+			const eliminated = players.filter((player) => player.eliminated)
+				.sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999));
+			for (const player of eliminated) {
+				if (player.guest || player.redtoothId === null || player.eliminationPosition === null) continue;
+				const previousPending = player.redtoothPendingPoints ?? 0;
+				const confirmedPoints = (player.redtoothPoints ?? 0) - previousPending;
+				const newPoints = Math.max(0, pointsForPlace(player.eliminationPosition) - 10);
+				player.redtoothPendingPoints = newPoints;
+				player.redtoothPoints = confirmedPoints + newPoints;
+				redtoothPlayers = redtoothPlayers.map((row) =>
+					row.redtoothId === player.redtoothId
+						? { ...row, localGames: 1, localPoints: newPoints, pendingPoints: newPoints }
+						: row
+				);
 			}
-
-			if (player.eliminationPosition === null) {
-				continue;
-			}
-			const previousPending = player.redtoothPendingPoints ?? 0;
-			const confirmedPoints = (player.redtoothPoints ?? 0) - previousPending;
-
-			const newPoints = Math.max(0, pointsForPlace(player.eliminationPosition) - 10);
-
-			player.redtoothPendingPoints = newPoints;
-			player.redtoothPoints = confirmedPoints + newPoints;
-
-			redtoothPlayers = redtoothPlayers.map((row) =>
-				row.redtoothId === player.redtoothId
-					? {
-							...row,
-							localGames: 1,
-							localPoints: newPoints,
-							pendingPoints: newPoints
-						}
-					: row
-			);
+			schedulePlayerSave();
+		} catch (error) {
+			console.error('Elimination reorder failed:', error);
+			await loadTournament();
 		}
-		schedulePlayerSave();
 	}
 
 	function rebalanceTables() {
