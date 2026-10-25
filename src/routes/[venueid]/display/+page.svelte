@@ -31,9 +31,13 @@
 	const timerText = $derived(
 		String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0')
 	);
+	/** @type {any} */
 	let kokoroTTS = null;
+	/** @type {Promise<any> | null} */
 	let kokoroLoading = null;
+	/** @type {HTMLAudioElement | null} */
 	let announcementAudio = null;
+	/** @type {HTMLAudioElement | null} */
 	let tableMoveSound = null;
 	let soundEnabled = $state(false);
 	let lastSpokenAnnouncementId = '';
@@ -43,7 +47,7 @@
 		if (!soundEnabled || !tableMoveSound) return;
 		tableMoveSound.pause();
 		tableMoveSound.currentTime = 0;
-		void tableMoveSound.play().catch((error) => {
+		void tableMoveSound.play().catch((/** @type {any} */ error) => {
 			console.error('Table move sound playback failed:', error);
 			soundEnabled = false;
 		});
@@ -80,6 +84,7 @@
 		return kokoroLoading;
 	}
 
+	/** @param {{ text?:string, id?:string } | null | undefined} announcement */
 	async function speakAnnouncement(announcement) {
 		if (!announcement?.text || !announcement.id || announcement.id === lastSpokenAnnouncementId) return;
 		lastSpokenAnnouncementId = announcement.id;
