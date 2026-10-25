@@ -2240,184 +2240,88 @@ function startCasting() {
 					</div>
 				</section>
 		{:else if activeTab === 'setup'}
-			<div class="setup-sidebar">
-					<!-- PLAYERS -->
-					<section class="setup-card players-card">
-						<div class="section-heading setup-heading">
-							<div>
-								<span class="label">TOURNAMENT</span>
-								<h2>Players</h2>
+			<section class="players-workspace">
+				<div class="players-panel-heading">
+					<div>
+						<span class="label">TOURNAMENT MANAGEMENT</span>
+						<h2>Players</h2>
+						<p>Add players, manage entries and track payments.</p>
+					</div>
+					<div class="players-summary">
+						<div><strong>{activePlayerCount}</strong><span>Active</span></div>
+						<div><strong>{players.length}</strong><span>Players</span></div>
+						<div><strong>{totalEntries}</strong><span>Entries</span></div>
+					</div>
+				</div>
+
+				<div class="players-add-panel">
+					<form class="players-add-form" onsubmit={(e) => { e.preventDefault(); addPlayerFromForm(); }}>
+						<label class="redtooth-player-input">
+							<span>Player name</span>
+							<div class="redtooth-autocomplete">
+								<input value={newPlayerName} placeholder="Search Redtooth or enter a name" autocomplete="off" oninput={(e) => { newPlayerName = e.currentTarget.value; redtoothSelectedPlayer = null; searchRedtooth(e.currentTarget.value); }} />
+								{#if redtoothSearchResults.length > 0}
+									<div class="redtooth-search-results">
+										{#each redtoothSearchResults as result}
+											<button type="button" class="redtooth-search-result" onclick={() => selectRedtoothPlayer(result)}>
+												<span><strong>{result.name}</strong><small>{result.games} games · {result.points} pts</small></span>
+												<span class="redtooth-search-position">#{result.position}</span>
+											</button>
+										{/each}
+									</div>
+								{/if}
 							</div>
-						</div>
+						</label>
+						<button class="primary add-player-submit" type="submit">+ Add player</button>
+					</form>
+					<button class="secondary players-randomise" type="button" onclick={randomiseSeats}>Randomise seating</button>
+				</div>
 
-						<form
-							class="add-player-form"
-							onsubmit={(e) => {
-								e.preventDefault();
-								addPlayerFromForm();
-							}}
-						>
-							<label class="redtooth-player-input">
-								<span>Player name</span>
-
-								<div class="redtooth-autocomplete">
-									<input
-										value={newPlayerName}
-										placeholder="Enter player name"
-										autocomplete="off"
-										oninput={(e) => {
-											newPlayerName = e.currentTarget.value;
-
-											redtoothSelectedPlayer = null;
-
-											searchRedtooth(e.currentTarget.value);
-										}}
-									/>
-
-									{#if redtoothSearchResults.length > 0}
-										<div class="redtooth-search-results">
-											{#each redtoothSearchResults as result}
-												<button
-													type="button"
-													class="redtooth-search-result"
-													onclick={() => selectRedtoothPlayer(result)}
-												>
-													<span>
-														<strong>
-															{result.name}
-														</strong>
-
-														<small>
-															{result.games}
-															games ·
-															{result.points}
-															pts
-														</small>
-													</span>
-
-													<span class="redtooth-search-position">
-														#{result.position}
-													</span>
-												</button>
-											{/each}
+				<div class="players-roster">
+					<div class="players-roster-heading">
+						<h3>Player list</h3>
+						<span>Swipe left to eliminate · swipe right to toggle payment</span>
+					</div>
+					{#if players.length === 0}
+						<p class="empty players-empty">No players added yet.</p>
+					{:else}
+						<div class="players-roster-list">
+							{#each players as player (player.id)}
+								<div class="players-roster-row" class:player-eliminated={player.eliminated}>
+									<div class="players-roster-main">
+										<input class="players-name-input" aria-label="Player name" value={player.name} onchange={(e) => updatePlayerName(player.id, e.currentTarget.value)} />
+										<div class="players-tags">
+											{#if player.redtoothId != null}<span class="roster-tag tag-linked">Redtooth linked</span>{:else if !player.guest}<span class="roster-tag tag-unlinked">Not linked</span>{:else}<span class="roster-tag">Guest</span>{/if}
+											<span class="roster-tag">{player.eliminated ? 'Eliminated' : `Table ${player.table} · Seat ${player.seat}`}</span>
+											{#if player.eliminated}<span class="roster-tag tag-place">{player.eliminationPosition === 1 ? '1st' : player.eliminationPosition === 2 ? '2nd' : player.eliminationPosition === 3 ? '3rd' : `${player.eliminationPosition}th`} place</span>{/if}
 										</div>
-									{/if}
-								</div>
-							</label>
-
-							<button class="primary add-player-submit" type="submit"> + Add Player </button>
-
-							<button
-								class="secondary gridspan2 randomise-seats"
-								type="button"
-								onclick={randomiseSeats}
-							>
-								Randomly assign seats
-							</button>
-						</form>
-
-						<div class="player-list setup-list">
-							<div class="list-header">
-								<h3>Seating & entries</h3>
-
-								<span>
-									{activePlayerCount}
-									active ·
-									{players.length}
-									players ·
-									{totalEntries}
-									entries
-								</span>
-							</div>
-
-							{#each players as player}
-								<div class:eliminated={player.eliminated} class="player-row">
-									<input
-										value={player.name}
-										onchange={(e) => updatePlayerName(player.id, e.currentTarget.value)}
-									/>
-
-									{#if player.redtoothId != null}
-										<span class="redtooth-linked"> ✓ Redtooth </span>
-									{:else if !player.guest}
-										<span class="redtooth-unlinked"> ✗ Redtooth </span>
-									{:else}
-										<span class="redtooth-guest"> Guest </span>
-									{/if}
-
-									<span>
-										{player.eliminated ? 'ELIMINATED' : `Table ${player.table}`}
-									</span>
-
-									<span class="player-position">
+									</div>
+									<div class="players-roster-actions">
+										<button class:paid={player.paid} class="paid-button" type="button" onclick={() => togglePaid(player.id)}>{player.paid ? '✓ Paid' : 'Unpaid'}</button>
+										{#if maxRebuys > 0}
+											<button class="tiny" type="button" disabled={player.eliminated || player.rebuys >= maxRebuys} onclick={() => changeEntry(player.id, 'rebuys')}>+ Rebuy ({player.rebuys})</button>
+											<button class="tiny entry-remove" type="button" disabled={player.eliminated || player.rebuys === 0} onclick={() => removeEntry(player.id, 'rebuys')}>−</button>
+										{/if}
+										{#if maxTopUps > 0}
+											<button class="tiny" type="button" disabled={player.eliminated || player.topUps >= maxTopUps} onclick={() => changeEntry(player.id, 'topUps')}>+ Top-up ({player.topUps})</button>
+											<button class="tiny entry-remove" type="button" disabled={player.eliminated || player.topUps === 0} onclick={() => removeEntry(player.id, 'topUps')}>−</button>
+										{/if}
 										{#if player.eliminated}
-											{player.eliminationPosition === 1
-												? '1st'
-												: player.eliminationPosition === 2
-													? '2nd'
-													: player.eliminationPosition === 3
-														? '3rd'
-														: `${player.eliminationPosition}th`}
-
+											<button class="tiny restore-player" type="button" onclick={() => restorePlayer(player.id)}>Restore</button>
 											<div class="elimination-order-controls">
-												<button
-													class="order-button"
-													disabled={player.eliminationPosition === activePlayerCount + 1}
-													title="Move one place earlier"
-													onclick={() => moveEliminatedPlayer(player.id, -1)}
-												>
-													↑
-												</button>
-
-												<button
-													class="order-button"
-													disabled={player.eliminationPosition === players.length}
-													title="Move one place later"
-													onclick={() => moveEliminatedPlayer(player.id, 1)}
-												>
-													↓
-												</button>
+												<button class="order-button" title="Improve finishing position" disabled={player.eliminationPosition === activePlayerCount + 1} onclick={() => moveEliminatedPlayer(player.id, -1)}>↑</button>
+												<button class="order-button" title="Lower finishing position" disabled={player.eliminationPosition === players.length} onclick={() => moveEliminatedPlayer(player.id, 1)}>↓</button>
 											</div>
 										{:else}
-											Seat {player.seat}
+											<button class="tiny delete-player-button" type="button" title="Delete player" onclick={() => deletePlayer(player.id)}>Delete</button>
 										{/if}
-									</span>
-
-									<button
-										class:paid={player.paid}
-										class="paid-button"
-										onclick={() => togglePaid(player.id)}
-									>
-										{player.paid ? '✓ Paid' : 'Unpaid'}
-						</button>
-						<button
-							class="tiny delete-player-button"
-							title={player.eliminated ? 'Undo elimination before deleting this player' : 'Delete player'}
-							disabled={player.eliminated}
-							onclick={() => deletePlayer(player.id)}
-						>
-							Delete
-						</button>
-
-						{#if maxRebuys > 0}
-										<button class="tiny" disabled={player.eliminated || player.rebuys >= maxRebuys} onclick={() => changeEntry(player.id, 'rebuys')}>
-											+ Rebuy ({player.rebuys})
-										</button>
-										<button class="tiny" disabled={player.eliminated || player.rebuys === 0} onclick={() => removeEntry(player.id, 'rebuys')}>−</button>
-									{/if}
-									{#if maxTopUps > 0}
-										<button class="tiny" disabled={player.eliminated || player.topUps >= maxTopUps} onclick={() => changeEntry(player.id, 'topUps')}>
-											+ Top-up ({player.topUps})
-										</button>
-										<button class="tiny" disabled={player.eliminated || player.topUps === 0} onclick={() => removeEntry(player.id, 'topUps')}>−</button>
-									{/if}
+									</div>
 								</div>
-							{:else}
-								<p class="empty">No players added yet.</p>
 							{/each}
 						</div>
-					</section>
+					{/if}
 				</div>
+			</section>
 		{:else if activeTab === 'payouts'}
 			<section class="payout-card">
 				<div class="section-heading">
@@ -3632,4 +3536,56 @@ function startCasting() {
 	.icon-tabs { justify-content: space-around; gap: 8px !important; }
 	.icon-tabs button { flex: 1 1 0 !important; max-width: 56px; }
 }
+
+	/* Players tab: rebuilt roster layout */
+	.players-workspace { display:flex; flex-direction:column; gap:18px; width:100%; max-width:1200px; min-height:0; margin:0 auto; }
+	.players-panel-heading { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:20px 22px; background:#17191b; border:1px solid #292d30; border-radius:14px; }
+	.players-panel-heading h2 { margin:4px 0 3px; color:#f2f3f4; font-size:1.55rem; }
+	.players-panel-heading p { margin:0; color:#8f969d; font-size:.82rem; }
+	.players-summary { display:flex; gap:10px; }
+	.players-summary > div { display:flex; flex-direction:column; align-items:center; justify-content:center; min-width:76px; padding:9px 13px; background:#111316; border:1px solid #30353a; border-radius:9px; }
+	.players-summary strong { color:#f4f4f1; font-size:1.25rem; font-variant-numeric:tabular-nums; }
+	.players-summary span { color:#929aa1; font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.06em; }
+	.players-add-panel { display:flex; align-items:flex-end; gap:12px; padding:16px 18px; background:#17191b; border:1px solid #292d30; border-radius:14px; }
+	.players-add-form { display:flex; align-items:flex-end; flex:1; gap:10px; min-width:0; }
+	.players-add-form .redtooth-player-input { flex:1; min-width:0; margin:0; }
+	.players-add-form .redtooth-player-input > span { display:block; margin-bottom:6px; color:#9ba2a8; font-size:.68rem; font-weight:800; text-transform:uppercase; }
+	.players-add-form .redtooth-autocomplete { width:100%; }
+	.players-add-form input { box-sizing:border-box; width:100%; min-height:42px; margin:0; padding:10px 12px; border:1px solid #343a40; border-radius:8px; background:#111316; color:#f4f4f1; }
+	.players-add-form .add-player-submit, .players-randomise { min-height:42px; height:42px; padding:0 16px; white-space:nowrap; }
+	.players-randomise { flex:0 0 auto; }
+	.players-roster { display:flex; flex-direction:column; min-height:240px; max-height:calc(100dvh - 350px); padding:16px 18px; overflow:hidden; background:#17191b; border:1px solid #292d30; border-radius:14px; }
+	.players-roster-heading { display:flex; justify-content:space-between; align-items:center; gap:12px; padding-bottom:12px; border-bottom:1px solid #30353a; }
+	.players-roster-heading h3 { margin:0; color:#f2f3f4; font-size:1rem; }
+	.players-roster-heading > span { color:#858d95; font-size:.72rem; text-align:right; }
+	.players-roster-list { min-height:0; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+	.players-roster-row { display:flex; align-items:center; justify-content:space-between; gap:18px; padding:12px 2px; border-bottom:1px solid #292e34; }
+	.players-roster-main { display:flex; flex:1; flex-direction:column; gap:7px; min-width:160px; }
+	.players-name-input { box-sizing:border-box; width:min(100%,360px); min-height:34px; padding:6px 9px; border:1px solid #343a40; border-radius:7px; background:#111316; color:#f4f4f1; font-size:.9rem; }
+	.players-tags { display:flex; flex-wrap:wrap; gap:6px; }
+	.roster-tag { display:inline-flex; align-items:center; padding:3px 7px; border-radius:5px; background:#252a2f; color:#aeb5bb; font-size:.62rem; font-weight:750; white-space:nowrap; }
+	.tag-linked { background:#1d3c2b; color:#8bd5a4; }.tag-unlinked { background:#422525; color:#e5a0a0; }.tag-place { background:#40351d; color:#e6c77f; }
+	.players-roster-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:6px; }
+	.players-roster-actions .paid-button { min-height:30px; padding:6px 10px; font-size:.68rem; }
+	.players-roster-actions .tiny { min-height:30px; padding:6px 9px; font-size:.66rem; }
+	.players-roster-actions button:disabled { opacity:.35; cursor:not-allowed; }
+	.players-roster-actions .entry-remove { min-width:28px; }
+	.players-roster-actions .restore-player { background:#263c30; color:#a8e6be; }
+	.players-roster-actions .delete-player-button { background:#3b2525; color:#e9aaaa; }
+	.players-roster-row.player-eliminated { opacity:.65; }.players-roster-row.player-eliminated .players-name-input { color:#9ba2a8; text-decoration:line-through; }
+	.players-empty { padding:20px 0; }
+	@media (max-width:760px) {
+		.players-panel-heading { align-items:flex-start; flex-direction:column; padding:16px; }
+		.players-summary { width:100%; }.players-summary > div { flex:1; min-width:0; }
+		.players-add-panel { align-items:stretch; flex-direction:column; padding:14px; }
+		.players-add-form { align-items:stretch; flex-direction:column; }
+		.players-add-form .add-player-submit, .players-randomise { width:100%; }
+		.players-roster { max-height:none; min-height:300px; padding:13px; }
+		.players-roster-heading { align-items:flex-start; flex-direction:column; }
+		.players-roster-heading > span { text-align:left; }
+		.players-roster-row { align-items:stretch; flex-direction:column; gap:10px; }
+		.players-roster-main { min-width:0; }
+		.players-name-input { width:100%; }
+		.players-roster-actions { justify-content:flex-start; }
+	}
 </style>
