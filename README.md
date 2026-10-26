@@ -32,6 +32,8 @@ npm run build
 npm run preview
 ```
 
+Requires Node.js 22.12.0 or later. The app uses Node's built-in SQLite module, so no native SQLite package installation is required.
+
 The dependency ranges are intentionally kept on current major versions so `npm install` resolves current compatible Svelte/SvelteKit releases.
 
 ## Venue-specific tournaments
@@ -39,7 +41,7 @@ The dependency ranges are intentionally kept on current major versions so `npm i
 - `/` opens the venue selector.
 - `/<venueid>` opens that venue's tournament admin.
 - `/<venueid>/display` opens the read-only TV display.
-- Tournament data is stored independently in `.data/venues/<venueid>.json`.
+- Tournament data is stored in `.data/poker.sqlite`, with one row per venue.
 
 The development server is already configured to listen on the local network. Run:
 
@@ -73,6 +75,10 @@ The receiver must be reachable by the Chromecast over HTTPS. A local `localhost`
 - The event hub is in-process. Run one persistent Node server for this JSON-backed architecture; separate Node instances do not share event notifications.
 - Keep the Mac awake and the Node server running while tournaments are in progress. The JSON files remain the durable source of truth.
 
-## Persistence
+## SQLite persistence and JSON migration
 
-The current venue store writes JSON files under `.data/venues`, suitable for a single persistent Node server during local development. Before deploying to serverless or multi-instance hosting, replace this file store with a shared persistent database.
+- The first server start imports valid `.data/venues/<venueid>.json` files into `.data/poker.sqlite` in a single SQLite transaction.
+- Import is idempotent. Existing SQLite rows are never overwritten by legacy JSON files, and the original JSON files are retained as backups.
+- SQLite uses WAL journaling and full synchronous writes. The database and its journal files are ignored by Git.
+- Back up the entire `.data/` directory, especially `.data/poker.sqlite`, before moving or reinstalling the app.
+- The app still expects one persistent Node process because live Server-Sent Event notifications are held in-process. SQLite provides durable transactional storage, but does not make the current SSE event hub multi-instance aware.
