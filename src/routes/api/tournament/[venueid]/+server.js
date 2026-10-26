@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { startPushScheduler } from '$lib/server/push-notifications';
+import { publishTournamentUpdate } from '$lib/server/tournament-events';
 
 startPushScheduler();
 const DATA_DIR = path.resolve('.data', 'venues');
@@ -10,6 +11,11 @@ const valid = (id) => /^\d{1,12}$/.test(String(id ?? ''));
 /** @param {string | number} id */
 const file = (id) => path.join(DATA_DIR, id + '.json');
 /** @param {string | number} id */
+async function persist(id, state) {
+	await fs.mkdir(DATA_DIR, { recursive: true });
+	await fs.writeFile(file(id), JSON.stringify(state, null, 2));
+	publishTournamentUpdate(id);
+}
 async function read(id) {
 	try {
 		return JSON.parse(await fs.readFile(file(id), 'utf8'));
@@ -188,7 +194,7 @@ export async function GET({ params, url }) {
 							: `Next level. ${game ? speechGame + '. ' : ''}Blinds ${next?.sb ?? 0} ${next?.bb ?? 0}.`;
 						s.announcementEvent = { id: `level-${now}-${level}`, text, createdAt: now };
 					}
-					await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+					await persist(params.venueid, s);
 				}
 			}
 			return json({ ok: true, state: url.searchParams.get('public') === '1' ? publicState(s) : s });
@@ -268,7 +274,7 @@ export async function PUT({ params, request }) {
 			updatedAt: Date.now()
 		};
 		await fs.mkdir(DATA_DIR, { recursive: true });
-		await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+		await persist(params.venueid, s);
 		return json({ ok: true, updatedAt: s.updatedAt });
 		});
 	} catch (e) {
@@ -336,7 +342,7 @@ export async function POST({ params, request }) {
 				}
 				recalculateRedtoothResults();
 				s.updatedAt = Date.now();
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, player, players: s.players, redtoothPlayers: s.redtoothPlayers ?? [], eliminationEvent: s.eliminationEvent ?? null, updatedAt: s.updatedAt });
 			}
 			if (action === 'addPlayer') {
@@ -375,7 +381,7 @@ export async function POST({ params, request }) {
 				s.players.push(player);
 				s.nextPlayerId = id + 1;
 				s.updatedAt = Date.now();
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, player, nextPlayerId: s.nextPlayerId, updatedAt: s.updatedAt });
 			}
 			if (action === 'deletePlayer') {
@@ -394,7 +400,7 @@ export async function POST({ params, request }) {
 					seated.forEach((/** @type {any} */ item, index) => { item.seat = index + 1; });
 				}
 				s.updatedAt = Date.now();
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, players: s.players, updatedAt: s.updatedAt });
 			}
 			if (action === 'setPlayerPaid' || action === 'renamePlayer' || action === 'adjustPlayerEntry') {
@@ -422,7 +428,7 @@ export async function POST({ params, request }) {
 					player[field] = nextValue;
 				}
 				s.updatedAt = Date.now();
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, player, updatedAt: s.updatedAt });
 			}
 			if (action === 'reorderElimination') {
@@ -454,7 +460,7 @@ export async function POST({ params, request }) {
 					return { ...row, localGames: pendingByRedtoothId.has(Number(row.redtoothId)) ? 1 : 0, localPoints: pending, pendingPoints: pending };
 				});
 				s.updatedAt = Date.now();
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, players: s.players, redtoothPlayers: s.redtoothPlayers ?? [], updatedAt: s.updatedAt });
 			}
 			if (['randomiseSeats', 'applyTableBalance', 'replaceEliminatedSeat', 'renameTable'].includes(action)) {
@@ -541,7 +547,7 @@ export async function POST({ params, request }) {
 					else s.tableNames[table] = name;
 				}
 				s.updatedAt = Date.now();
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, players: s.players, tableNames: s.tableNames ?? {}, tableMoveEvent: s.tableMoveEvent ?? null, updatedAt: s.updatedAt });
 			}
 			if (action === 'resetTournament') {
@@ -558,7 +564,7 @@ export async function POST({ params, request }) {
 				s.announcementEvent = null;
 				s.tableMoveEvent = null;
 				s.updatedAt = now;
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, state: s, updatedAt: now });
 			}
 			if (action === 'clearPlayers') {
@@ -569,7 +575,7 @@ export async function POST({ params, request }) {
 				s.tableMoveEvent = null;
 				s.announcementEvent = null;
 				s.updatedAt = Date.now();
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, updatedAt: s.updatedAt });
 			}
 			if (action === 'saveLevels') {
@@ -617,7 +623,7 @@ export async function POST({ params, request }) {
 					: Math.max(0, Math.min(nextDuration, Math.round(nextDuration * (1 - progress))));
 				if (s.running && s.remainingMs <= 0) s.running = false;
 				s.updatedAt = now;
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, levels: s.levels, state: s, updatedAt: s.updatedAt });
 			}
 			if (action === 'saveSettings') {
@@ -641,7 +647,7 @@ export async function POST({ params, request }) {
 				}
 				if (typeof settings.venueName === 'string') s.venueName = settings.venueName.trim().slice(0, 160);
 				s.updatedAt = Date.now();
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, settings: { soundEnabled: s.soundEnabled, announcementEnabled: s.announcementEnabled, buyInAmount: s.buyInAmount, maxRebuys: s.maxRebuys, maxTopUps: s.maxTopUps, mixedGames: s.mixedGames, activeTab: s.activeTab, tableNames: s.tableNames ?? {}, venueName: s.venueName ?? '' }, updatedAt: s.updatedAt });
 			}
 			if (action === 'saveRedtoothState') {
@@ -688,7 +694,7 @@ export async function POST({ params, request }) {
 					}).filter((/** @type {any} */ row) => Number.isInteger(row.redtoothId) && row.redtoothId > 0);
 				}
 				s.updatedAt = Date.now();
-				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				await persist(params.venueid, s);
 				return json({ ok: true, updatedAt: s.updatedAt });
 			}
 			if (!s || !Array.isArray(s.levels) || !s.levels.length)
@@ -734,7 +740,7 @@ export async function POST({ params, request }) {
 			if (action === 'pause') s.remainingMs = remaining;
 			if (action === 'start' && s.running) s.remainingMs = remaining;
 			if (level === s.levels.length - 1 && s.remainingMs <= 0) s.running = false;
-			await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+			await persist(params.venueid, s);
 			return json({ ok: true, state: s });
 		});
 	} catch (e) {
