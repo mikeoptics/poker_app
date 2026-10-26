@@ -11,9 +11,14 @@ export async function GET({ params }) {
 
 export async function POST({ params, request }) {
 	if (!valid(params.venueid)) return json({ error: 'Invalid venue ID.' }, { status: 400 });
+	let subscription;
 	try {
-		const subscription = await request.json();
-		if (!isValidPushSubscription(subscription)) return json({ error: 'Invalid push subscription.' }, { status: 400 });
+		subscription = await request.json();
+	} catch {
+		return json({ error: 'Request body must contain valid JSON.' }, { status: 400 });
+	}
+	if (!isValidPushSubscription(subscription)) return json({ error: 'Invalid push subscription.' }, { status: 400 });
+	try {
 		await savePushSubscription(params.venueid, subscription);
 		return json({ ok: true });
 	} catch (error) {
@@ -24,12 +29,18 @@ export async function POST({ params, request }) {
 
 export async function DELETE({ params, request }) {
 	if (!valid(params.venueid)) return json({ error: 'Invalid venue ID.' }, { status: 400 });
+	let body;
 	try {
-		const { endpoint } = await request.json();
-		if (!isValidPushEndpoint(endpoint)) return json({ error: 'Invalid push endpoint.' }, { status: 400 });
-		await removePushSubscription(params.venueid, endpoint);
+		body = await request.json();
+	} catch {
+		return json({ error: 'Request body must contain valid JSON.' }, { status: 400 });
+	}
+	if (!isValidPushEndpoint(body?.endpoint)) return json({ error: 'Invalid push endpoint.' }, { status: 400 });
+	try {
+		await removePushSubscription(params.venueid, body.endpoint);
 		return json({ ok: true });
 	} catch (error) {
+		console.error('Push subscription removal failed:', error);
 		return json({ ok: false, error: 'Unable to remove notification subscription.' }, { status: 500 });
 	}
 }
