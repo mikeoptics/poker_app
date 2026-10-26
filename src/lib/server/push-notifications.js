@@ -45,7 +45,7 @@ export async function removePushSubscription(venueId, endpoint) {
 	} catch {}
 }
 
-async function checkVenueFiles() {
+async function checkVenueStates() {
 	if (!configure()) return;
 	for (const venueId of listVenueIds()) {
 		const subscriptionsFile = path.join(PUSH_DIR, venueId + '.json');
@@ -105,5 +105,5 @@ export function startPushScheduler() {
 	schedulerStarted = true;
 	// The server process advances the notification clock independently of the
 	// TD's browser tab, so push alerts still fire when the phone is locked.
-	setInterval(() => checkVenueFiles().catch((error) => console.error('Push scheduler failed:', error)), 5000);
+	setInterval(() => checkVenueStates().catch((error) => console.error('Push scheduler failed:', error)), 5000);
 }
