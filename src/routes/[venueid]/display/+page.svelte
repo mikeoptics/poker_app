@@ -172,7 +172,9 @@
 		refresh();
 		pollTimer = setInterval(refresh, 15000);
 		tournamentEvents = new EventSource('/api/tournament/' + venueId + '/events');
-		tournamentEvents.onmessage = () => { void refresh(); };
+		tournamentEvents.onmessage = (event) => {
+			try { if (JSON.parse(event.data)?.type === 'update') void refresh(); } catch { /* Ignore malformed event data. */ }
+		};
 		tickTimer = setInterval(() => {
 			clockNow = Date.now();
 		}, 200);
