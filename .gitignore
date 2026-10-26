@@ -9,3 +9,4 @@ build
 # Per-venue live tournament data
 .data/venues/
 .data/push/
+.data/poker.sqlite*
