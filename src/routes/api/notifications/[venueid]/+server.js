@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { isValidPushEndpoint, savePushSubscription, removePushSubscription } from '$lib/server/push-notifications';
+import { isValidPushEndpoint, isValidPushSubscription, savePushSubscription, removePushSubscription } from '$lib/server/push-notifications';
 
 /** @param {string | number | null | undefined} id */
 const valid = (id) => /^\d{1,12}$/.test(String(id ?? ''));
@@ -13,6 +13,7 @@ export async function POST({ params, request }) {
 	if (!valid(params.venueid)) return json({ error: 'Invalid venue ID.' }, { status: 400 });
 	try {
 		const subscription = await request.json();
+		if (!isValidPushSubscription(subscription)) return json({ error: 'Invalid push subscription.' }, { status: 400 });
 		await savePushSubscription(params.venueid, subscription);
 		return json({ ok: true });
 	} catch (error) {
