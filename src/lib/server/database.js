@@ -44,7 +44,7 @@ function migrateLegacyVenues() {
 	const importFiles = () => {
 		if (!fs.existsSync(LEGACY_DIR)) return;
 		for (const name of fs.readdirSync(LEGACY_DIR)) {
-			const match = /^(\d{1,12})\\.json$/.exec(name);
+			const match = /^(\d{1,12})\.json$/.exec(name);
 			if (!match) continue;
 			try {
 				const raw = fs.readFileSync(path.join(LEGACY_DIR, name), 'utf8');
