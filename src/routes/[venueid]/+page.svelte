@@ -52,6 +52,7 @@
 	let lastSavedSnapshot = '';
 	let lastSavedRedtoothSnapshot = '';
 	let lastSavedSettingsSnapshot = '';
+	let lastSavedLevelsSnapshot = '';
 	let castStatus = $state('');
 	let timerCompact = $state(false);
 	const games = ['NLH', 'PLO5', 'Pineapple', 'PLO4', 'Crazy Pineapple'];
@@ -1610,7 +1611,7 @@
 
 	function tournamentSnapshot() {
 		return {
-			levels, players, nextPlayerId, tournamentStarted,
+			players, nextPlayerId, tournamentStarted,
 			eliminationEvent, announcementEvent, tableMoveEvent, redtoothPlayers
 		};
 	}
@@ -1644,7 +1645,8 @@
 		venueName = state.venueName || venueName;
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
-		lastSavedSnapshot = JSON.stringify(state);
+		lastSavedSnapshot = JSON.stringify(tournamentSnapshot());
+		lastSavedLevelsSnapshot = JSON.stringify(levels);
 		lastSavedSettingsSnapshot = JSON.stringify({ soundEnabled, announcementEnabled, buyInAmount, maxRebuys, maxTopUps, mixedGames, activeTab, tableNames, venueName });
 		lastSavedRedtoothSnapshot = JSON.stringify({ players: players.map((player) => ({ id: player.id, redtoothId: player.redtoothId, redtoothGames: player.redtoothGames, redtoothPoints: player.redtoothPoints, redtoothPendingPoints: player.redtoothPendingPoints, redtoothConfirmed: player.redtoothConfirmed })), redtoothPlayers });
 		if (running) {
@@ -1684,6 +1686,25 @@
 				});
 				if (!response.ok) throw new Error('Unable to save tournament settings.');
 				lastSavedSnapshot = serialised;
+			}
+			const levelsSerialised = JSON.stringify(levels);
+			if (levelsSerialised !== lastSavedLevelsSnapshot) {
+				const response = await fetch(`/api/tournament/${venueId}`, {
+					method: 'POST',
+					headers: { 'content-type': 'application/json' },
+					body: JSON.stringify({ action: 'saveLevels', levels, currentLevel })
+				});
+				const result = await response.json();
+				if (!response.ok || !result?.levels) throw new Error(result?.error || 'Unable to save blind structure.');
+				lastSavedLevelsSnapshot = levelsSerialised;
+				if (JSON.stringify(levels) === levelsSerialised) {
+					levels = result.levels;
+					currentLevel = result.state.currentLevel;
+					levelDurationMs = result.state.levelDurationMs;
+					remainingMs = result.state.remainingMs;
+					running = Boolean(result.state.running);
+					levelStartedAt = now() - (levelDurationMs - remainingMs);
+				}
 			}
 			if (settingsSerialised !== lastSavedSettingsSnapshot) {
 				const response = await fetch(`/api/tournament/${venueId}`, {
@@ -1807,6 +1828,7 @@ function startCasting() {
 
 		// Keep redtoothPlayers intact so the league table remains visible on the TV.
 		lastSavedSnapshot = '';
+		lastSavedLevelsSnapshot = JSON.stringify(levels);
 		lastSavedRedtoothSnapshot = JSON.stringify({ players: [], redtoothPlayers });
 		await saveTournament();
 	}
