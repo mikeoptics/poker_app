@@ -590,7 +590,12 @@
         refreshInterval = null;
         if (tournamentEvents) tournamentEvents.close();
         tournamentEvents = new EventSource('/api/tournament/' + venueId + '/events');
-        tournamentEvents.onmessage = () => { if (refreshInterval !== null) clearTimeout(refreshInterval); refreshInterval = null; refresh(); };
+        tournamentEvents.onmessage = (event) => {
+          try { if (JSON.parse(event.data)?.type !== 'update') return; } catch { return; }
+          if (refreshInterval !== null) clearTimeout(refreshInterval);
+          refreshInterval = null;
+          refresh();
+        };
         requestScreenWakeLock();
         refresh();
       }
