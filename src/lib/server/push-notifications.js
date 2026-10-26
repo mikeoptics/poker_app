@@ -105,10 +105,12 @@ async function checkVenueStates() {
 			// Revalidate persisted data as well as new registrations. This also
 			// safely ignores subscriptions written before endpoint validation existed.
 			const subscriptions = storedSubscriptions.filter(isValidPushSubscription);
-			if (!subscriptions.length) continue;
 			if (subscriptions.length !== storedSubscriptions.length) {
+				// Persist even an empty result so invalid legacy entries are not
+				// re-read and revalidated on every scheduler pass.
 				await fs.writeFile(subscriptionsFile, JSON.stringify(subscriptions, null, 2));
 			}
+			if (!subscriptions.length) continue;
 			const cursorFile = path.join(PUSH_DIR, venueId + '.state.json');
 			let cursor = { level: Number(state.currentLevel) || 0 };
 			try { cursor = JSON.parse(await fs.readFile(cursorFile, 'utf8')); } catch {}
