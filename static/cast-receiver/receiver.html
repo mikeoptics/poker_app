@@ -333,6 +333,7 @@
       let updatedAt = 0;
       let running = false;
       let refreshInterval = null;
+      let tournamentEvents = null;
       let screenWakeLock = null;
       let lastEliminationEventId = null;
       let hasReceivedInitialState = false;
@@ -580,13 +581,16 @@
         } finally {
           // Schedule the next request only after this one completes, avoiding
           // overlapping requests if the network or server is slow.
-          if (venueId) refreshInterval = setTimeout(refresh, 1000);
+          if (venueId) refreshInterval = setTimeout(refresh, 15000);
         }
       }
 
       function startPolling() {
         if (refreshInterval !== null) clearTimeout(refreshInterval);
         refreshInterval = null;
+        if (tournamentEvents) tournamentEvents.close();
+        tournamentEvents = new EventSource('/api/tournament/' + venueId + '/events');
+        tournamentEvents.onmessage = () => { if (refreshInterval !== null) clearTimeout(refreshInterval); refreshInterval = null; refresh(); };
         requestScreenWakeLock();
         refresh();
       }
@@ -641,7 +645,7 @@
 
       context.addEventListener(
         cast.framework.system.EventType.SHUTDOWN,
-        () => console.log('Poker receiver shutting down')
+        () => { if (tournamentEvents) tournamentEvents.close(); if (refreshInterval !== null) clearTimeout(refreshInterval); console.log('Poker receiver shutting down'); }
       );
 
       context.addEventListener(
