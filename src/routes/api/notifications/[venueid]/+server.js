@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { savePushSubscription, removePushSubscription } from '$lib/server/push-notifications';
+import { isValidPushEndpoint, savePushSubscription, removePushSubscription } from '$lib/server/push-notifications';
 
 /** @param {string | number | null | undefined} id */
 const valid = (id) => /^\d{1,12}$/.test(String(id ?? ''));
@@ -25,6 +25,7 @@ export async function DELETE({ params, request }) {
 	if (!valid(params.venueid)) return json({ error: 'Invalid venue ID.' }, { status: 400 });
 	try {
 		const { endpoint } = await request.json();
+		if (!isValidPushEndpoint(endpoint)) return json({ error: 'Invalid push endpoint.' }, { status: 400 });
 		await removePushSubscription(params.venueid, endpoint);
 		return json({ ok: true });
 	} catch (error) {
