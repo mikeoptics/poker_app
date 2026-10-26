@@ -35,6 +35,9 @@
 	let venueName = $state('Selected venue');
 	/** @type {ReturnType<typeof setInterval> | null} */
 	let syncInterval = null;
+	/** @type {EventSource | null} */
+	let tournamentEvents = null;
+	let eventRefreshPending = false;
 	let savingTournament = false;
 	let savePending = false;
 	/** @type {ReturnType<typeof setTimeout> | null} */
@@ -1907,7 +1910,15 @@ function startCasting() {
 			if (running) remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
 			void refreshServerTimer();
 			saveTournament();
-		}, 5000);
+		}, 15000);
+		tournamentEvents = new EventSource(`/api/tournament/${venueId}/events`);
+		tournamentEvents.onmessage = () => {
+			if (eventRefreshPending || savingTournament || playerSaveTimer !== null) return;
+			eventRefreshPending = true;
+			void loadTournament()
+				.catch((error) => console.warn('Live tournament refresh failed:', error))
+				.finally(() => { eventRefreshPending = false; });
+		};
 		startRedtoothViewTimer();
 		const handleVisibilityChange = async () => {
 			if (document.visibilityState === 'visible') {
@@ -1952,6 +1963,7 @@ function startCasting() {
 			window.removeEventListener('keydown', handleKeyboard);
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			if (syncInterval !== null) clearInterval(syncInterval);
+			tournamentEvents?.close();
 			if (playerSaveTimer !== null) {
 				clearTimeout(playerSaveTimer);
 				playerSaveTimer = null;
