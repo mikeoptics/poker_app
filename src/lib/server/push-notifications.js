@@ -14,6 +14,50 @@ let schedulerStarted = false;
 let schedulerCheckInProgress = false;
 let vapidReady = false;
 
+const PUSH_HOSTS = [
+	'fcm.googleapis.com',
+	'push.services.mozilla.com',
+	'notify.windows.com',
+	'web.push.apple.com'
+];
+
+/**
+ * Accept only HTTPS endpoints belonging to known browser push services.
+ * This prevents clients from turning the notification sender into an SSRF
+ * primitive by registering arbitrary URLs.
+ * @param {unknown} endpoint
+ */
+export function isValidPushEndpoint(endpoint) {
+	if (typeof endpoint !== 'string' || endpoint.length > 4096) return false;
+	try {
+		const url = new URL(endpoint);
+		if (
+			url.protocol !== 'https:' ||
+			url.username ||
+			url.password ||
+			(url.port && url.port !== '443') ||
+			url.hostname.endsWith('.')
+		) return false;
+		const hostname = url.hostname.toLowerCase();
+		return PUSH_HOSTS.some((host) => hostname === host || hostname.endsWith('.' + host));
+	} catch {
+		return false;
+	}
+}
+
+function validSubscription(subscription) {
+	return Boolean(
+		subscription &&
+		typeof subscription === 'object' &&
+		isValidPushEndpoint(subscription.endpoint) &&
+		subscription.keys &&
+		typeof subscription.keys.p256dh === 'string' &&
+		subscription.keys.p256dh.length > 0 &&
+		typeof subscription.keys.auth === 'string' &&
+		subscription.keys.auth.length > 0
+	);
+}
+
 function configure() {
 	if (vapidReady) return true;
 	if (!publicKey || !privateKey) return false;
@@ -30,7 +74,7 @@ export async function savePushSubscription(venueId, subscription) {
 	try { subscriptions = JSON.parse(await fs.readFile(file, 'utf8')); } catch {}
 	if (!Array.isArray(subscriptions)) subscriptions = [];
 	const endpoint = subscription?.endpoint;
-	if (!endpoint || typeof endpoint !== 'string') throw new Error('Invalid push subscription');
+	if (!validSubscription(subscription)) throw new Error('Invalid push subscription endpoint or keys');
 	subscriptions = subscriptions.filter(/** @param {any} item */ (item) => item.endpoint !== endpoint);
 	subscriptions.push(subscription);
 	await fs.writeFile(file, JSON.stringify(subscriptions, null, 2));
@@ -56,8 +100,15 @@ async function checkVenueStates() {
 			const state = readVenue(venueId);
 			if (!state) continue;
 			if (!Array.isArray(state.levels) || !state.levels.length) continue;
-			const subscriptions = JSON.parse(await fs.readFile(subscriptionsFile, 'utf8'));
-			if (!Array.isArray(subscriptions) || !subscriptions.length) continue;
+			const storedSubscriptions = JSON.parse(await fs.readFile(subscriptionsFile, 'utf8'));
+			if (!Array.isArray(storedSubscriptions) || !storedSubscriptions.length) continue;
+			// Revalidate persisted data as well as new registrations. This also
+			// safely ignores subscriptions written before endpoint validation existed.
+			const subscriptions = storedSubscriptions.filter(validSubscription);
+			if (!subscriptions.length) continue;
+			if (subscriptions.length !== storedSubscriptions.length) {
+				await fs.writeFile(subscriptionsFile, JSON.stringify(subscriptions, null, 2));
+			}
 			const cursorFile = path.join(PUSH_DIR, venueId + '.state.json');
 			let cursor = { level: Number(state.currentLevel) || 0 };
 			try { cursor = JSON.parse(await fs.readFile(cursorFile, 'utf8')); } catch {}
@@ -85,7 +136,11 @@ async function checkVenueStates() {
 					tag: `blind-level-${venueId}-${level}`,
 					url: `/${venueId}`
 				});
-				const results = await Promise.allSettled(subscriptions.map((subscription) => webpush.sendNotification(subscription, payload)));
+				const results = await Promise.allSettled(subscriptions.map((subscription) => {
+					// Keep the send boundary defensive even if storage changes later.
+					if (!validSubscription(subscription)) throw new Error('Rejected invalid push endpoint');
+					return webpush.sendNotification(subscription, payload);
+				}));
 				const expired = results.map((result, i) => result.status === 'rejected' && [404, 410].includes(result.reason?.statusCode) ? subscriptions[i].endpoint : null).filter(Boolean);
 				if (expired.length) {
 					const active = subscriptions.filter((item) => !expired.includes(item.endpoint));
