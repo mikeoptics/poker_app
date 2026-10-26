@@ -1613,8 +1613,7 @@
 
 	function tournamentSnapshot() {
 		return {
-			players, nextPlayerId, tournamentStarted,
-			eliminationEvent, announcementEvent, tableMoveEvent, redtoothPlayers
+			players, nextPlayerId, redtoothPlayers
 		};
 	}
 
@@ -1804,12 +1803,13 @@ function startCasting() {
 		}
 
 		closeClock();
-		const clearResponse = await fetch(`/api/tournament/${venueId}`, {
+		const resetResponse = await fetch(`/api/tournament/${venueId}`, {
 			method: 'POST',
 			headers: { 'content-type': 'application/json' },
-			body: JSON.stringify({ action: 'clearPlayers' })
+			body: JSON.stringify({ action: 'resetTournament' })
 		});
-		if (!clearResponse.ok) throw new Error('Unable to clear server player state.');
+		const resetResult = await resetResponse.json();
+		if (!resetResponse.ok) throw new Error(resetResult.error || 'Unable to reset tournament state.');
 		players = [];
 		tournamentStarted = false;
 		nextPlayerId = 1;
@@ -1817,8 +1817,11 @@ function startCasting() {
 		redtoothSearchResults = [];
 		redtoothSelectedPlayer = null;
 		currentLevel = 0;
+		levelDurationMs = resetResult.state.levelDurationMs;
+		remainingMs = resetResult.state.remainingMs;
+		running = false;
+		levelStartedAt = now();
 		setLevel(0);
-		await sendTimerCommand('selectLevel', 0);
 		tournamentMode = 'paused';
 		eliminationEvent = null;
 		announcementEvent = null;
