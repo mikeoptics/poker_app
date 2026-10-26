@@ -39,31 +39,31 @@ const upsertVenue = database.prepare(
  */
 function migrateLegacyVenues() {
 	const migration = 'import-legacy-venue-json-v1';
-	if (database.prepare('SELECT 1 FROM schema_migrations WHERE migration = ?').get(migration)) return;
-
-	const importFiles = () => {
-		if (!fs.existsSync(LEGACY_DIR)) return;
-		for (const name of fs.readdirSync(LEGACY_DIR)) {
-			const match = /^(\d{1,12})\.json$/.exec(name);
-			if (!match) continue;
-			try {
-				const raw = fs.readFileSync(path.join(LEGACY_DIR, name), 'utf8');
-				const state = JSON.parse(raw);
-				if (!state || typeof state !== 'object' || Array.isArray(state)) {
-					console.error(`Skipping invalid legacy venue file: ${name}`);
-					continue;
-				}
-				insertVenue.run(match[1], JSON.stringify(state), Number(state.updatedAt) || Date.now());
-			} catch (error) {
-				console.error(`Unable to import legacy venue file ${name}:`, error);
-			}
-		}
-	};
-
 	database.exec('BEGIN IMMEDIATE');
 	try {
-		importFiles();
-		database.prepare('INSERT INTO schema_migrations (migration, applied_at) VALUES (?, ?)').run(migration, Date.now());
+		// Recheck after acquiring the write lock so two server starts cannot
+		// race to apply the same one-time migration.
+		if (!database.prepare('SELECT 1 FROM schema_migrations WHERE migration = ?').get(migration)) {
+			if (fs.existsSync(LEGACY_DIR)) {
+				for (const name of fs.readdirSync(LEGACY_DIR)) {
+					const match = /^(\\d{1,12})\\.json$/.exec(name);
+					if (!match) continue;
+					let state;
+					try {
+						state = JSON.parse(fs.readFileSync(path.join(LEGACY_DIR, name), 'utf8'));
+					} catch (error) {
+						console.error(`Unable to read legacy venue file ${name}:`, error);
+						continue;
+					}
+					if (!state || typeof state !== 'object' || Array.isArray(state)) {
+						console.error(`Skipping invalid legacy venue file: ${name}`);
+						continue;
+					}
+					insertVenue.run(match[1], JSON.stringify(state), Number(state.updatedAt) || Date.now());
+				}
+			}
+			database.prepare('INSERT INTO schema_migrations (migration, applied_at) VALUES (?, ?)').run(migration, Date.now());
+		}
 		database.exec('COMMIT');
 	} catch (error) {
 		database.exec('ROLLBACK');
