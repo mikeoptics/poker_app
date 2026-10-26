@@ -87,3 +87,8 @@ export function writeVenue(id, state) {
 	const updatedAt = Number(state?.updatedAt) || Date.now();
 	upsertVenue.run(key, JSON.stringify(state), updatedAt);
 }
+
+/** @returns {string[]} */
+export function listVenueIds() {
+	return database.prepare('SELECT venue_id FROM venues ORDER BY venue_id').all().map((row) => row.venue_id);
+}
