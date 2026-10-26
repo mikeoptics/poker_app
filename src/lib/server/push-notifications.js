@@ -1,9 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import webpush from 'web-push';
 import { listVenueIds, readVenue } from '$lib/server/database';
 
-const DATA_DIR = path.resolve('.data');
+const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const DATA_DIR = path.join(PROJECT_ROOT, '.data');
 const PUSH_DIR = path.join(DATA_DIR, 'push');
 const publicKey = process.env.VAPID_PUBLIC_KEY;
 const privateKey = process.env.VAPID_PRIVATE_KEY;
