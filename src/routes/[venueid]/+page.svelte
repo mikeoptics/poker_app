@@ -2179,6 +2179,7 @@ function startCasting() {
 				{activePlayers}
 				{tableCount}
 				{tableNames}
+				{venueName}
 				renameTable={renameTable}
 				{seatRole}
 				{applyBalance}
