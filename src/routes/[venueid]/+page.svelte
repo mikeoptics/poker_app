@@ -1679,7 +1679,7 @@
 				redtoothPlayers
 			};
 			const redtoothSerialised = JSON.stringify(redtoothState);
-			if (serialised !== lastSavedSnapshot) {
+			if (!lastSavedSnapshot) {
 				const response = await fetch(`/api/tournament/${venueId}`, {
 					method: 'PUT',
 					headers: { 'content-type': 'application/json' },
