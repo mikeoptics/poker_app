@@ -1065,3 +1065,9 @@
 	.table-heading-actions { gap: 6px; }
 	.share-seating { padding: 7px 8px; font-size: 10px; }
 }
+
+.seating-share-status {
+	flex: 0 0 100%;
+	width: 100%;
+	box-sizing: border-box;
+}
