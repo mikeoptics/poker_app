@@ -1,8 +1,10 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 
-const DATA_ROOT = path.resolve('.data');
+const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
+const DATA_ROOT = path.join(PROJECT_ROOT, '.data');
 const LEGACY_DIR = path.join(DATA_ROOT, 'venues');
 const DATABASE_PATH = path.join(DATA_ROOT, 'poker.sqlite');
 
