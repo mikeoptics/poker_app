@@ -96,6 +96,7 @@
 			const gap = 28;
 			const columns = tables.length > 1 ? 2 : 1;
 			const cardWidth = (width - padding * 2 - gap * (columns - 1)) / columns;
+			/** @type {number[]} */
 			const rowHeights = [];
 			for (let i = 0; i < tables.length; i += columns) {
 				rowHeights.push(Math.max(...tables.slice(i, i + columns).map((table) => 104 + table.players.length * 54)));
@@ -152,9 +153,11 @@
 				}
 				y += rowHeights[row] + gap;
 			}
-			const blob = await new Promise((resolve, reject) => {
+			/** @type {Promise<Blob>} */
+			const blobPromise = new Promise((resolve, reject) => {
 				canvas.toBlob((value) => value ? resolve(value) : reject(new Error('Could not export the seating image.')), 'image/png');
 			});
+			const blob = await blobPromise;
 			const file = new File([blob], 'poker-seating-plan.png', { type: 'image/png' });
 			if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
 				await navigator.share({ files: [file], title: `${venueName} seating plan`, text: 'Tournament seating plan' });
