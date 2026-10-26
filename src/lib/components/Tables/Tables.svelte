@@ -1,7 +1,7 @@
 <script>
 	import './tables.css';
 
-	/** @type {{ activePlayerCount:number, players:any[], eliminatedPlayers:any[], balanceMessage:string, balanceSuggestions:any[], activePlayers:any[], tableCount:number, tableNames:Record<string,string>, renameTable?: (tableNumber:number, name:string) => void, seatRole: (seat:number) => string, applyBalance: () => void, replacePlayer: (playerId:number, replacementId:number) => void, randomiseSeats: () => void }} */
+	/** @type {{ activePlayerCount:number, players:any[], eliminatedPlayers:any[], balanceMessage:string, balanceSuggestions:any[], activePlayers:any[], tableCount:number, tableNames:Record<string,string>, venueName?:string, renameTable?: (tableNumber:number, name:string) => void, seatRole: (seat:number) => string, applyBalance: () => void, replacePlayer: (playerId:number, replacementId:number) => void, randomiseSeats: () => void }} */
 	let {
 		activePlayerCount,
 		players,
@@ -11,6 +11,7 @@
 		activePlayers,
 		tableCount,
 		tableNames = {},
+		venueName = 'Poker tournament',
 		renameTable,
 		seatRole,
 		applyBalance,
@@ -23,6 +24,8 @@
 	/** @type {number | null} */
 	let editingTableNumber = $state(null);
 	let tableNameDraft = $state('');
+	let sharingSeatingPlan = $state(false);
+	let shareStatus = $state('');
 
 	const visibleTableNumbers = $derived(
 		[...new Set(players.filter((player) => Number(player.table) > 0 && Number(player.seat) > 0).map((player) => Number(player.table)))].sort((a, b) => a - b)
@@ -65,6 +68,117 @@
 		replacingPlayerId = null;
 		selectedReplacementId = '';
 	}
+
+	/**
+	 * Build a single PNG containing every currently occupied table, then use
+	 * the device share sheet so WhatsApp can receive it as an image attachment.
+	 */
+	async function shareSeatingPlan() {
+		if (sharingSeatingPlan) return;
+		const tables = visibleTableNumbers
+			.map((number) => ({
+				number,
+				name: tableNames[number] || `Table ${number}`,
+				players: players
+					.filter((player) => !player.eliminated && Number(player.table) === number && Number(player.seat) > 0)
+					.sort((a, b) => Number(a.seat) - Number(b.seat))
+			}))
+			.filter((table) => table.players.length > 0);
+		if (!tables.length) {
+			shareStatus = 'There are no seated players to share.';
+			return;
+		}
+		sharingSeatingPlan = true;
+		shareStatus = '';
+		try {
+			const width = 1200;
+			const padding = 64;
+			const gap = 28;
+			const columns = tables.length > 1 ? 2 : 1;
+			const cardWidth = (width - padding * 2 - gap * (columns - 1)) / columns;
+			const rowHeights = [];
+			for (let i = 0; i < tables.length; i += columns) {
+				rowHeights.push(Math.max(...tables.slice(i, i + columns).map((table) => 104 + table.players.length * 54)));
+			}
+			const headerHeight = 210;
+			const height = padding + headerHeight + rowHeights.reduce((sum, value) => sum + value, 0) + gap * Math.max(0, rowHeights.length - 1) + padding;
+			const canvas = document.createElement('canvas');
+			canvas.width = width;
+			canvas.height = height;
+			const context = canvas.getContext('2d');
+			if (!context) throw new Error('Unable to create the seating image.');
+			context.fillStyle = '#111519';
+			context.fillRect(0, 0, width, height);
+			context.fillStyle = '#8fa99a';
+			context.font = '700 22px system-ui, sans-serif';
+			context.fillText('TOURNAMENT SEATING', padding, padding + 18);
+			context.fillStyle = '#f1f4f1';
+			context.font = '800 48px system-ui, sans-serif';
+			context.fillText(String(venueName || 'Poker tournament').slice(0, 38), padding, padding + 82);
+			context.fillStyle = '#aeb8b2';
+			context.font = '500 25px system-ui, sans-serif';
+			context.fillText(new Intl.DateTimeFormat(undefined, { dateStyle: 'long' }).format(new Date()), padding, padding + 130);
+			context.fillText(`${tables.reduce((sum, table) => sum + table.players.length, 0)} players · ${tables.length} tables`, padding, padding + 170);
+			let y = padding + headerHeight;
+			let tableIndex = 0;
+			for (let row = 0; row < rowHeights.length; row += 1) {
+				for (let column = 0; column < columns; column += 1) {
+					const table = tables[tableIndex++];
+					if (!table) continue;
+					const x = padding + column * (cardWidth + gap);
+					const cardHeight = rowHeights[row];
+					context.fillStyle = '#20272c';
+					context.beginPath();
+					context.roundRect(x, y, cardWidth, cardHeight, 18);
+					context.fill();
+					context.fillStyle = '#8fa99a';
+					context.fillRect(x, y, 8, cardHeight);
+					context.fillStyle = '#f2f5f2';
+					context.font = '800 29px system-ui, sans-serif';
+					context.fillText(table.name.slice(0, 28), x + 28, y + 48, cardWidth - 56);
+					context.fillStyle = '#9da9a2';
+					context.font = '600 18px system-ui, sans-serif';
+					context.fillText(`${table.players.length} PLAYERS`, x + 28, y + 79);
+					let playerY = y + 125;
+					for (const player of table.players) {
+						context.fillStyle = '#a9b5ad';
+						context.font = '700 19px system-ui, sans-serif';
+						context.fillText(String(player.seat), x + 30, playerY);
+						context.fillStyle = '#f0f2f0';
+						context.font = '600 23px system-ui, sans-serif';
+						context.fillText(String(player.name || 'Player').slice(0, 32), x + 78, playerY, cardWidth - 110);
+						playerY += 54;
+					}
+				}
+				y += rowHeights[row] + gap;
+			}
+			const blob = await new Promise((resolve, reject) => {
+				canvas.toBlob((value) => value ? resolve(value) : reject(new Error('Could not export the seating image.')), 'image/png');
+			});
+			const file = new File([blob], 'poker-seating-plan.png', { type: 'image/png' });
+			if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
+				await navigator.share({ files: [file], title: `${venueName} seating plan`, text: 'Tournament seating plan' });
+				shareStatus = 'Seating image shared.';
+			} else {
+				const url = URL.createObjectURL(blob);
+				const link = document.createElement('a');
+				link.href = url;
+				link.download = 'poker-seating-plan.png';
+				link.click();
+				URL.revokeObjectURL(url);
+				shareStatus = 'Image downloaded. Attach it to your WhatsApp group.';
+			}
+		} catch (error) {
+			if (error instanceof Error && error.name === 'AbortError') {
+				shareStatus = 'Sharing cancelled.';
+			} else {
+				console.error('Seating plan sharing failed:', error);
+				shareStatus = 'Unable to create or share the seating image.';
+			}
+		} finally {
+			sharingSeatingPlan = false;
+		}
+	}
 </script>
 
 <section class="tables-page">
@@ -75,7 +189,11 @@
 				{activePlayerCount} players
 				{#if eliminatedPlayers.length} · {eliminatedPlayers.length} eliminated{/if}
 			</span>
-			<button class="randomise-seating" type="button" onclick={randomiseSeats}>Randomise seating</button>
+			<div class="table-heading-actions">
+				<button class="share-seating" type="button" onclick={shareSeatingPlan} disabled={sharingSeatingPlan || activePlayerCount === 0}>{sharingSeatingPlan ? 'Preparing image…' : 'Share seating plan'}</button>
+				<button class="randomise-seating" type="button" onclick={randomiseSeats}>Randomise seating</button>
+			</div>
+			{#if shareStatus}<p class="seating-share-status" role="status">{shareStatus}</p>{/if}
 		</div>
 
 		<div class="table-list-view">
