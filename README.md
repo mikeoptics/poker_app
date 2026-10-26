@@ -63,6 +63,16 @@ VITE_CAST_RECEIVER_APP_ID=YOUR_GOOGLE_CAST_RECEIVER_APP_ID
 
 The receiver must be reachable by the Chromecast over HTTPS. A local `localhost` URL is not reachable from a Chromecast; for local testing, use a secure public tunnel or a deployed HTTPS environment. The admin page and TV display should use the same app origin so the receiver can read the venue's public display data.
 
+
+## Server-authoritative tournament state
+
+- The Node server owns the canonical timer, player state, blind structure, tournament settings and lifecycle events.
+- Tournament mutations use explicit POST actions and are serialized per venue before being written to the venue JSON file.
+- The admin page, public display and Chromecast receiver subscribe to `/api/tournament/<venueid>/events` using Server-Sent Events. They reload the authoritative state when a change is published.
+- Clients retain a 15-second refresh fallback so they can recover if an event connection is interrupted. The display and receiver animate the countdown locally from the server's timer timestamps.
+- The event hub is in-process. Run one persistent Node server for this JSON-backed architecture; separate Node instances do not share event notifications.
+- Keep the Mac awake and the Node server running while tournaments are in progress. The JSON files remain the durable source of truth.
+
 ## Persistence
 
 The current venue store writes JSON files under `.data/venues`, suitable for a single persistent Node server during local development. Before deploying to serverless or multi-instance hosting, replace this file store with a shared persistent database.
