@@ -202,7 +202,7 @@ export async function PUT({ params, request }) {
 	if (!valid(params.venueid)) return json({ error: 'Invalid venue ID.' }, { status: 400 });
 	try {
 		const v = await request.json();
-		if (!v || typeof v !== 'object' || !Array.isArray(v.levels) || !Array.isArray(v.players))
+		if (!v || typeof v !== 'object' || !Array.isArray(v.players))
 			return json({ error: 'Invalid tournament state.' }, { status: 400 });
 		// Admin pages may be open on multiple devices. Never let a stale page
 		// replace a newer one-shot announcement with an older event or null.
@@ -237,7 +237,7 @@ export async function PUT({ params, request }) {
 			(existingLevel > incomingLevel || sameLevelStaleTimer)
 		);
 		const s = {
-			levels: v.levels,
+			levels: Array.isArray(existing?.levels) && existing.levels.length ? existing.levels : (Array.isArray(v.levels) && v.levels.length ? v.levels : [{ sb: 25, bb: 50, minutes: 15, game: 'NLH' }, { sb: 50, bb: 100, minutes: 15, game: 'NLH' }, { sb: 100, bb: 200, minutes: 15, game: 'NLH' }, { sb: 200, bb: 400, minutes: 15, game: 'NLH' }, { sb: 0, bb: 0, minutes: 15, break: true }]),
 			players: existing?.players ?? v.players,
 			nextPlayerId: Number(existing?.nextPlayerId) || Number(v.nextPlayerId) || 1,
 			currentLevel: existing ? Math.max(0, Number(existing.currentLevel) || 0) : 0,
@@ -579,6 +579,49 @@ export async function POST({ params, request }) {
 				s.updatedAt = Date.now();
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 				return json({ ok: true, updatedAt: s.updatedAt });
+			}
+			if (action === 'saveLevels') {
+				if (!s || !Array.isArray(s.levels)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				if (!Array.isArray(body.levels) || body.levels.length < 1 || body.levels.length > 200) return json({ error: 'Blind structure must contain between 1 and 200 levels.' }, { status: 400 });
+				const allowedGames = ['NLH', 'PLO5', 'Pineapple', 'PLO4', 'Crazy Pineapple'];
+				const levels = [];
+				for (const item of body.levels) {
+					if (!item || typeof item !== 'object' || Array.isArray(item)) return json({ error: 'Invalid blind level.' }, { status: 400 });
+					const minutes = Number(item.minutes);
+					const isBreak = item.break === true;
+					const sb = Number(item.sb), bb = Number(item.bb);
+					if (!Number.isInteger(minutes) || minutes < 1 || minutes > 999 ||
+						!Number.isFinite(sb) || !Number.isFinite(bb) || sb < 0 || bb < 0 ||
+						sb > 100000000 || bb > 100000000 ||
+						(!isBreak && (sb <= 0 || bb <= 0 || bb < sb)) ||
+						(!isBreak && item.game != null && !allowedGames.includes(String(item.game)))) {
+						return json({ error: 'Invalid blind level values.' }, { status: 400 });
+					}
+					levels.push(isBreak
+						? { sb: 0, bb: 0, minutes, break: true }
+						: { sb, bb, minutes, game: allowedGames.includes(String(item.game)) ? String(item.game) : 'NLH' });
+				}
+				const now = Date.now();
+				const oldIndex = Math.max(0, Math.min(Number(s.currentLevel) || 0, s.levels.length - 1));
+				let remaining = Math.max(0, Number(s.remainingMs) || 0);
+				if (s.running) remaining = Math.max(0, remaining - Math.max(0, now - Number(s.updatedAt || now)));
+				const requestedIndex = Number(body.currentLevel);
+				const nextIndex = Number.isInteger(requestedIndex) && requestedIndex >= 0 && requestedIndex < levels.length
+					? requestedIndex
+					: Math.min(oldIndex, levels.length - 1);
+				const nextDuration = Math.max(1, levels[nextIndex].minutes) * 60000;
+				const oldDuration = Math.max(1, Number(s.levelDurationMs) || Number(s.levels[oldIndex]?.minutes) * 60000 || nextDuration);
+				// Preserve elapsed progress when the selected level's duration changes.
+				const progress = oldDuration > 0 ? Math.max(0, Math.min(1, 1 - remaining / oldDuration)) : 0;
+				const selectedLevelChanged = nextIndex !== oldIndex;
+				s.levels = levels;
+				s.currentLevel = nextIndex;
+				s.levelDurationMs = nextDuration;
+				s.remainingMs = selectedLevelChanged ? nextDuration : Math.max(0, Math.min(nextDuration, Math.round(nextDuration * (1 - progress))));
+				if (s.running && s.remainingMs <= 0) s.running = false;
+				s.updatedAt = now;
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, levels: s.levels, state: s, updatedAt: s.updatedAt });
 			}
 			if (action === 'saveSettings') {
 				if (!s) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
