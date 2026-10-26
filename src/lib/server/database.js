@@ -46,7 +46,7 @@ function migrateLegacyVenues() {
 		if (!database.prepare('SELECT 1 FROM schema_migrations WHERE migration = ?').get(migration)) {
 			if (fs.existsSync(LEGACY_DIR)) {
 				for (const name of fs.readdirSync(LEGACY_DIR)) {
-					const match = /^(\\d{1,12})\\.json$/.exec(name);
+					const match = /^(\d{1,12})\.json$/.exec(name);
 					if (!match) continue;
 					let state;
 					try {
