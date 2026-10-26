@@ -11,6 +11,7 @@ const publicKey = process.env.VAPID_PUBLIC_KEY;
 const privateKey = process.env.VAPID_PRIVATE_KEY;
 const subject = process.env.VAPID_SUBJECT || 'mailto:admin@miiiike.com';
 let schedulerStarted = false;
+let schedulerCheckInProgress = false;
 let vapidReady = false;
 
 function configure() {
@@ -107,5 +108,18 @@ export function startPushScheduler() {
 	schedulerStarted = true;
 	// The server process advances the notification clock independently of the
 	// TD's browser tab, so push alerts still fire when the phone is locked.
-	setInterval(() => checkVenueStates().catch((error) => console.error('Push scheduler failed:', error)), 5000);
+	// A check can take longer than five seconds when push providers are slow.
+	// Never overlap checks: the level cursor is persisted after delivery, so
+	// overlapping runs could otherwise send the same blind alert more than once.
+	setInterval(async () => {
+		if (schedulerCheckInProgress) return;
+		schedulerCheckInProgress = true;
+		try {
+			await checkVenueStates();
+		} catch (error) {
+			console.error('Push scheduler failed:', error);
+		} finally {
+			schedulerCheckInProgress = false;
+		}
+	}, 5000);
 }
