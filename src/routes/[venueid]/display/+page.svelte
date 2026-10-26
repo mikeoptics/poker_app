@@ -10,6 +10,8 @@
 	let pollTimer;
 	/** @type {ReturnType<typeof setInterval> | undefined} */
 	let tickTimer;
+	/** @type {EventSource | null} */
+	let tournamentEvents = null;
 	let lastAnnouncementId = '';
 	let announcementInitialized = false;
 	// Keep the visual table-move banner on screen long enough to be read
@@ -168,13 +170,16 @@
 		tableMoveSound.preload = 'auto';
 		tableMoveSound.volume = 0.85;
 		refresh();
-		pollTimer = setInterval(refresh, 1000);
+		pollTimer = setInterval(refresh, 15000);
+		tournamentEvents = new EventSource('/api/tournament/' + venueId + '/events');
+		tournamentEvents.onmessage = () => { void refresh(); };
 		tickTimer = setInterval(() => {
 			clockNow = Date.now();
 		}, 200);
 		return () => {
 			clearInterval(pollTimer);
 			clearInterval(tickTimer);
+			tournamentEvents?.close();
 		};
 	});
 </script>
