@@ -45,7 +45,7 @@ export function isValidPushEndpoint(endpoint) {
 	}
 }
 
-function validSubscription(subscription) {
+export function isValidPushSubscription(subscription) {
 	return Boolean(
 		subscription &&
 		typeof subscription === 'object' &&
@@ -74,7 +74,7 @@ export async function savePushSubscription(venueId, subscription) {
 	try { subscriptions = JSON.parse(await fs.readFile(file, 'utf8')); } catch {}
 	if (!Array.isArray(subscriptions)) subscriptions = [];
 	const endpoint = subscription?.endpoint;
-	if (!validSubscription(subscription)) throw new Error('Invalid push subscription endpoint or keys');
+	if (!isValidPushSubscription(subscription)) throw new Error('Invalid push subscription endpoint or keys');
 	subscriptions = subscriptions.filter(/** @param {any} item */ (item) => item.endpoint !== endpoint);
 	subscriptions.push(subscription);
 	await fs.writeFile(file, JSON.stringify(subscriptions, null, 2));
@@ -104,7 +104,7 @@ async function checkVenueStates() {
 			if (!Array.isArray(storedSubscriptions) || !storedSubscriptions.length) continue;
 			// Revalidate persisted data as well as new registrations. This also
 			// safely ignores subscriptions written before endpoint validation existed.
-			const subscriptions = storedSubscriptions.filter(validSubscription);
+			const subscriptions = storedSubscriptions.filter(isValidPushSubscription);
 			if (!subscriptions.length) continue;
 			if (subscriptions.length !== storedSubscriptions.length) {
 				await fs.writeFile(subscriptionsFile, JSON.stringify(subscriptions, null, 2));
@@ -138,7 +138,7 @@ async function checkVenueStates() {
 				});
 				const results = await Promise.allSettled(subscriptions.map((subscription) => {
 					// Keep the send boundary defensive even if storage changes later.
-					if (!validSubscription(subscription)) throw new Error('Rejected invalid push endpoint');
+					if (!isValidPushSubscription(subscription)) throw new Error('Rejected invalid push endpoint');
 					return webpush.sendNotification(subscription, payload);
 				}));
 				const expired = results.map((result, i) => result.status === 'rejected' && [404, 410].includes(result.reason?.statusCode) ? subscriptions[i].endpoint : null).filter(Boolean);
