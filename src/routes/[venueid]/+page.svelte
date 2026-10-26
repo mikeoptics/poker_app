@@ -768,7 +768,9 @@
 
 		levels.splice(index, 1);
 
-		if (currentLevel >= levels.length) {
+		if (index < currentLevel) {
+			currentLevel -= 1;
+		} else if (currentLevel >= levels.length) {
 			currentLevel = levels.length - 1;
 		}
 
