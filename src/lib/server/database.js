@@ -46,6 +46,7 @@ function migrateLegacyVenues() {
 		// Recheck after acquiring the write lock so two server starts cannot
 		// race to apply the same one-time migration.
 		if (!database.prepare('SELECT 1 FROM schema_migrations WHERE migration = ?').get(migration)) {
+			let hasInvalidLegacyFiles = false;
 			if (fs.existsSync(LEGACY_DIR)) {
 				for (const name of fs.readdirSync(LEGACY_DIR)) {
 					const match = /^(\d{1,12})\.json$/.exec(name);
@@ -54,17 +55,25 @@ function migrateLegacyVenues() {
 					try {
 						state = JSON.parse(fs.readFileSync(path.join(LEGACY_DIR, name), 'utf8'));
 					} catch (error) {
-						console.error(`Unable to read legacy venue file ${name}:`, error);
+						console.error(`Unable to read legacy venue file ${name}; migration will retry on next startup:`, error);
+						hasInvalidLegacyFiles = true;
 						continue;
 					}
 					if (!state || typeof state !== 'object' || Array.isArray(state)) {
-						console.error(`Skipping invalid legacy venue file: ${name}`);
+						console.error(`Invalid legacy venue file ${name}; migration will retry on next startup.`);
+						hasInvalidLegacyFiles = true;
 						continue;
 					}
 					insertVenue.run(match[1], JSON.stringify(state), Number(state.updatedAt) || Date.now());
 				}
 			}
-			database.prepare('INSERT INTO schema_migrations (migration, applied_at) VALUES (?, ?)').run(migration, Date.now());
+			// Keep the migration pending if any legacy file was unreadable. Valid
+			// rows are safe to re-process because INSERT OR IGNORE never overwrites
+			// an existing SQLite record; fixing the bad file then retrying startup
+			// will import it without losing the rows already migrated.
+			if (!hasInvalidLegacyFiles) {
+				database.prepare('INSERT INTO schema_migrations (migration, applied_at) VALUES (?, ?)').run(migration, Date.now());
+			}
 		}
 		database.exec('COMMIT');
 	} catch (error) {
