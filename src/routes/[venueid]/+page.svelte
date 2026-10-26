@@ -1912,7 +1912,8 @@ function startCasting() {
 			saveTournament();
 		}, 15000);
 		tournamentEvents = new EventSource(`/api/tournament/${venueId}/events`);
-		tournamentEvents.onmessage = () => {
+		tournamentEvents.onmessage = (event) => {
+			try { if (JSON.parse(event.data)?.type !== 'update') return; } catch { return; }
 			if (eventRefreshPending || savingTournament || playerSaveTimer !== null) return;
 			eventRefreshPending = true;
 			void loadTournament()
