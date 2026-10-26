@@ -429,6 +429,7 @@
 	const prizePool = $derived(totalEntries * buyInAmount);
 	/** @type {HTMLAudioElement | null} */
 	let eliminationSound = null;
+	let lastPlayedEliminationEventId = '';
 	/** @type {number | null} */
 	let swipedPlayerId = $state(null);
 	let playerSwipeStartX = 0;
@@ -1025,9 +1026,13 @@
 			p.eliminated = true;
 			p.eliminationPosition = finishPlace;
 			eliminationEvent = result.eliminationEvent;
-			if (soundEnabled && eliminationSound) {
-				eliminationSound.currentTime = 0;
-				eliminationSound.play().catch(() => {});
+			const eventId = result.eliminationEvent?.id;
+			if (eventId && eventId !== lastPlayedEliminationEventId) {
+				lastPlayedEliminationEventId = eventId;
+				if (soundEnabled && eliminationSound) {
+					eliminationSound.currentTime = 0;
+					eliminationSound.play().catch(() => {});
+				}
 			}
 			redtoothPlayers = result.redtoothPlayers ?? redtoothPlayers;
 			rebalanceTables();
@@ -1643,6 +1648,8 @@
 		activeTab = state.activeTab ?? 'timer';
 		if (Array.isArray(state.redtoothPlayers)) redtoothPlayers = state.redtoothPlayers;
 		eliminationEvent = state.eliminationEvent ?? null;
+		// Treat the event already stored at page load as historical; never replay it after refresh.
+		lastPlayedEliminationEventId = eliminationEvent?.id ?? '';
 		announcementEvent = state.announcementEvent ?? null;
 		tableMoveEvent = state.tableMoveEvent ?? null;
 		tableNames = state.tableNames && typeof state.tableNames === 'object' ? state.tableNames : {};
