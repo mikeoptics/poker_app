@@ -617,7 +617,12 @@ export async function POST({ params, request }) {
 				s.levels = levels;
 				s.currentLevel = nextIndex;
 				s.levelDurationMs = nextDuration;
-				s.remainingMs = selectedLevelChanged ? nextDuration : Math.max(0, Math.min(nextDuration, Math.round(nextDuration * (1 - progress))));
+				// Keep the remaining clock time when an insertion/removal shifts the
+				// selected level index; when editing that level's duration, preserve
+				// its elapsed proportion instead of restarting the timer.
+				s.remainingMs = selectedLevelChanged
+					? Math.max(0, Math.min(nextDuration, remaining))
+					: Math.max(0, Math.min(nextDuration, Math.round(nextDuration * (1 - progress))));
 				if (s.running && s.remainingMs <= 0) s.running = false;
 				s.updatedAt = now;
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
