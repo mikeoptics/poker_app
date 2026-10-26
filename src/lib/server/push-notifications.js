@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import webpush from 'web-push';
+import { listVenueIds, readVenue } from '$lib/server/database';
 
 const DATA_DIR = path.resolve('.data');
-const VENUES_DIR = path.join(DATA_DIR, 'venues');
 const PUSH_DIR = path.join(DATA_DIR, 'push');
 const publicKey = process.env.VAPID_PUBLIC_KEY;
 const privateKey = process.env.VAPID_PRIVATE_KEY;
@@ -32,10 +32,8 @@ export async function savePushSubscription(venueId, subscription) {
 	subscriptions.push(subscription);
 	await fs.writeFile(file, JSON.stringify(subscriptions, null, 2));
 	const stateFile = path.join(PUSH_DIR, venueId + '.state.json');
-	try {
-		const current = JSON.parse(await fs.readFile(path.join(VENUES_DIR, venueId + '.json'), 'utf8'));
-		await fs.writeFile(stateFile, JSON.stringify({ level: Number(current.currentLevel) || 0 }));
-	} catch {}
+	const current = readVenue(venueId);
+	if (current) await fs.writeFile(stateFile, JSON.stringify({ level: Number(current.currentLevel) || 0 }));
 }
 
 /** @param {string} venueId @param {string} endpoint */
@@ -49,14 +47,11 @@ export async function removePushSubscription(venueId, endpoint) {
 
 async function checkVenueFiles() {
 	if (!configure()) return;
-	let names = [];
-	try { names = await fs.readdir(VENUES_DIR); } catch { return; }
-	for (const name of names.filter((value) => /^\d{1,12}\.json$/.test(value))) {
-		const venueId = name.slice(0, -5);
-		const stateFile = path.join(VENUES_DIR, name);
+	for (const venueId of listVenueIds()) {
 		const subscriptionsFile = path.join(PUSH_DIR, venueId + '.json');
 		try {
-			const state = JSON.parse(await fs.readFile(stateFile, 'utf8'));
+			const state = readVenue(venueId);
+			if (!state) continue;
 			if (!Array.isArray(state.levels) || !state.levels.length) continue;
 			const subscriptions = JSON.parse(await fs.readFile(subscriptionsFile, 'utf8'));
 			if (!Array.isArray(subscriptions) || !subscriptions.length) continue;
