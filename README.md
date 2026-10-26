@@ -69,11 +69,11 @@ The receiver must be reachable by the Chromecast over HTTPS. A local `localhost`
 ## Server-authoritative tournament state
 
 - The Node server owns the canonical timer, player state, blind structure, tournament settings and lifecycle events.
-- Tournament mutations use explicit POST actions and are serialized per venue before being written to the venue JSON file.
+- Tournament mutations use explicit POST actions and are serialized per venue before being committed to the SQLite database.
 - The admin page, public display and Chromecast receiver subscribe to `/api/tournament/<venueid>/events` using Server-Sent Events. They reload the authoritative state when a change is published.
 - Clients retain a 15-second refresh fallback so they can recover if an event connection is interrupted. The display and receiver animate the countdown locally from the server's timer timestamps.
-- The event hub is in-process. Run one persistent Node server for this JSON-backed architecture; separate Node instances do not share event notifications.
-- Keep the Mac awake and the Node server running while tournaments are in progress. The JSON files remain the durable source of truth.
+- The event hub is in-process. Run one persistent Node server for this architecture; separate Node instances do not share event notifications.
+- Keep the Mac awake and the Node server running while tournaments are in progress. SQLite is the durable source of truth; imported JSON files are retained as backups.
 
 ## SQLite persistence and JSON migration
 
