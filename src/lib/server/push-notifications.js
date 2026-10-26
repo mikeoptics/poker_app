@@ -45,16 +45,24 @@ export function isValidPushEndpoint(endpoint) {
 	}
 }
 
+function isValidBase64UrlKey(value, expectedLength) {
+	if (typeof value !== 'string' || !/^[A-Za-z0-9_-]+$/.test(value)) return false;
+	try {
+		return Buffer.from(value, 'base64url').length === expectedLength;
+	} catch {
+		return false;
+	}
+}
+
 export function isValidPushSubscription(subscription) {
 	return Boolean(
 		subscription &&
 		typeof subscription === 'object' &&
 		isValidPushEndpoint(subscription.endpoint) &&
 		subscription.keys &&
-		typeof subscription.keys.p256dh === 'string' &&
-		subscription.keys.p256dh.length > 0 &&
-		typeof subscription.keys.auth === 'string' &&
-		subscription.keys.auth.length > 0
+		isValidBase64UrlKey(subscription.keys.p256dh, 65) &&
+		Buffer.from(subscription.keys.p256dh, 'base64url')[0] === 4 &&
+		isValidBase64UrlKey(subscription.keys.auth, 16)
 	);
 }
 
