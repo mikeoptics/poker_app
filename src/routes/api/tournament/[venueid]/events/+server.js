@@ -7,9 +7,11 @@ export function GET({ params }) {
   }
 
   let unsubscribe = () => {};
+  /** @type {ReturnType<typeof setInterval> | undefined} */
   let heartbeat;
   const stream = new ReadableStream({
     start(controller) {
+      /** @param {{ type: string; at: number }} payload */
       const send = (payload) => {
         try { controller.enqueue(new TextEncoder().encode('data: ' + JSON.stringify(payload) + '\n\n')); }
         catch { /* The client has disconnected. */ }
