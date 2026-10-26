@@ -1,5 +1,5 @@
 // Lightweight in-process notifications for connected tournament clients.
-// Tournament JSON files remain the durable source of truth.
+// SQLite remains the durable source of truth; this module only signals live clients.
 const listeners = new Map();
 
 /** @param {string | number} venueId @param {(event: { type: string; at: number }) => void} listener */
