@@ -204,20 +204,10 @@ export async function PUT({ params, request }) {
 		const v = await request.json();
 		if (!v || typeof v !== 'object' || !Array.isArray(v.players))
 			return json({ error: 'Invalid tournament state.' }, { status: 400 });
-		// Admin pages may be open on multiple devices. Never let a stale page
-		// replace a newer one-shot announcement with an older event or null.
+		// Lifecycle and announcement events are server-owned. General saves cannot
+		// start/reset a tournament or replay/erase one-shot display events.
 		return await withVenueWriteLock(params.venueid, async () => {
 		const existing = await read(params.venueid);
-		/** @param {any} incoming @param {any} previous */
-		const preserveRecentEvent = (incoming, previous) => {
-			const incomingAt = Number(incoming?.createdAt) || 0;
-			const previousAt = Number(previous?.createdAt) || 0;
-			if (previous && previousAt >= incomingAt && previous.id !== incoming?.id && Date.now() - previousAt < 60_000) return previous;
-			return incoming;
-		};
-		const eliminationEvent = preserveRecentEvent(v.eliminationEvent, existing?.eliminationEvent);
-		const announcementEvent = preserveRecentEvent(v.announcementEvent, existing?.announcementEvent);
-		const tableMoveEvent = preserveRecentEvent(v.tableMoveEvent, existing?.tableMoveEvent);
 		// A sleeping admin tab can submit an older running timer snapshot when it wakes.
 		// Do not let that stale snapshot roll back a level already advanced by the server.
 		const existingLevel = Number(existing?.currentLevel) || 0;
@@ -244,7 +234,7 @@ export async function PUT({ params, request }) {
 			remainingMs: existing ? existingRemaining : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
 			levelDurationMs: existing ? Math.max(1, Number(existing.levelDurationMs) || Number(existing.levels?.[existing.currentLevel]?.minutes) * 60_000 || 60_000) : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
 			running: Boolean(existing?.running),
-			tournamentStarted: Boolean(existing?.tournamentStarted || existing?.running || v.tournamentStarted),
+			tournamentStarted: Boolean(existing?.tournamentStarted || existing?.running || (existing?.players ?? v.players).some((p) => p.eliminated)),
 			soundEnabled: existing ? Boolean(existing.soundEnabled) : true,
 			announcementEnabled: existing ? Boolean(existing.announcementEnabled) : true,
 			buyInAmount: existing ? Math.max(0, Number(existing.buyInAmount) || 0) : 5,
@@ -256,35 +246,20 @@ export async function PUT({ params, request }) {
 				: 'timer',
 			redtoothPlayers: Array.isArray(existing?.redtoothPlayers) ? existing.redtoothPlayers : (Array.isArray(v.redtoothPlayers) ? v.redtoothPlayers : []),
 			eliminationEvent:
-				eliminationEvent &&
-				typeof eliminationEvent.id === 'string' &&
-				typeof eliminationEvent.playerName === 'string' &&
-				Number.isFinite(Number(eliminationEvent.createdAt))
-					? {
-							id: eliminationEvent.id.slice(0, 100),
-							playerName: eliminationEvent.playerName.slice(0, 160),
-							createdAt: Number(eliminationEvent.createdAt)
-						}
+				existing?.eliminationEvent && typeof existing.eliminationEvent.id === 'string' &&
+				typeof existing.eliminationEvent.playerName === 'string' &&
+				Number.isFinite(Number(existing.eliminationEvent.createdAt))
+					? { id: existing.eliminationEvent.id.slice(0, 100), playerName: existing.eliminationEvent.playerName.slice(0, 160), createdAt: Number(existing.eliminationEvent.createdAt) }
 					: null,
 			tableMoveEvent:
-				tableMoveEvent &&
-				typeof tableMoveEvent.id === 'string' &&
-				typeof tableMoveEvent.text === 'string'
-					? {
-							id: tableMoveEvent.id.slice(0, 100),
-							text: tableMoveEvent.text.slice(0, 500),
-							createdAt: Number(tableMoveEvent.createdAt) || Date.now()
-						}
+				existing?.tableMoveEvent && typeof existing.tableMoveEvent.id === 'string' &&
+				typeof existing.tableMoveEvent.text === 'string'
+					? { id: existing.tableMoveEvent.id.slice(0, 100), text: existing.tableMoveEvent.text.slice(0, 500), createdAt: Number(existing.tableMoveEvent.createdAt) || Date.now() }
 					: null,
 			announcementEvent:
-				announcementEvent &&
-				typeof announcementEvent.id === 'string' &&
-				typeof announcementEvent.text === 'string'
-					? {
-							id: announcementEvent.id.slice(0, 100),
-							text: announcementEvent.text.slice(0, 500),
-							createdAt: Number(announcementEvent.createdAt) || Date.now()
-						}
+				existing?.announcementEvent && typeof existing.announcementEvent.id === 'string' &&
+				typeof existing.announcementEvent.text === 'string'
+					? { id: existing.announcementEvent.id.slice(0, 100), text: existing.announcementEvent.text.slice(0, 500), createdAt: Number(existing.announcementEvent.createdAt) || Date.now() }
 					: null,
 			tableNames: existing?.tableNames && typeof existing.tableNames === 'object' && !Array.isArray(existing.tableNames)
 				? existing.tableNames
@@ -568,6 +543,23 @@ export async function POST({ params, request }) {
 				s.updatedAt = Date.now();
 				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
 				return json({ ok: true, players: s.players, tableNames: s.tableNames ?? {}, tableMoveEvent: s.tableMoveEvent ?? null, updatedAt: s.updatedAt });
+			}
+			if (action === 'resetTournament') {
+				if (!s || !Array.isArray(s.levels) || !s.levels.length) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
+				const now = Date.now();
+				s.players = [];
+				s.nextPlayerId = 1;
+				s.currentLevel = 0;
+				s.levelDurationMs = Math.max(1, Number(s.levels[0]?.minutes) || 1) * 60000;
+				s.remainingMs = s.levelDurationMs;
+				s.running = false;
+				s.tournamentStarted = false;
+				s.eliminationEvent = null;
+				s.announcementEvent = null;
+				s.tableMoveEvent = null;
+				s.updatedAt = now;
+				await fs.writeFile(file(params.venueid), JSON.stringify(s, null, 2));
+				return json({ ok: true, state: s, updatedAt: now });
 			}
 			if (action === 'clearPlayers') {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
