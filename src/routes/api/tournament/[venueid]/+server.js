@@ -1,28 +1,19 @@
 import { json } from '@sveltejs/kit';
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import { readVenue, writeVenue } from '$lib/server/database';
 import { startPushScheduler } from '$lib/server/push-notifications';
 import { publishTournamentUpdate } from '$lib/server/tournament-events';
 
 startPushScheduler();
-const DATA_DIR = path.resolve('.data', 'venues');
 /** @param {string | number | null | undefined} id */
 const valid = (id) => /^\d{1,12}$/.test(String(id ?? ''));
 /** @param {string | number} id */
-const file = (id) => path.join(DATA_DIR, id + '.json');
-/** @param {string | number} id */
 async function persist(id, state) {
-	await fs.mkdir(DATA_DIR, { recursive: true });
-	await fs.writeFile(file(id), JSON.stringify(state, null, 2));
+	writeVenue(id, state);
 	publishTournamentUpdate(id);
 }
+/** @param {string | number} id */
 async function read(id) {
-	try {
-		return JSON.parse(await fs.readFile(file(id), 'utf8'));
-	} catch (e) {
-		if (e && typeof e === 'object' && 'code' in e && e.code === 'ENOENT') return null;
-		throw e;
-	}
+	return readVenue(id);
 }
 
 // Serialize writes per venue so simultaneous phone/laptop saves cannot race.
@@ -273,7 +264,6 @@ export async function PUT({ params, request }) {
 			venueName: String(existing?.venueName ?? '').slice(0, 160),
 			updatedAt: Date.now()
 		};
-		await fs.mkdir(DATA_DIR, { recursive: true });
 		await persist(params.venueid, s);
 		return json({ ok: true, updatedAt: s.updatedAt });
 		});
