@@ -2,7 +2,7 @@ import { subscribeTournament } from '$lib/server/tournament-events';
 
 /** @param {{ params: { venueid: string } }} event */
 export function GET({ params }) {
-  if (!/^\\d{1,12}$/.test(String(params.venueid ?? ''))) {
+  if (!/^\d{1,12}$/.test(String(params.venueid ?? ''))) {
     return new Response('Invalid venue ID.', { status: 400 });
   }
 
@@ -11,7 +11,7 @@ export function GET({ params }) {
   const stream = new ReadableStream({
     start(controller) {
       const send = (payload) => {
-        try { controller.enqueue(new TextEncoder().encode('data: ' + JSON.stringify(payload) + '\\n\\n')); }
+        try { controller.enqueue(new TextEncoder().encode('data: ' + JSON.stringify(payload) + '\n\n')); }
         catch { /* The client has disconnected. */ }
       };
       send({ type: 'connected', at: Date.now() });
