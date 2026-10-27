@@ -238,9 +238,6 @@ export async function PUT({ params, request }) {
 			maxRebuys: existing ? Math.max(0, Number(existing.maxRebuys) || 0) : 0,
 			maxTopUps: existing ? Math.max(0, Number(existing.maxTopUps) || 0) : 0,
 			mixedGames: existing ? Boolean(existing.mixedGames) : false,
-			activeTab: ['timer', 'tables', 'setup', 'payouts'].includes(existing?.activeTab)
-				? existing.activeTab
-				: 'timer',
 			redtoothPlayers: Array.isArray(existing?.redtoothPlayers) ? existing.redtoothPlayers : (Array.isArray(v.redtoothPlayers) ? v.redtoothPlayers : []),
 			eliminationEvent:
 				existing?.eliminationEvent && typeof existing.eliminationEvent.id === 'string' &&
@@ -631,14 +628,13 @@ export async function POST({ params, request }) {
 				s.maxRebuys = maxRebuys;
 				s.maxTopUps = maxTopUps;
 				s.mixedGames = settings.mixedGames;
-				if (['timer', 'tables', 'setup', 'payouts'].includes(settings.activeTab)) s.activeTab = settings.activeTab;
 				if (settings.tableNames && typeof settings.tableNames === 'object' && !Array.isArray(settings.tableNames)) {
 					s.tableNames = Object.fromEntries(Object.entries(settings.tableNames).slice(0, 30).map(([key, value]) => [String(Number(key)), String(value ?? '').trim().slice(0, 32)]).filter(([key, value]) => Number(key) > 0 && value));
 				}
 				if (typeof settings.venueName === 'string') s.venueName = settings.venueName.trim().slice(0, 160);
 				s.updatedAt = Date.now();
 				await persist(params.venueid, s);
-				return json({ ok: true, settings: { soundEnabled: s.soundEnabled, announcementEnabled: s.announcementEnabled, buyInAmount: s.buyInAmount, maxRebuys: s.maxRebuys, maxTopUps: s.maxTopUps, mixedGames: s.mixedGames, activeTab: s.activeTab, tableNames: s.tableNames ?? {}, venueName: s.venueName ?? '' }, updatedAt: s.updatedAt });
+				return json({ ok: true, settings: { soundEnabled: s.soundEnabled, announcementEnabled: s.announcementEnabled, buyInAmount: s.buyInAmount, maxRebuys: s.maxRebuys, maxTopUps: s.maxTopUps, mixedGames: s.mixedGames, tableNames: s.tableNames ?? {}, venueName: s.venueName ?? '' }, updatedAt: s.updatedAt });
 			}
 			if (action === 'saveRedtoothState') {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
