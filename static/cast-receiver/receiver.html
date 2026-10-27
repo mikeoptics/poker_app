@@ -337,6 +337,10 @@
       let screenWakeLock = null;
       let lastEliminationEventId = null;
       let hasReceivedInitialState = false;
+      // Events that predate this receiver connection are historical. This
+      // timestamp also protects against an empty first response followed by
+      // a delayed response containing an old persisted elimination event.
+      let receiverConnectedAt = 0;
       let eliminationHideTimer = null;
       let lastCurrentLevel = null;
       let receiverSoundEnabled = true;
@@ -485,6 +489,14 @@
         }
 
         if (!event || typeof event.id !== 'string' || event.id === lastEliminationEventId) return;
+
+        const eventCreatedAt = Number(event.createdAt);
+        if (!Number.isFinite(eventCreatedAt) || eventCreatedAt <= receiverConnectedAt) {
+          // A delayed poll may return an event that was already in the server
+          // state before casting began. Mark it handled without showing it.
+          lastEliminationEventId = event.id;
+          return;
+        }
 
         lastEliminationEventId = event.id;
         try {
@@ -639,6 +651,9 @@
           console.log('Poker receiver connected to venue:', incomingVenueId);
 
           venueId = incomingVenueId;
+          receiverConnectedAt = Date.now();
+          hasReceivedInitialState = false;
+          lastEliminationEventId = null;
           startPolling();
         }
       );
