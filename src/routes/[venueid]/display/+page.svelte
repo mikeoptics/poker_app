@@ -45,7 +45,7 @@
 	let lastSpokenAnnouncementId = '';
 	let lastTableMoveEventId = '';
 	let tableMoveInitialized = false;
-	const tableMoveStorageKey = `poker-last-table-move-${venueId}`;
+	const tableMoveStorageKey = $derived(`poker-last-table-move-${venueId}`);
 
 	function playTableMoveSound() {
 		if (!soundEnabled || !tableMoveSound) return;
