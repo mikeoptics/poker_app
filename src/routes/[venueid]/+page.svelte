@@ -3,13 +3,13 @@
 	import { fly } from 'svelte/transition';
 	import { ClockArrowUp, Settings } from '@lucide/svelte';
 	import { page } from '$app/state';
-	import Tables from '$lib/components/Tables/Tables.svelte';
+	import Tables from '#lib/components/Tables/Tables.svelte';
 	import {
 		pointsForPlace,
 		searchRedtoothPlayers,
 		applyLocalResult,
 		projectedRows
-	} from '$lib/redtooth.js';
+	} from '#lib/redtooth.js';
 
 	/** @typedef {{ sb:number; bb:number; minutes:number; game?:string; break?:boolean }} BlindLevel */
 	/** @typedef {{
