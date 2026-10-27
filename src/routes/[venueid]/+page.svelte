@@ -1543,7 +1543,6 @@
 		buyInAmount = state.buyInAmount ?? 5;
 		tournamentStarted = Boolean(state.tournamentStarted || state.running || players.some((player) => player.eliminated));
 		mixedGames = Boolean(state.mixedGames);
-		activeTab = state.activeTab ?? 'timer';
 		if (Array.isArray(state.redtoothPlayers)) redtoothPlayers = state.redtoothPlayers;
 		eliminationEvent = state.eliminationEvent ?? null;
 		// Treat the event already stored at page load as historical; never replay it after refresh.
@@ -1556,7 +1555,7 @@
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
 		lastSavedSnapshot = JSON.stringify(tournamentSnapshot());
 		lastSavedLevelsSnapshot = JSON.stringify(levels);
-		lastSavedSettingsSnapshot = JSON.stringify({ soundEnabled, announcementEnabled, buyInAmount, maxRebuys, maxTopUps, mixedGames, activeTab, tableNames, venueName });
+		lastSavedSettingsSnapshot = JSON.stringify({ soundEnabled, announcementEnabled, buyInAmount, maxRebuys, maxTopUps, mixedGames, tableNames, venueName });
 		lastSavedRedtoothSnapshot = JSON.stringify({ players: players.map((player) => ({ id: player.id, redtoothId: player.redtoothId, redtoothGames: player.redtoothGames, redtoothPoints: player.redtoothPoints, redtoothPendingPoints: player.redtoothPendingPoints, redtoothConfirmed: player.redtoothConfirmed })), redtoothPlayers });
 		if (running) {
 			tournamentMode = currentBlinds?.break ? 'break' : 'play';
@@ -1573,7 +1572,7 @@
 		try {
 			const snapshot = tournamentSnapshot();
 			const serialised = JSON.stringify(snapshot);
-			const settings = { soundEnabled, announcementEnabled, buyInAmount, maxRebuys, maxTopUps, mixedGames, activeTab, tableNames, venueName };
+			const settings = { soundEnabled, announcementEnabled, buyInAmount, maxRebuys, maxTopUps, mixedGames, tableNames, venueName };
 			const settingsSerialised = JSON.stringify(settings);
 			const redtoothState = {
 				players: players.map((player) => ({
