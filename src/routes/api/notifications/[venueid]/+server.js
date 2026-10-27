@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { isValidPushEndpoint, isValidPushSubscription, savePushSubscription, removePushSubscription } from '#lib/server/push-notifications';
+import { isValidPushEndpoint, isValidPushSubscription, savePushSubscription, removePushSubscription } from '$lib/server/push-notifications';
 
 /** @param {string | number | null | undefined} id */
 const valid = (id) => /^\d{1,12}$/.test(String(id ?? ''));
