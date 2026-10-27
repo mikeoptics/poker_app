@@ -1555,12 +1555,27 @@
 		// venue name already saved with the tournament.
 		const requestedVenueName = new URLSearchParams(window.location.search).get('name')?.trim() || '';
 		const savedVenueName = String(state.venueName || '').trim();
+		let selectedVenueName = '';
+		try {
+			selectedVenueName = localStorage.getItem(`poker-venue-name:${venueId}`)?.trim() || '';
+		} catch {
+			// Continue with the URL and saved tournament data.
+		}
 		const isPlaceholderVenueName = (name) => !name || /^Venue\s+\d+$/i.test(name);
 		venueName = !isPlaceholderVenueName(requestedVenueName)
 			? requestedVenueName
-			: !isPlaceholderVenueName(savedVenueName)
-				? savedVenueName
-				: 'Poker tournament';
+			: !isPlaceholderVenueName(selectedVenueName)
+				? selectedVenueName
+				: !isPlaceholderVenueName(savedVenueName)
+					? savedVenueName
+					: 'Poker tournament';
+		if (!isPlaceholderVenueName(venueName)) {
+			try {
+				localStorage.setItem(`poker-venue-name:${venueId}`, venueName);
+			} catch {
+				// The venue name remains available in app state for this session.
+			}
+		}
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
 		lastSavedSnapshot = JSON.stringify(tournamentSnapshot());
