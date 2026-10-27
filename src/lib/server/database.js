@@ -89,7 +89,7 @@ export function readVenue(id) {
 	const key = String(id);
 	const row = getVenue.get(key);
 	if (!row) return null;
-	return JSON.parse(row.state_json);
+	return JSON.parse(String(row.state_json));
 }
 
 /** @param {string | number} id @param {any} state */
@@ -101,5 +101,5 @@ export function writeVenue(id, state) {
 
 /** @returns {string[]} */
 export function listVenueIds() {
-	return database.prepare('SELECT venue_id FROM venues ORDER BY venue_id').all().map((row) => row.venue_id);
+	return database.prepare('SELECT venue_id FROM venues ORDER BY venue_id').all().map((row) => String(row.venue_id));
 }
