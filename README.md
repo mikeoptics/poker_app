@@ -38,12 +38,12 @@ The project uses `@sveltejs/adapter-node`. Build the standalone Node server and 
 
 ```bash
 npm run build
-node build
+npm start
 ```
 
-The server listens on port `3000` by default. Set `PORT` to change it, for example `PORT=5173 node build`. Point the Cloudflare Tunnel at the production server's port, not the Vite development server. Keep the Node process running while tournaments are active.
+The production server is configured to listen on port `5173`, matching the existing Cloudflare Tunnel origin. Keep the Node process running while tournaments are active. Do not run the Vite development server and production server simultaneously because they use the same port.
 
-Requires Node.js 22.12.0 or later. The app uses Node's built-in SQLite module, so no native SQLite package installation is required.
+Requires Node.js 22.17.0 or later. The app uses Node's built-in SQLite module, so no native SQLite package installation is required.
 
 The dependency ranges are intentionally kept on current major versions so `npm install` resolves current compatible Svelte/SvelteKit releases.
 
@@ -75,7 +75,6 @@ VITE_CAST_RECEIVER_APP_ID=YOUR_GOOGLE_CAST_RECEIVER_APP_ID
 4. Restart the Vite development server after changing `.env`.
 
 The receiver must be reachable by the Chromecast over HTTPS. A local `localhost` URL is not reachable from a Chromecast; for local testing, use a secure public tunnel or a deployed HTTPS environment. The admin page and TV display should use the same app origin so the receiver can read the venue's public display data.
-
 
 ## Server-authoritative tournament state
 
