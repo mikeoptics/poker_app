@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import webpush from 'web-push';
-import { listVenueIds, readVenue } from '$lib/server/database';
+import { listVenueIds, readVenue } from '#lib/server/database.js';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const DATA_DIR = path.join(PROJECT_ROOT, '.data');
