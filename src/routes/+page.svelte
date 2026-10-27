@@ -38,6 +38,13 @@
 	}
 	/** @param {RedtoothVenue} v */
 	function chooseVenue(v) {
+		// Keep the selected Redtooth name available when the installed PWA
+		// launches directly from its venue-specific start URL.
+		try {
+			localStorage.setItem(`poker-venue-name:${v.venueid}`, v.venuename);
+		} catch {
+			// The URL still carries the name if storage is unavailable.
+		}
 		goto('/' + v.venueid + '?name=' + encodeURIComponent(v.venuename));
 	}
 </script>
