@@ -3,13 +3,15 @@ export function GET({ params, url }) {
 	if (!/^\d{1,12}$/.test(venueId)) {
 		return new Response('Not found', { status: 404 });
 	}
-	const venueName = (url.searchParams.get('name') || `Venue ${venueId}`).slice(0, 100);
+	const requestedVenueName = (url.searchParams.get('name') || '').trim();
+	const venueName = /^Venue\s+\d+$/i.test(requestedVenueName) ? '' : requestedVenueName;
+	const displayName = venueName || 'Poker tournament';
 	const manifest = {
 		id: `/${venueId}/`,
-		name: `Mike's Poker App · ${venueName}`,
-		short_name: venueName.slice(0, 20) || 'Poker',
-		description: `Poker tournament timer for ${venueName}`,
-		start_url: `/${venueId}/?name=${encodeURIComponent(venueName)}`,
+		name: venueName ? `Mike's Poker App · ${venueName}` : "Mike's Poker App",
+		short_name: venueName ? venueName.slice(0, 20) : 'Poker',
+		description: venueName ? `Poker tournament timer for ${venueName}` : 'Poker tournament timer',
+		start_url: venueName ? `/${venueId}/?name=${encodeURIComponent(venueName)}` : `/${venueId}/`,
 		scope: `/${venueId}/`,
 		display: 'standalone',
 		background_color: '#101214',
