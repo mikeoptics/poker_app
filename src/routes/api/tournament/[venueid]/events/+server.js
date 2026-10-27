@@ -1,4 +1,4 @@
-import { subscribeTournament } from '$lib/server/tournament-events';
+import { subscribeTournament } from '#lib/server/tournament-events';
 
 /** @param {{ params: { venueid: string } }} event */
 export function GET({ params }) {
