@@ -1550,9 +1550,17 @@
 		announcementEvent = state.announcementEvent ?? null;
 		tableMoveEvent = state.tableMoveEvent ?? null;
 		tableNames = state.tableNames && typeof state.tableNames === 'object' ? state.tableNames : {};
-		// The selected venue name in the URL is authoritative; older saved tournaments may
-		// contain only a generic "Venue <id>" label.
-		venueName = new URLSearchParams(window.location.search).get('name') || state.venueName || venueName;
+		// Installed PWAs can retain a generic "Venue <id>" name in their manifest
+		// start_url. Treat that as a placeholder so it cannot overwrite the real
+		// venue name already saved with the tournament.
+		const requestedVenueName = new URLSearchParams(window.location.search).get('name')?.trim() || '';
+		const savedVenueName = String(state.venueName || '').trim();
+		const isPlaceholderVenueName = (name) => !name || /^Venue\s+\d+$/i.test(name);
+		venueName = !isPlaceholderVenueName(requestedVenueName)
+			? requestedVenueName
+			: !isPlaceholderVenueName(savedVenueName)
+				? savedVenueName
+				: 'Poker tournament';
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
 		lastSavedSnapshot = JSON.stringify(tournamentSnapshot());
