@@ -6,7 +6,7 @@ import { publishTournamentUpdate } from '#lib/server/tournament-events';
 startPushScheduler();
 /** @param {string | number | null | undefined} id */
 const valid = (id) => /^\d{1,12}$/.test(String(id ?? ''));
-/** @param {string | number} id */
+/** @param {string | number} id @param {any} state */
 async function persist(id, state) {
 	writeVenue(id, state);
 	publishTournamentUpdate(id);
@@ -231,7 +231,7 @@ export async function PUT({ params, request }) {
 			remainingMs: existing ? existingRemaining : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
 			levelDurationMs: existing ? Math.max(1, Number(existing.levelDurationMs) || Number(existing.levels?.[existing.currentLevel]?.minutes) * 60_000 || 60_000) : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
 			running: Boolean(existing?.running),
-			tournamentStarted: Boolean(existing?.tournamentStarted || existing?.running || (existing?.players ?? v.players).some((p) => p.eliminated)),
+			tournamentStarted: Boolean(existing?.tournamentStarted || existing?.running || (existing?.players ?? v.players).some((/** @type {any} */ p) => p.eliminated)),
 			soundEnabled: existing ? Boolean(existing.soundEnabled) : true,
 			announcementEnabled: existing ? Boolean(existing.announcementEnabled) : true,
 			buyInAmount: existing ? Math.max(0, Number(existing.buyInAmount) || 0) : 5,
@@ -293,9 +293,9 @@ export async function POST({ params, request }) {
 				if (!player) return json({ error: 'Player not found.' }, { status: 404 });
 				// Rebuild unpublished local league results from the authoritative finishing order.
 				const recalculateRedtoothResults = () => {
-					const pointsForPlace = (place) => ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 })[place] ?? 10;
+					const pointsForPlace = (/** @type {number} */ place) => (/** @type {Record<number, number>} */ ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 }))[place] ?? 10;
 					const eliminated = s.players.filter((/** @type {any} */ item) => item.eliminated)
-						.sort((a, b) => Number(a.eliminationPosition ?? 999999) - Number(b.eliminationPosition ?? 999999));
+						.sort((/** @type {any} */ a, /** @type {any} */ b) => Number(a.eliminationPosition ?? 999999) - Number(b.eliminationPosition ?? 999999));
 					const results = new Map();
 					for (const item of eliminated) {
 						if (item.guest || item.redtoothId == null) continue;
@@ -386,8 +386,8 @@ export async function POST({ params, request }) {
 				const remainingActive = s.players.filter((/** @type {any} */ item) => !item.eliminated);
 				const tableIds = [...new Set(remainingActive.map((/** @type {any} */ item) => Number(item.table)).filter((/** @type {number} */ table) => Number.isInteger(table) && table > 0))].sort((a, b) => a - b);
 				for (const table of tableIds) {
-					const seated = remainingActive.filter((/** @type {any} */ item) => Number(item.table) === table).sort((a, b) => Number(a.seat) - Number(b.seat));
-					seated.forEach((/** @type {any} */ item, index) => { item.seat = index + 1; });
+					const seated = remainingActive.filter((/** @type {any} */ item) => Number(item.table) === table).sort((/** @type {any} */ a, /** @type {any} */ b) => Number(a.seat) - Number(b.seat));
+					seated.forEach((/** @type {any} */ item, /** @type {number} */ index) => { item.seat = index + 1; });
 				}
 				s.updatedAt = Date.now();
 				await persist(params.venueid, s);
@@ -427,7 +427,7 @@ export async function POST({ params, request }) {
 				if (!Number.isInteger(playerId) || playerId <= 0 || (direction !== -1 && direction !== 1))
 					return json({ error: 'Invalid elimination reorder request.' }, { status: 400 });
 				const eliminated = s.players.filter((/** @type {any} */ player) => player.eliminated)
-					.sort((x, y) => Number(x.eliminationPosition ?? 999999) - Number(y.eliminationPosition ?? 999999));
+					.sort((/** @type {any} */ x, /** @type {any} */ y) => Number(x.eliminationPosition ?? 999999) - Number(y.eliminationPosition ?? 999999));
 				const currentIndex = eliminated.findIndex((/** @type {any} */ player) => Number(player.id) === playerId);
 				const nextIndex = currentIndex + direction;
 				if (currentIndex < 0) return json({ error: 'Eliminated player not found.' }, { status: 404 });
@@ -523,7 +523,7 @@ export async function POST({ params, request }) {
 					}
 					if (moves.length) {
 						const now = Date.now();
-						s.tableMoveEvent = { id: `table-move-${now}`, text: moves.map((move) => {
+						s.tableMoveEvent = { id: `table-move-${now}`, text: moves.map((/** @type {any} */ move) => {
 							const player = active.find((/** @type {any} */ item) => Number(item.id) === Number(move.id));
 							return `${player?.name ?? 'Player'}, please move to position ${Number(move.seat)} on table ${Number(move.to)}`;
 						}).join('. '), createdAt: now };
