@@ -435,7 +435,7 @@ export async function POST({ params, request }) {
 				[eliminated[currentIndex], eliminated[nextIndex]] = [eliminated[nextIndex], eliminated[currentIndex]];
 				const activeCount = s.players.filter((/** @type {any} */ player) => !player.eliminated).length;
 				for (let index = 0; index < eliminated.length; index++) eliminated[index].eliminationPosition = activeCount + index + 1;
-				const pointsForPlace = (place) => ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 })[place] ?? 10;
+				const pointsForPlace = (/** @type {number} */ place) => (/** @type {Record<number, number>} */ ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 }))[place] ?? 10;
 				const pendingByRedtoothId = new Map(eliminated.filter((/** @type {any} */ player) => !player.guest && player.redtoothId != null)
 					.map((/** @type {any} */ player) => [Number(player.redtoothId), Math.max(0, pointsForPlace(Number(player.eliminationPosition)) - 10)]));
 				for (const player of s.players) {
