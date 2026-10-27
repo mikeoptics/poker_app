@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import webpush from 'web-push';
-import { listVenueIds, readVenue } from '$lib/server/database';
+import { listVenueIds, readVenue } from '#lib/server/database';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const DATA_DIR = path.join(PROJECT_ROOT, '.data');
@@ -45,6 +45,7 @@ export function isValidPushEndpoint(endpoint) {
 	}
 }
 
+/** @param {unknown} value @param {number} expectedLength */
 function isValidBase64UrlKey(value, expectedLength) {
 	if (typeof value !== 'string' || !/^[A-Za-z0-9_-]+$/.test(value)) return false;
 	try {
@@ -54,6 +55,7 @@ function isValidBase64UrlKey(value, expectedLength) {
 	}
 }
 
+/** @param {any} subscription */
 export function isValidPushSubscription(subscription) {
 	return Boolean(
 		subscription &&
