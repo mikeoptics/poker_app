@@ -160,7 +160,7 @@
 			const blob = await blobPromise;
 			const file = new File([blob], 'poker-seating-plan.png', { type: 'image/png' });
 			if (navigator.share && (!navigator.canShare || navigator.canShare({ files: [file] }))) {
-				await navigator.share({ files: [file], title: `${venueName} seating plan`, text: 'Tournament seating plan' });
+				await navigator.share({ files: [file] });
 				shareStatus = 'Seating image shared.';
 			} else {
 				const url = URL.createObjectURL(blob);
