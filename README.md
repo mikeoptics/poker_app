@@ -32,6 +32,17 @@ npm run build
 npm run preview
 ```
 
+## Production server
+
+The project uses `@sveltejs/adapter-node`. Build the standalone Node server and start it with:
+
+```bash
+npm run build
+node build
+```
+
+The server listens on port `3000` by default. Set `PORT` to change it, for example `PORT=5173 node build`. Point the Cloudflare Tunnel at the production server's port, not the Vite development server. Keep the Node process running while tournaments are active.
+
 Requires Node.js 22.12.0 or later. The app uses Node's built-in SQLite module, so no native SQLite package installation is required.
 
 The dependency ranges are intentionally kept on current major versions so `npm install` resolves current compatible Svelte/SvelteKit releases.
