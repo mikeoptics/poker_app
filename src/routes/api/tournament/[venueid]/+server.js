@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
-import { readVenue, writeVenue } from '$lib/server/database';
-import { startPushScheduler } from '$lib/server/push-notifications';
-import { publishTournamentUpdate } from '$lib/server/tournament-events';
+import { readVenue, writeVenue } from '#lib/server/database.js';
+import { startPushScheduler } from '#lib/server/push-notifications.js';
+import { publishTournamentUpdate } from '#lib/server/tournament-events.js';
 
 startPushScheduler();
 /** @param {string | number | null | undefined} id */
