@@ -3,13 +3,13 @@
 	import { fly } from 'svelte/transition';
 	import { ClockArrowUp, Settings } from '@lucide/svelte';
 	import { page } from '$app/state';
-	import Tables from '$lib/components/Tables/Tables.svelte';
+	import Tables from '#lib/components/Tables/Tables.svelte';
 	import {
 		pointsForPlace,
 		searchRedtoothPlayers,
 		applyLocalResult,
 		projectedRows
-	} from '$lib/redtooth.js';
+	} from '#lib/redtooth.js';
 
 	/** @typedef {{ sb:number; bb:number; minutes:number; game?:string; break?:boolean }} BlindLevel */
 	/** @typedef {{
@@ -304,7 +304,7 @@
 	);
 
 	const redtoothLeague = $derived(
-		projectedRows(/** @type {import('$lib/redtooth.js').RedtoothRow[]} */ (redtoothPlayers)).map((/** @type {import('$lib/redtooth.js').RedtoothRow} */ row) => {
+		projectedRows(/** @type {import('#lib/redtooth.js').RedtoothRow[]} */ (redtoothPlayers)).map((/** @type {import('#lib/redtooth.js').RedtoothRow} */ row) => {
 			const projectedPosition = row.projectedPosition ?? 0;
 
 			return {
@@ -389,8 +389,8 @@
 		const active = players
 			.filter((player) => !player.eliminated)
 			.sort((a, b) => {
-				const aRow = redtoothLeague.find((/** @type {import('$lib/redtooth.js').RedtoothRow} */ row) => row.redtoothId === a.redtoothId);
-				const bRow = redtoothLeague.find((/** @type {import('$lib/redtooth.js').RedtoothRow} */ row) => row.redtoothId === b.redtoothId);
+				const aRow = redtoothLeague.find((/** @type {import('#lib/redtooth.js').RedtoothRow} */ row) => row.redtoothId === a.redtoothId);
+				const bRow = redtoothLeague.find((/** @type {import('#lib/redtooth.js').RedtoothRow} */ row) => row.redtoothId === b.redtoothId);
 
 				// Keep the same order as the Redtooth league table.
 				if (aRow && bRow) {
@@ -412,7 +412,7 @@
 		return [
 			...active.map((player, index) => ({
 				player,
-				row: redtoothLeague.find((/** @type {import('$lib/redtooth.js').RedtoothRow} */ redtoothRow) => redtoothRow.redtoothId === player.redtoothId),
+				row: redtoothLeague.find((/** @type {import('#lib/redtooth.js').RedtoothRow} */ redtoothRow) => redtoothRow.redtoothId === player.redtoothId),
 				displayPosition: index + 1
 			})),
 			...eliminated.map((player) => ({
