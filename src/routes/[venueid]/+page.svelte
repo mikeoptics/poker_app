@@ -1561,15 +1561,17 @@
 		} catch {
 			// Continue with the URL and saved tournament data.
 		}
-		const isPlaceholderVenueName = (name) => !name || /^Venue\s+\d+$/i.test(name);
-		venueName = !isPlaceholderVenueName(requestedVenueName)
+		const hasRequestedVenueName = Boolean(requestedVenueName) && !/^Venue\s+\d+$/i.test(requestedVenueName);
+		const hasSelectedVenueName = Boolean(selectedVenueName) && !/^Venue\s+\d+$/i.test(selectedVenueName);
+		const hasSavedVenueName = Boolean(savedVenueName) && !/^Venue\s+\d+$/i.test(savedVenueName);
+		venueName = hasRequestedVenueName
 			? requestedVenueName
-			: !isPlaceholderVenueName(selectedVenueName)
+			: hasSelectedVenueName
 				? selectedVenueName
-				: !isPlaceholderVenueName(savedVenueName)
+				: hasSavedVenueName
 					? savedVenueName
 					: 'Poker tournament';
-		if (!isPlaceholderVenueName(venueName)) {
+		if (venueName !== 'Poker tournament') {
 			try {
 				localStorage.setItem(`poker-venue-name:${venueId}`, venueName);
 			} catch {
