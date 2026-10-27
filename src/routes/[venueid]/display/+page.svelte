@@ -33,12 +33,6 @@
 	const timerText = $derived(
 		String(Math.floor(seconds / 60)).padStart(2, '0') + ':' + String(seconds % 60).padStart(2, '0')
 	);
-	/** @type {any} */
-	let kokoroTTS = null;
-	/** @type {Promise<any> | null} */
-	let kokoroLoading = null;
-	/** @type {HTMLAudioElement | null} */
-	let announcementAudio = null;
 	/** @type {HTMLAudioElement | null} */
 	let tableMoveSound = null;
 	let soundEnabled = $state(false);
@@ -62,63 +56,20 @@
 		playTableMoveSound();
 	}
 
-	async function getKokoro() {
-		if (kokoroTTS) return kokoroTTS;
-		if (kokoroLoading) return kokoroLoading;
-		kokoroLoading = (async () => {
-			try {
-				const { KokoroTTS } = await import('kokoro-js');
-				const modelId = 'onnx-community/Kokoro-82M-v1.0-ONNX';
-				if (navigator.gpu) {
-					try {
-						kokoroTTS = await KokoroTTS.from_pretrained(modelId, { device: 'webgpu', dtype: 'fp32' });
-						return kokoroTTS;
-					} catch (error) {
-						console.warn('Cast display WebGPU TTS unavailable; using WASM.', error);
-					}
-				}
-				kokoroTTS = await KokoroTTS.from_pretrained(modelId, { device: 'wasm', dtype: 'q8' });
-				return kokoroTTS;
-			} catch (error) {
-				console.error('Cast display TTS failed to load:', error);
-				kokoroLoading = null;
-				return null;
-			}
-		})();
-		return kokoroLoading;
-	}
-
 	/** @param {{ text?:string, id?:string } | null | undefined} announcement */
-	async function speakAnnouncement(announcement) {
+	function speakAnnouncement(announcement) {
 		if (!announcement?.text || !announcement.id || announcement.id === lastSpokenAnnouncementId) return;
 		lastSpokenAnnouncementId = announcement.id;
+
+		if (!('speechSynthesis' in window)) return;
+
 		try {
-			const tts = await getKokoro();
-			if (tts) {
-				const audio = await tts.generate(announcement.text, { voice: 'bm_lewis' });
-				const url = URL.createObjectURL(audio.toBlob());
-				if (announcementAudio) {
-					announcementAudio.pause();
-					if (announcementAudio.src.startsWith('blob:')) URL.revokeObjectURL(announcementAudio.src);
-				}
-				announcementAudio = new Audio(url);
-				announcementAudio.volume = 1;
-				await announcementAudio.play();
-				return;
-			}
+			window.speechSynthesis.cancel();
+			const utterance = new SpeechSynthesisUtterance(announcement.text);
+			utterance.lang = 'en-GB';
+			window.speechSynthesis.speak(utterance);
 		} catch (error) {
-			console.error('Cast audio announcement playback failed:', error);
-		}
-		// Keep a native speech fallback for receivers where Kokoro cannot initialise.
-		if ('speechSynthesis' in window) {
-			try {
-				window.speechSynthesis.cancel();
-				const utterance = new SpeechSynthesisUtterance(announcement.text);
-				utterance.lang = 'en-GB';
-				window.speechSynthesis.speak(utterance);
-			} catch (error) {
-				console.error('Native Cast speech fallback failed:', error);
-			}
+			console.error('Browser speech announcement failed:', error);
 		}
 	}
 
