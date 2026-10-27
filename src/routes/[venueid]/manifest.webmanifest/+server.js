@@ -5,7 +5,6 @@ export function GET({ params, url }) {
 	}
 	const requestedVenueName = (url.searchParams.get('name') || '').trim();
 	const venueName = /^Venue\s+\d+$/i.test(requestedVenueName) ? '' : requestedVenueName;
-	const displayName = venueName || 'Poker tournament';
 	const manifest = {
 		id: `/${venueId}/`,
 		name: venueName ? `Mike's Poker App · ${venueName}` : "Mike's Poker App",
