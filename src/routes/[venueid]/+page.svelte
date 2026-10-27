@@ -248,17 +248,6 @@
 	/** @type {ReturnType<typeof setTimeout> | null} */
 	let transitionTimer = null;
 
-	// Kokoro TTS
-	/** @type {any} */
-	let kokoroTTS = null;
-
-	/** @type {Promise<any> | null} */
-	let kokoroLoading = null;
-
-	const speechCache = new Map();
-
-	/** @type {HTMLAudioElement | null} */
-	let speechAudio = null;
 
 	const activePlayers = $derived(players.filter((p) => !p.eliminated));
 	const eliminatedPlayers = $derived(players.filter((p) => p.eliminated));
@@ -600,7 +589,6 @@
 			tournamentMode = running ? (currentBlinds?.break ? 'break' : 'play') : 'paused';
 			if (frame !== null) cancelAnimationFrame(frame);
 			frame = running ? requestAnimationFrame(syncTimer) : null;
-			if (running) warmNextAnnouncement();
 			lastSavedSnapshot = '';
 		} catch (error) {
 			console.error('Timer command failed:', error);
@@ -1279,117 +1267,27 @@
 		return `Next level. ${speechGame}. Blinds ${level.sb} ${level.bb}.`;
 	}
 
-	async function getKokoro() {
-		if (typeof window === 'undefined') return null;
-
-		if (kokoroTTS) return kokoroTTS;
-		if (kokoroLoading) return kokoroLoading;
-
-		kokoroLoading = (async () => {
-			try {
-				const { KokoroTTS } = await import('kokoro-js');
-
-				const modelId = 'onnx-community/Kokoro-82M-v1.0-ONNX';
-
-				if (navigator.gpu) {
-					try {
-						kokoroTTS = await KokoroTTS.from_pretrained(modelId, {
-							device: 'webgpu',
-							dtype: 'fp32'
-						});
-
-						return kokoroTTS;
-					} catch (webgpuError) {
-						console.warn('Kokoro WebGPU unavailable; falling back to WASM:', webgpuError);
-					}
-				}
-
-				kokoroTTS = await KokoroTTS.from_pretrained(modelId, {
-					device: 'wasm',
-					dtype: 'q8'
-				});
-
-				return kokoroTTS;
-			} catch (error) {
-				console.error('Kokoro TTS failed to load:', error);
-
-				kokoroLoading = null;
-
-				return null;
-			}
-		})();
-
-		return kokoroLoading;
-	}
-
-	/** @param {string} text */
-	async function generateSpeech(text) {
-		if (!text) return null;
-
-		if (speechCache.has(text)) {
-			return speechCache.get(text);
-		}
-
-		const tts = await getKokoro();
-
-		if (!tts) return null;
-
-		try {
-			const audio = await tts.generate(text, { voice: 'bm_lewis' });
-
-			const url = URL.createObjectURL(audio.toBlob());
-
-			speechCache.set(text, url);
-
-			return url;
-		} catch (error) {
-			console.error('Kokoro TTS generation failed:', error);
-
-			return null;
-		}
-	}
-
-	async function warmNextAnnouncement() {
-		if (!announcementEnabled) return;
-
-		const next = currentLevel + 1;
-
-		if (next >= levels.length) {
-			return;
-		}
-
-		await generateSpeech(announcementTextForLevel(next));
-	}
-
-	async function announceNextLevel() {
+	function announceNextLevel() {
 		if (!announcementEnabled) return;
 
 		const i = Math.min(currentLevel + 1, levels.length - 1);
-
 		const text = announcementTextForLevel(i);
-
 		if (!text) return;
 
 		announcementEvent = { id: `${Date.now()}-${i}`, text, createdAt: Date.now() };
 
-		const url = await generateSpeech(text);
-
-		if (!url) return;
-
-		if (speechAudio) {
-			speechAudio.pause();
-			speechAudio.currentTime = 0;
-		}
-
-		speechAudio = new Audio(url);
-		speechAudio.volume = 1;
+		if (!('speechSynthesis' in window)) return;
 
 		try {
-			await speechAudio.play();
+			window.speechSynthesis.cancel();
+			const utterance = new SpeechSynthesisUtterance(text);
+			utterance.lang = 'en-GB';
+			window.speechSynthesis.speak(utterance);
 		} catch (error) {
-			console.warn('Kokoro audio playback was blocked by the browser:', error);
+			console.warn('Browser voice announcement failed:', error);
 		}
 	}
+
 	const eliminatedCount = $derived(players.filter((player) => player.eliminated).length);
 
 	function startClock() {
@@ -1807,10 +1705,6 @@ function startCasting() {
 			transitionTimer = null;
 		}
 
-		if (speechAudio) {
-			speechAudio.pause();
-			speechAudio.currentTime = 0;
-		}
 
 		closeClock();
 		const resetResponse = await fetch(`/api/tournament/${venueId}`, {
@@ -1992,16 +1886,6 @@ function startCasting() {
 				clearInterval(clockInterval);
 			}
 
-			if (speechAudio) {
-				speechAudio.pause();
-				speechAudio.currentTime = 0;
-			}
-
-			for (const url of speechCache.values()) {
-				URL.revokeObjectURL(url);
-			}
-
-			speechCache.clear();
 		};
 	});
 </script>
