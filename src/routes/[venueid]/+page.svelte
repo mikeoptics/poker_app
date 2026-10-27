@@ -1550,7 +1550,9 @@
 		announcementEvent = state.announcementEvent ?? null;
 		tableMoveEvent = state.tableMoveEvent ?? null;
 		tableNames = state.tableNames && typeof state.tableNames === 'object' ? state.tableNames : {};
-		venueName = state.venueName || venueName;
+		// The selected venue name in the URL is authoritative; older saved tournaments may
+		// contain only a generic "Venue <id>" label.
+		venueName = new URLSearchParams(window.location.search).get('name') || state.venueName || venueName;
 		redtoothSelectedVenue = { venueid: venueId, venuename: venueName, address1: '', address2: '', town: '', county: '', postcode: '', gamenight: '', distanceMiles: 0, active: '', lat: 0, lng: 0 };
 		levelStartedAt = now() - (levelDurationMs - remainingMs);
 		lastSavedSnapshot = JSON.stringify(tournamentSnapshot());
