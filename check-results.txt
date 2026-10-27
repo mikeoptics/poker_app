@@ -5,54 +5,21 @@
 Loading svelte-check in workspace: /Users/admin/Downloads/poker-blind-timer-sveltekit
 Getting Svelte diagnostics...
 
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/server/database.js:92:20
-Error: Argument of type 'SQLOutputValue' is not assignable to parameter of type 'string'.
-  Type 'null' is not assignable to type 'string'. 
-	if (!row) return null;
-	return JSON.parse(row.state_json);
-}
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/server/database.js:104:2
-Error: Type 'SQLOutputValue[]' is not assignable to type 'string[]'.
-  Type 'SQLOutputValue' is not assignable to type 'string'.
-    Type 'null' is not assignable to type 'string'. 
-export function listVenueIds() {
-	return database.prepare('SELECT venue_id FROM venues ORDER BY venue_id').all().map((row) => row.venue_id);
-}
-
 /Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/server/push-notifications.js:5:41
-Error: Cannot find module '$lib/server/database' or its corresponding type declarations. 
+Error: Cannot find module '#lib/server/database' or its corresponding type declarations. 
 import webpush from 'web-push';
-import { listVenueIds, readVenue } from '$lib/server/database';
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/server/push-notifications.js:48:30
-Error: Parameter 'value' implicitly has an 'any' type. 
-
-function isValidBase64UrlKey(value, expectedLength) {
-	if (typeof value !== 'string' || !/^[A-Za-z0-9_-]+$/.test(value)) return false;
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/server/push-notifications.js:48:37
-Error: Parameter 'expectedLength' implicitly has an 'any' type. 
-
-function isValidBase64UrlKey(value, expectedLength) {
-	if (typeof value !== 'string' || !/^[A-Za-z0-9_-]+$/.test(value)) return false;
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/lib/server/push-notifications.js:57:41
-Error: Parameter 'subscription' implicitly has an 'any' type. 
-
-export function isValidPushSubscription(subscription) {
-	return Boolean(
+import { listVenueIds, readVenue } from '#lib/server/database';
 
 /Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:6:21
-Error: Cannot find module '$lib/components/Tables/Tables.svelte' or its corresponding type declarations. (js)
+Error: Cannot find module '#lib/components/Tables/Tables.svelte' or its corresponding type declarations. (js)
 	import { page } from '$app/state';
-	import Tables from '$lib/components/Tables/Tables.svelte';
+	import Tables from '#lib/components/Tables/Tables.svelte';
 	import {
 
 /Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:12:9
-Error: Cannot find module '$lib/redtooth.js' or its corresponding type declarations. (js)
+Error: Cannot find module '#lib/redtooth.js' or its corresponding type declarations. (js)
 		projectedRows
-	} from '$lib/redtooth.js';
+	} from '#lib/redtooth.js';
 
 /Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/+page.svelte:307:39
 Error: Parameter 'row' implicitly has an 'any' type. (js)
@@ -83,99 +50,27 @@ Error: Parameter 'redtoothRow' implicitly has an 'any' type. (js)
 				row: redtoothLeague.find((redtoothRow) => redtoothRow.redtoothId === player.redtoothId),
 				displayPosition: player.eliminationPosition
 
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/[venueid]/display/+page.svelte:48:55
-Warn: This reference only captures the initial value of `venueId`. Did you mean to reference it inside a closure instead?
-https://svelte.dev/e/state_referenced_locally (svelte)
-	let tableMoveInitialized = false;
-	const tableMoveStorageKey = `poker-last-table-move-${venueId}`;
-
 /Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/notifications/[venueid]/+server.js:2:108
-Error: Cannot find module '$lib/server/push-notifications' or its corresponding type declarations. 
+Error: Cannot find module '#lib/server/push-notifications' or its corresponding type declarations. 
 import { json } from '@sveltejs/kit';
-import { isValidPushEndpoint, isValidPushSubscription, savePushSubscription, removePushSubscription } from '$lib/server/push-notifications';
+import { isValidPushEndpoint, isValidPushSubscription, savePushSubscription, removePushSubscription } from '#lib/server/push-notifications';
 
 /Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:2:39
-Error: Cannot find module '$lib/server/database' or its corresponding type declarations. 
+Error: Cannot find module '#lib/server/database' or its corresponding type declarations. 
 import { json } from '@sveltejs/kit';
-import { readVenue, writeVenue } from '$lib/server/database';
-import { startPushScheduler } from '$lib/server/push-notifications';
+import { readVenue, writeVenue } from '#lib/server/database';
+import { startPushScheduler } from '#lib/server/push-notifications';
 
 /Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:3:36
-Error: Cannot find module '$lib/server/push-notifications' or its corresponding type declarations. 
-import { readVenue, writeVenue } from '$lib/server/database';
-import { startPushScheduler } from '$lib/server/push-notifications';
-import { publishTournamentUpdate } from '$lib/server/tournament-events';
+Error: Cannot find module '#lib/server/push-notifications' or its corresponding type declarations. 
+import { readVenue, writeVenue } from '#lib/server/database';
+import { startPushScheduler } from '#lib/server/push-notifications';
+import { publishTournamentUpdate } from '#lib/server/tournament-events';
 
 /Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:4:41
-Error: Cannot find module '$lib/server/tournament-events' or its corresponding type declarations. 
-import { startPushScheduler } from '$lib/server/push-notifications';
-import { publishTournamentUpdate } from '$lib/server/tournament-events';
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:10:28
-Error: Parameter 'state' implicitly has an 'any' type. 
-/** @param {string | number} id */
-async function persist(id, state) {
-	writeVenue(id, state);
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:234:122
-Error: Parameter 'p' implicitly has an 'any' type. 
-			running: Boolean(existing?.running),
-			tournamentStarted: Boolean(existing?.tournamentStarted || existing?.running || (existing?.players ?? v.players).some((p) => p.eliminated)),
-			soundEnabled: existing ? Boolean(existing.soundEnabled) : true,
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:296:30
-Error: Parameter 'place' implicitly has an 'any' type. 
-				const recalculateRedtoothResults = () => {
-					const pointsForPlace = (place) => ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 })[place] ?? 10;
-					const eliminated = s.players.filter((/** @type {any} */ item) => item.eliminated)
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:296:40
-Error: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ 1: number; 2: number; 3: number; 4: number; 5: number; 6: number; 7: number; 8: number; }'. 
-				const recalculateRedtoothResults = () => {
-					const pointsForPlace = (place) => ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 })[place] ?? 10;
-					const eliminated = s.players.filter((/** @type {any} */ item) => item.eliminated)
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:298:14
-Error: Parameter 'a' implicitly has an 'any' type. 
-					const eliminated = s.players.filter((/** @type {any} */ item) => item.eliminated)
-						.sort((a, b) => Number(a.eliminationPosition ?? 999999) - Number(b.eliminationPosition ?? 999999));
-					const results = new Map();
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:298:17
-Error: Parameter 'b' implicitly has an 'any' type. 
-					const eliminated = s.players.filter((/** @type {any} */ item) => item.eliminated)
-						.sort((a, b) => Number(a.eliminationPosition ?? 999999) - Number(b.eliminationPosition ?? 999999));
-					const results = new Map();
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:389:109
-Error: Parameter 'a' implicitly has an 'any' type. 
-				for (const table of tableIds) {
-					const seated = remainingActive.filter((/** @type {any} */ item) => Number(item.table) === table).sort((a, b) => Number(a.seat) - Number(b.seat));
-					seated.forEach((/** @type {any} */ item, index) => { item.seat = index + 1; });
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:389:112
-Error: Parameter 'b' implicitly has an 'any' type. 
-				for (const table of tableIds) {
-					const seated = remainingActive.filter((/** @type {any} */ item) => Number(item.table) === table).sort((a, b) => Number(a.seat) - Number(b.seat));
-					seated.forEach((/** @type {any} */ item, index) => { item.seat = index + 1; });
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:390:47
-Error: Parameter 'index' implicitly has an 'any' type. 
-					const seated = remainingActive.filter((/** @type {any} */ item) => Number(item.table) === table).sort((a, b) => Number(a.seat) - Number(b.seat));
-					seated.forEach((/** @type {any} */ item, index) => { item.seat = index + 1; });
-				}
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:430:13
-Error: Parameter 'x' implicitly has an 'any' type. 
-				const eliminated = s.players.filter((/** @type {any} */ player) => player.eliminated)
-					.sort((x, y) => Number(x.eliminationPosition ?? 999999) - Number(y.eliminationPosition ?? 999999));
-				const currentIndex = eliminated.findIndex((/** @type {any} */ player) => Number(player.id) === playerId);
-
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:430:16
-Error: Parameter 'y' implicitly has an 'any' type. 
-				const eliminated = s.players.filter((/** @type {any} */ player) => player.eliminated)
-					.sort((x, y) => Number(x.eliminationPosition ?? 999999) - Number(y.eliminationPosition ?? 999999));
-				const currentIndex = eliminated.findIndex((/** @type {any} */ player) => Number(player.id) === playerId);
+Error: Cannot find module '#lib/server/tournament-events' or its corresponding type declarations. 
+import { startPushScheduler } from '#lib/server/push-notifications';
+import { publishTournamentUpdate } from '#lib/server/tournament-events';
 
 /Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:438:29
 Error: Parameter 'place' implicitly has an 'any' type. 
@@ -189,15 +84,9 @@ Error: Element implicitly has an 'any' type because expression of type 'any' can
 				const pointsForPlace = (place) => ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 })[place] ?? 10;
 				const pendingByRedtoothId = new Map(eliminated.filter((/** @type {any} */ player) => !player.guest && player.redtoothId != null)
 
-/Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/+server.js:526:70
-Error: Parameter 'move' implicitly has an 'any' type. 
-						const now = Date.now();
-						s.tableMoveEvent = { id: `table-move-${now}`, text: moves.map((move) => {
-							const player = active.find((/** @type {any} */ item) => Number(item.id) === Number(move.id));
-
 /Users/admin/Downloads/poker-blind-timer-sveltekit/src/routes/api/tournament/[venueid]/events/+server.js:1:37
-Error: Cannot find module '$lib/server/tournament-events' or its corresponding type declarations. 
-import { subscribeTournament } from '$lib/server/tournament-events';
+Error: Cannot find module '#lib/server/tournament-events' or its corresponding type declarations. 
+import { subscribeTournament } from '#lib/server/tournament-events';
 
 ====================================
-svelte-check found 32 errors and 1 warning in 7 files
+svelte-check found 15 errors and 0 warnings in 5 files
