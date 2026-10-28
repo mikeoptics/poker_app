@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { env } from '$app/env/private';
+import { VAPID_PUBLIC_KEY } from '$app/env/private';
 import { isValidPushEndpoint, isValidPushSubscription, savePushSubscription, removePushSubscription } from '#lib/server/push-notifications.js';
 
 /** @param {string | number | null | undefined} id */
@@ -7,7 +7,7 @@ const valid = (id) => /^\d{1,12}$/.test(String(id ?? ''));
 
 export async function GET({ params }) {
 	if (!valid(params.venueid)) return json({ error: 'Invalid venue ID.' }, { status: 400 });
-	return json({ publicKey: env.VAPID_PUBLIC_KEY || '' });
+	return json({ publicKey: VAPID_PUBLIC_KEY || '' });
 }
 
 export async function POST({ params, request }) {
