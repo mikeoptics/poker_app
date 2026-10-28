@@ -1,5 +1,5 @@
 import { json } from '@sveltejs/kit';
-import { env } from '$env/dynamic/private';
+import { env } from '$app/env/private';
 import { isValidPushEndpoint, isValidPushSubscription, savePushSubscription, removePushSubscription } from '#lib/server/push-notifications.js';
 
 /** @param {string | number | null | undefined} id */
