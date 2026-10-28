@@ -2,14 +2,15 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import webpush from 'web-push';
+import { env } from '$env/dynamic/private';
 import { listVenueIds, readVenue } from '#lib/server/database.js';
 
 const PROJECT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const DATA_DIR = path.join(PROJECT_ROOT, '.data');
 const PUSH_DIR = path.join(DATA_DIR, 'push');
-const publicKey = process.env.VAPID_PUBLIC_KEY;
-const privateKey = process.env.VAPID_PRIVATE_KEY;
-const subject = process.env.VAPID_SUBJECT || 'mailto:admin@miiiike.com';
+const publicKey = env.VAPID_PUBLIC_KEY;
+const privateKey = env.VAPID_PRIVATE_KEY;
+const subject = env.VAPID_SUBJECT || 'mailto:admin@miiiike.com';
 let schedulerStarted = false;
 let schedulerCheckInProgress = false;
 let vapidReady = false;
