@@ -1857,13 +1857,9 @@ function startCasting() {
 				console.error('Tournament load failed:', error);
 			})
 			.finally(() => refreshRedtooth());
-		// Persist periodically rather than rewriting the full tournament file every second.
-		// The display derives its clock from updatedAt, so this reduces disk writes
-		// while retaining regular timer recovery snapshots.
+		// Periodically flush pending player/settings changes. The timer is
+		// independent and remains anchored to the server's levelEndsAt timestamp.
 		syncInterval = setInterval(() => {
-			if (running) remainingMs = Math.max(0, (levelEndsAt > 0 ? levelEndsAt - (Date.now() + serverClockOffsetMs) : levelStartedAt + levelDurationMs - now()));
-			// Persist the locally calculated clock snapshot. A concurrent GET here
-			// can rebase the timer from an older server snapshot and make it jump back.
 			saveTournament();
 		}, 15000);
 		tournamentEvents = new EventSource(`/api/tournament/${venueId}/events`);
