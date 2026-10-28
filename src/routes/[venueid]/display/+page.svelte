@@ -6,6 +6,7 @@
 	let tournamentState = $state(null);
 	let error = $state('');
 	let clockNow = $state(Date.now());
+	let serverClockOffsetMs = $state(0);
 	/** @type {ReturnType<typeof setInterval> | undefined} */
 	let pollTimer;
 	/** @type {ReturnType<typeof setInterval> | undefined} */
@@ -24,8 +25,9 @@
 		tournamentState
 			? Math.max(
 					0,
-					Number(tournamentState.remainingMs || 0) -
-						(tournamentState.running ? clockNow - Number(tournamentState.updatedAt || clockNow) : 0)
+					tournamentState.running && Number(tournamentState.levelEndsAt) > 0
+						? Number(tournamentState.levelEndsAt) - (clockNow + serverClockOffsetMs)
+						: Number(tournamentState.remainingMs || 0)
 				)
 			: 0
 	);
@@ -78,7 +80,11 @@
 			const response = await fetch('/api/tournament/' + venueId + '?public=1', { cache: 'no-store' });
 			if (!response.ok) throw new Error('Tournament display is not available.');
 			const result = await response.json();
+			const receivedAt = Date.now();
 			if (!result.ok || !result.state) throw new Error('Waiting for tournament data.');
+			if (Number.isFinite(Number(result.state.serverNow))) {
+				serverClockOffsetMs = Number(result.state.serverNow) - receivedAt;
+			}
 			const nextAnnouncement = result.state.announcementEvent;
 			const nextTableMove = result.state.tableMoveEvent;
 			if (!tableMoveInitialized) {
