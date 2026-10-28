@@ -244,6 +244,9 @@
 
 	/** @type {number | null} */
 	let frame = null;
+	// Keep the animation-frame clock accurate, but only publish timer state four
+	// times per second. The countdown itself is derived from the absolute start time. 
+	let lastTimerRenderAt = 0;
 
 	/** @type {ReturnType<typeof setTimeout> | null} */
 	let transitionTimer = null;
@@ -551,21 +554,32 @@
 			tournamentMode = running ? (currentBlinds?.break ? 'break' : 'play') : 'paused';
 			if (previousLevel !== currentLevel && soundEnabled) playAlarm();
 			if (frame !== null) cancelAnimationFrame(frame);
+			lastTimerRenderAt = 0;
 			frame = running ? requestAnimationFrame(syncTimer) : null;
 		} catch (error) {
 			console.warn('Unable to refresh server timer:', error);
 		}
 	}
 
-	function syncTimer() {
+	function syncTimer(timestamp = now()) {
 		if (!running) return;
-		remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
-		if (remainingMs <= 0) {
+
+		// Calculate against the clock baseline rather than decrementing a counter,
+		// avoiding drift while reducing reactive updates from ~60Hz to 4Hz.
+		const nextRemainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
+		if (nextRemainingMs <= 0) {
 			remainingMs = 0;
+			lastTimerRenderAt = timestamp;
 			frame = null;
 			void refreshServerTimer();
 			return;
 		}
+
+		if (timestamp - lastTimerRenderAt >= 250) {
+			remainingMs = nextRemainingMs;
+			lastTimerRenderAt = timestamp;
+		}
+
 		frame = requestAnimationFrame(syncTimer);
 	}
 
@@ -588,6 +602,7 @@
 			levelStartedAt = now() - (levelDurationMs - remainingMs);
 			tournamentMode = running ? (currentBlinds?.break ? 'break' : 'play') : 'paused';
 			if (frame !== null) cancelAnimationFrame(frame);
+			lastTimerRenderAt = 0;
 			frame = running ? requestAnimationFrame(syncTimer) : null;
 			lastSavedSnapshot = '';
 		} catch (error) {
@@ -1865,7 +1880,8 @@ function startCasting() {
 						announcementEvent = state.announcementEvent ?? announcementEvent;
 						levelStartedAt = now() - (levelDurationMs - remainingMs);
 						if (frame !== null) cancelAnimationFrame(frame);
-						frame = running ? requestAnimationFrame(syncTimer) : null;
+						lastTimerRenderAt = 0;
+			frame = running ? requestAnimationFrame(syncTimer) : null;
 						tournamentMode = running ? (currentBlinds?.break ? 'break' : 'play') : 'paused';
 					}
 				} catch (error) {
