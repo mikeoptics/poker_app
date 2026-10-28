@@ -188,7 +188,20 @@ export async function GET({ params, url }) {
 					await persist(params.venueid, s);
 				}
 			}
-			return json({ ok: true, state: url.searchParams.get('public') === '1' ? publicState(s) : s });
+			// Return the wall-clock-adjusted timer even when the current level has not
+			// expired. The stored snapshot may be several seconds old; returning it
+			// unchanged makes a page reload restore an earlier countdown value.
+			const responseState = url.searchParams.get('public') === '1'
+				? publicState(s)
+				: s?.running
+					? {
+							...s,
+							currentLevel: level,
+							levelDurationMs: Math.max(1, Number(s.levels?.[level]?.minutes) || 1) * 60_000,
+							remainingMs: Math.max(0, remaining)
+						}
+					: s;
+			return json({ ok: true, state: responseState });
 		});
 	} catch (e) {
 		console.error('Tournament load failed:', e);
