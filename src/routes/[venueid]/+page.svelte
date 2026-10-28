@@ -1850,7 +1850,8 @@ function startCasting() {
 		// while retaining regular timer recovery snapshots.
 		syncInterval = setInterval(() => {
 			if (running) remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
-			void refreshServerTimer();
+			// Persist the locally calculated clock snapshot. A concurrent GET here
+			// can rebase the timer from an older server snapshot and make it jump back.
 			saveTournament();
 		}, 15000);
 		tournamentEvents = new EventSource(`/api/tournament/${venueId}/events`);
