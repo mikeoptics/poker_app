@@ -196,9 +196,11 @@ export async function GET({ params, url }) {
 				: s?.running
 					? {
 							...s,
-							currentLevel: level,
-							levelDurationMs: Math.max(1, Number(s.levels?.[level]?.minutes) || 1) * 60_000,
-							remainingMs: Math.max(0, remaining)
+							remainingMs: Math.max(
+								0,
+								Number(s.remainingMs || 0) -
+									Math.max(0, Date.now() - Number(s.updatedAt || Date.now()))
+							)
 						}
 					: s;
 			return json({ ok: true, state: responseState });
