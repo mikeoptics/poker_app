@@ -33,6 +33,8 @@
 
 	const venueId = $derived(Number(page.params.venueid));
 	let venueName = $state('Selected venue');
+	let tournamentLoaded = $state(false);
+	let tournamentLoadError = $state('');
 	/** @type {ReturnType<typeof setInterval> | null} */
 	let syncInterval = null;
 	/** @type {EventSource | null} */
@@ -1550,7 +1552,7 @@
 		if (!response.ok) throw new Error('Unable to load this venue tournament.');
 		const { state } = await response.json();
 		const responseReceivedAt = Date.now();
-		if (!state) return;
+		if (!state) throw new Error('The server returned no tournament data.');
 		if (Number.isFinite(Number(state.serverNow))) serverClockOffsetMs = Number(state.serverNow) - responseReceivedAt;
 		levelEndsAt = state.running ? Number(state.levelEndsAt) || 0 : 0;
 		if (Array.isArray(state.levels) && state.levels.length) levels = state.levels;
@@ -1615,6 +1617,8 @@
 	}
 
 	async function saveTournament() {
+		// Never persist the empty client defaults while the saved tournament is loading.
+		if (!tournamentLoaded) return;
 		if (savingTournament) {
 			savePending = true;
 			return;
@@ -1853,10 +1857,15 @@ function startCasting() {
 		castScript.src = 'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1';
 		document.head.appendChild(castScript);
 		loadTournament()
+			.then(() => {
+				tournamentLoaded = true;
+				tournamentLoadError = '';
+				void refreshRedtooth();
+			})
 			.catch((error) => {
 				console.error('Tournament load failed:', error);
-			})
-			.finally(() => refreshRedtooth());
+				tournamentLoadError = error instanceof Error ? error.message : 'Unable to load this tournament.';
+			});
 		// Periodically flush pending player/settings changes. The timer is
 		// independent and remains anchored to the server's levelEndsAt timestamp.
 		syncInterval = setInterval(() => {
@@ -1864,6 +1873,7 @@ function startCasting() {
 		}, 15000);
 		tournamentEvents = new EventSource(`/api/tournament/${venueId}/events`);
 		tournamentEvents.onmessage = (event) => {
+			if (!tournamentLoaded) return;
 			try { if (JSON.parse(event.data)?.type !== 'update') return; } catch { return; }
 			if (eventRefreshPending || savingTournament || playerSaveTimer !== null) return;
 			eventRefreshPending = true;
@@ -1957,6 +1967,24 @@ function startCasting() {
 	class:mode-break={running && currentBlinds?.break}
 	class:mode-paused={!running}
 >
+	{#if !tournamentLoaded}
+		<div class="tournament-loading" role="status" aria-live="polite">
+			<div class="loading-spinner" aria-hidden="true"></div>
+			<strong>{tournamentLoadError ? 'Unable to load tournament' : 'Loading tournament'}</strong>
+			<span>{tournamentLoadError || 'Restoring players, blinds and timer…'}</span>
+			{#if tournamentLoadError}
+				<button type="button" onclick={() => {
+					tournamentLoadError = '';
+					void loadTournament().then(() => {
+						tournamentLoaded = true;
+						void refreshRedtooth();
+					}).catch((error) => {
+						tournamentLoadError = error instanceof Error ? error.message : 'Unable to load this tournament.';
+					});
+				}}>Retry</button>
+			{/if}
+		</div>
+	{:else}
 	<header class="header">
 		<div class="header-actions" aria-label="Tournament actions">
 			{#if !appInstalled}
@@ -2492,6 +2520,7 @@ function startCasting() {
 			</div>
 		</div>
 	{/if}
+	{/if}
 </div>
 
 <style>:global(*) {
@@ -2501,7 +2530,13 @@ function startCasting() {
 		background: #101214;
 		color: #f4f4f1;
 		font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-	}:global(button), :global(input), :global(select) {
+	}.tournament-loading { position: fixed; inset: 0; z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 13px; padding: 24px; background: #101214; color: #f4f4f1; text-align: center; }
+.tournament-loading strong { font-size: 16px; font-weight: 700; }
+.tournament-loading span { max-width: 320px; color: #929aa1; font-size: 13px; line-height: 1.5; }
+.tournament-loading button { margin-top: 8px; padding: 10px 20px; border: 1px solid #c4a36a; border-radius: 8px; background: #c4a36a; color: #101214; font-weight: 750; }
+.loading-spinner { width: 34px; height: 34px; border: 3px solid #343a40; border-top-color: #c4a36a; border-radius: 50%; animation: tournament-spin .8s linear infinite; }
+@keyframes tournament-spin { to { transform: rotate(360deg); } }
+:global(button), :global(input), :global(select) {
 		font: inherit;
 	}.app {
 		height: 100dvh;
