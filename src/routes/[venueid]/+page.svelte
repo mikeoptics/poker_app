@@ -199,6 +199,8 @@
 	let currentLevel = $state(0);
 	let remainingMs = $state(defaultLevels[0].minutes * 60_000);
 	let levelStartedAt = $state(0);
+	let levelEndsAt = $state(0);
+	let serverClockOffsetMs = $state(0);
 	let levelDurationMs = $state(defaultLevels[0].minutes * 60_000);
 	let running = $state(false);
 	let soundEnabled = $state(true);
@@ -543,6 +545,8 @@
 			const result = await response.json();
 			const state = result?.state;
 			if (!response.ok || !state) return;
+			if (Number.isFinite(Number(state.serverNow))) serverClockOffsetMs = Number(state.serverNow) - Date.now();
+			levelEndsAt = state.running ? Number(state.levelEndsAt) || 0 : 0;
 			const previousLevel = currentLevel;
 			currentLevel = Math.min(Number(state.currentLevel) || 0, levels.length - 1);
 			levelDurationMs = Math.max(1, Number(levels[currentLevel]?.minutes) || 1) * 60_000;
@@ -551,6 +555,8 @@
 			tournamentStarted = Boolean(state.tournamentStarted || state.running);
 			announcementEvent = state.announcementEvent ?? announcementEvent;
 			levelStartedAt = now() - (levelDurationMs - remainingMs);
+		levelEndsAt = state.running ? Number(state.levelEndsAt) || 0 : 0;
+		if (Number.isFinite(Number(state.serverNow))) serverClockOffsetMs = Number(state.serverNow) - Date.now();
 			tournamentMode = running ? (currentBlinds?.break ? 'break' : 'play') : 'paused';
 			if (previousLevel !== currentLevel && soundEnabled) playAlarm();
 			if (frame !== null) cancelAnimationFrame(frame);
@@ -566,7 +572,7 @@
 
 		// Calculate against the clock baseline rather than decrementing a counter,
 		// avoiding drift while reducing reactive updates from ~60Hz to 4Hz.
-		const nextRemainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
+		const nextRemainingMs = Math.max(0, levelEndsAt > 0 ? levelEndsAt - (Date.now() + serverClockOffsetMs) : (levelEndsAt > 0 ? levelEndsAt - (Date.now() + serverClockOffsetMs) : levelStartedAt + levelDurationMs - now()));
 		if (nextRemainingMs <= 0) {
 			remainingMs = 0;
 			lastTimerRenderAt = timestamp;
@@ -594,6 +600,8 @@
 			const result = await response.json();
 			if (!response.ok || !result?.state) throw new Error(result?.error || 'Timer command failed.');
 			const state = result.state;
+			if (Number.isFinite(Number(state.serverNow))) serverClockOffsetMs = Number(state.serverNow) - Date.now();
+			levelEndsAt = state.running ? Number(state.levelEndsAt) || 0 : 0;
 			currentLevel = Math.min(Number(state.currentLevel) || 0, levels.length - 1);
 			levelDurationMs = Math.max(1, Number(levels[currentLevel]?.minutes) || 1) * 60_000;
 			remainingMs = Math.max(0, Number(state.remainingMs) || 0);
@@ -1543,7 +1551,10 @@
 		const response = await fetch(`/api/tournament/${venueId}`);
 		if (!response.ok) throw new Error('Unable to load this venue tournament.');
 		const { state } = await response.json();
+		const responseReceivedAt = Date.now();
 		if (!state) return;
+		if (Number.isFinite(Number(state.serverNow))) serverClockOffsetMs = Number(state.serverNow) - responseReceivedAt;
+		levelEndsAt = state.running ? Number(state.levelEndsAt) || 0 : 0;
 		if (Array.isArray(state.levels) && state.levels.length) levels = state.levels;
 		if (Array.isArray(state.players)) players = state.players;
 		nextPlayerId = state.nextPlayerId ?? players.reduce((max, player) => Math.max(max, player.id), 0) + 1;
@@ -1766,6 +1777,7 @@ function startCasting() {
 		remainingMs = resetResult.state.remainingMs;
 		running = false;
 		levelStartedAt = now();
+		levelEndsAt = 0;
 		setLevel(0);
 		tournamentMode = 'paused';
 		eliminationEvent = null;
@@ -1849,7 +1861,7 @@ function startCasting() {
 		// The display derives its clock from updatedAt, so this reduces disk writes
 		// while retaining regular timer recovery snapshots.
 		syncInterval = setInterval(() => {
-			if (running) remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
+			if (running) remainingMs = Math.max(0, (levelEndsAt > 0 ? levelEndsAt - (Date.now() + serverClockOffsetMs) : levelStartedAt + levelDurationMs - now()));
 			// Persist the locally calculated clock snapshot. A concurrent GET here
 			// can rebase the timer from an older server snapshot and make it jump back.
 			saveTournament();
@@ -1888,7 +1900,7 @@ function startCasting() {
 				} catch (error) {
 					console.warn('Unable to catch up tournament timer:', error);
 					if (running) {
-						remainingMs = Math.max(0, levelStartedAt + levelDurationMs - now());
+						remainingMs = Math.max(0, (levelEndsAt > 0 ? levelEndsAt - (Date.now() + serverClockOffsetMs) : levelStartedAt + levelDurationMs - now()));
 						if (remainingMs <= 0) finishLevel();
 						else {
 							if (frame !== null) cancelAnimationFrame(frame);
