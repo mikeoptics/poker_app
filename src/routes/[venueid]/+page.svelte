@@ -2863,12 +2863,18 @@ function startCasting() {
 		z-index: 100;
 		left: 0;
 		right: 0;
-		top: calc(100% + 4px);
+		/* The add-player form sits below the roster, so open suggestions upward. */
+		top: auto;
+		bottom: calc(100% + 4px);
+		max-height: min(40vh, 280px);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		-webkit-overflow-scrolling: touch;
 		background: #202428;
 		border: 1px solid #3b4249;
 		border-radius: 9px;
 		box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
-		overflow: hidden;
+		overflow-x: hidden;
 	}.redtooth-search-result {
 		width: 100%;
 		display: flex;
@@ -3227,7 +3233,7 @@ function startCasting() {
 
 	/* Players tab: rebuilt roster layout */
 	.players-workspace { display:flex; flex-direction:column; gap:18px; width:100%; max-width:1200px; min-height:0; margin:0 auto; }
-	.players-add-panel { display:flex; align-items:flex-end; gap:12px; padding:16px 18px; background:#17191b; border:1px solid #292d30; border-radius:14px; }
+	.players-add-panel { position:relative; z-index:5; display:flex; align-items:flex-end; gap:12px; padding:16px 18px; background:#17191b; border:1px solid #292d30; border-radius:14px; }
 	.players-add-form { display:flex; align-items:flex-end; flex:1; gap:10px; min-width:0; }
 	.players-add-form .redtooth-player-input { flex:1; min-width:0; margin:0; }
 	.players-add-form .redtooth-player-input > span { display:block; margin-bottom:6px; color:#9ba2a8; font-size:.68rem; font-weight:800; text-transform:uppercase; }
