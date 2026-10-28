@@ -365,14 +365,31 @@ export async function POST({ params, request }) {
 				const active = s.players.filter((/** @type {any} */ player) => !player.eliminated && Number(player.table) > 0);
 				const tableCounts = new Map();
 				for (const player of active) tableCounts.set(Number(player.table), (tableCounts.get(Number(player.table)) || 0) + 1);
-				const tableIds = [...tableCounts.keys()].sort((x, y) => x - y);
-				const table = tableIds.length
-					? tableIds.sort((x, y) => tableCounts.get(x) - tableCounts.get(y) || x - y)[0]
-					: 1;
-				const occupied = new Set(active.filter((/** @type {any} */ player) => Number(player.table) === table).map((/** @type {any} */ player) => Number(player.seat)));
-				let seat = 1;
-				while (occupied.has(seat) && seat <= 8) seat += 1;
-				if (seat > 8) return json({ error: 'No available seat. Rebalance tables first.' }, { status: 409 });
+				// Prefer the least-populated existing table that has a genuinely free seat.
+				// A table can be full even when another table has room, so do not fail
+				// just because the least-populated candidate has no free seat number.
+				const tableIds = [...tableCounts.keys()].sort((x, y) => tableCounts.get(x) - tableCounts.get(y) || x - y);
+				let table = 0;
+				let seat = 0;
+				for (const candidate of tableIds) {
+					const occupied = new Set(active
+						.filter((/** @type {any} */ player) => Number(player.table) === candidate)
+						.map((/** @type {any} */ player) => Number(player.seat)));
+					for (let candidateSeat = 1; candidateSeat <= 8; candidateSeat += 1) {
+						if (!occupied.has(candidateSeat)) {
+							table = candidate;
+							seat = candidateSeat;
+							break;
+						}
+					}
+					if (table !== 0) break;
+				}
+				// All existing tables are full: open the next table instead of returning
+				// a 409. The client can then offer its normal table-balancing suggestion.
+				if (table === 0) {
+					table = Math.max(0, ...s.players.map((/** @type {any} */ player) => Number(player.table) || 0)) + 1;
+					seat = 1;
+				}
 				const id = Math.max(1, Number(s.nextPlayerId) || 1, ...s.players.map((/** @type {any} */ player) => Number(player.id) + 1));
 				const player = {
 					id, name, table, seat, buyIns: 1, rebuys: 0, topUps: 0, paid: false,
