@@ -18,12 +18,16 @@ async function persist(id, state) {
  * @param {any} state
  */
 function stampNonTimerUpdate(state) {
-	const timestamp = Date.now();
-	if (state?.running) {
-		state.remainingMs = Number(state.remainingMs ?? 0) -
-			Math.max(0, timestamp - Number(state.updatedAt || timestamp));
-	}
-	state.updatedAt = timestamp;
+	// updatedAt is metadata only; the running timer uses levelEndsAt.
+	state.updatedAt = Date.now();
+}
+function timerRemaining(state, timestamp = Date.now()) {
+	if (!state?.running) return Math.max(0, Number(state?.remainingMs) || 0);
+	if (Number(state.levelEndsAt) > 0) return Number(state.levelEndsAt) - timestamp;
+	return Number(state.remainingMs ?? 0) - Math.max(0, timestamp - Number(state.updatedAt || timestamp));
+}
+function ensureTimerAnchor(state, timestamp = Date.now()) {
+	if (state?.running && !(Number(state.levelEndsAt) > 0)) state.levelEndsAt = timestamp + Math.max(0, timerRemaining(state, timestamp));
 }
 /** @param {string | number} id */
 async function read(id) {
@@ -53,21 +57,11 @@ async function withVenueWriteLock(id, operation) {
 /** @param {any} s */
 function publicState(s) {
 	if (!s) return null;
-	let i = Math.max(0, Number(s.currentLevel ?? 0));
-	let remaining = Number(s.remainingMs ?? 0);
-	let displayRunning = Boolean(s.running);
-	const elapsed = displayRunning ? Math.max(0, Date.now() - (s.updatedAt ?? Date.now())) : 0;
-	remaining -= elapsed;
-	// Advance the public display through any levels that elapsed while the
-	// director's browser was backgrounded or suspended.
-	while (displayRunning && remaining <= 0 && i < (s.levels?.length ?? 0) - 1) {
-		i += 1;
-		remaining += Math.max(1, Number(s.levels?.[i]?.minutes ?? 1)) * 60_000;
-	}
-	if (displayRunning && remaining <= 0) {
-		remaining = 0;
-		displayRunning = false;
-	}
+	const timestamp = Date.now();
+	ensureTimerAnchor(s, timestamp);
+	const i = Math.max(0, Number(s.currentLevel ?? 0));
+	const remaining = timerRemaining(s, timestamp);
+	const displayRunning = Boolean(s.running);
 	const l = s.levels?.[i] ?? null;
 	const n = s.levels?.[Math.min(i + 1, (s.levels?.length ?? 1) - 1)] ?? null;
 	/** @type {any[]} */
@@ -151,6 +145,8 @@ function publicState(s) {
 		nextGame: n?.break ? 'BREAK' : s.mixedGames ? (n?.game ?? '') : 'BLINDS',
 		nextBlinds: n?.break ? 'BREAK' : n ? n.sb + ' / ' + n.bb : '—',
 		remainingMs: remaining,
+		levelEndsAt: displayRunning ? Number(s.levelEndsAt) : null,
+		serverNow: timestamp,
 		running: displayRunning,
 		tournamentStarted: started,
 		soundEnabled: s.soundEnabled !== false,
@@ -173,27 +169,28 @@ export async function GET({ params, url }) {
 		return await withVenueWriteLock(params.venueid, async () => {
 			const s = await read(params.venueid);
 			if (s?.running && Array.isArray(s.levels) && s.levels.length) {
+				const now = Date.now();
+				ensureTimerAnchor(s, now);
 				let level = Math.max(0, Math.min(Number(s.currentLevel) || 0, s.levels.length - 1));
-				let remaining = (Number(s.remainingMs) || 0) - Math.max(0, Date.now() - Number(s.updatedAt || Date.now()));
 				const previousLevel = level;
-				while (remaining <= 0 && level < s.levels.length - 1) {
+				while (Number(s.levelEndsAt) <= now && level < s.levels.length - 1) {
 					level += 1;
-					remaining += Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60_000;
+					s.levelEndsAt = Number(s.levelEndsAt) + Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60_000;
 				}
-				if (level !== previousLevel || remaining < 0) {
-					const now = Date.now();
+				if (level !== previousLevel || Number(s.levelEndsAt) <= now) {
 					s.currentLevel = level;
 					s.levelDurationMs = Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60_000;
-					s.remainingMs = Math.max(0, remaining);
+					s.remainingMs = Math.max(0, Number(s.levelEndsAt) - now);
 					s.updatedAt = now;
-					if (level >= s.levels.length - 1 && remaining <= 0) {
+					if (level >= s.levels.length - 1 && Number(s.levelEndsAt) <= now) {
 						s.remainingMs = 0;
 						s.running = false;
+						s.levelEndsAt = null;
 					}
 					if (level > previousLevel && s.announcementEnabled) {
 						const next = s.levels[level];
 						const game = s.mixedGames ? String(next?.game ?? '') : '';
-						const speechGame = game.replace(/\bPLO5\b/g, 'P L O five').replace(/\bPLO4\b/g, 'P L O four').replace(/\bNLH\b/g, 'N L H');
+						const speechGame = game.replace(/\\bPLO5\\b/g, 'P L O five').replace(/\\bPLO4\\b/g, 'P L O four').replace(/\\bNLH\\b/g, 'N L H');
 						const text = next?.break
 							? `Break. ${next.minutes} minutes.`
 							: `Next level. ${game ? speechGame + '. ' : ''}Blinds ${next?.sb ?? 0} ${next?.bb ?? 0}.`;
@@ -205,18 +202,11 @@ export async function GET({ params, url }) {
 			// Return the wall-clock-adjusted timer even when the current level has not
 			// expired. The stored snapshot may be several seconds old; returning it
 			// unchanged makes a page reload restore an earlier countdown value.
+			ensureTimerAnchor(s, Date.now());
+			const serverNow = Date.now();
 			const responseState = url.searchParams.get('public') === '1'
 				? publicState(s)
-				: s?.running
-					? {
-							...s,
-							remainingMs: Math.max(
-								0,
-								Number(s.remainingMs || 0) -
-									Math.max(0, Date.now() - Number(s.updatedAt || Date.now()))
-							)
-						}
-					: s;
+				: s ? { ...s, remainingMs: timerRemaining(s, serverNow), levelEndsAt: s.running ? Number(s.levelEndsAt) : null, serverNow } : null;
 			return json({ ok: true, state: responseState });
 		});
 	} catch (e) {
@@ -238,10 +228,7 @@ export async function PUT({ params, request }) {
 		// Do not let that stale snapshot roll back a level already advanced by the server.
 		const existingLevel = Number(existing?.currentLevel) || 0;
 		const incomingLevel = Number(v.currentLevel) || 0;
-		const existingRemaining = Math.max(
-			0,
-			Number(existing?.remainingMs) - (existing?.running ? Math.max(0, Date.now() - Number(existing?.updatedAt || Date.now())) : 0)
-		);
+		const existingRemaining = timerRemaining(existing, Date.now());
 		const sameLevelStaleTimer = Boolean(
 			existing?.running && v.running &&
 			existingLevel === incomingLevel &&
@@ -258,6 +245,7 @@ export async function PUT({ params, request }) {
 			nextPlayerId: Number(existing?.nextPlayerId) || Number(v.nextPlayerId) || 1,
 			currentLevel: existing ? Math.max(0, Number(existing.currentLevel) || 0) : 0,
 			remainingMs: existing ? existingRemaining : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
+			levelEndsAt: existing?.running ? (Number(existing.levelEndsAt) > 0 ? Number(existing.levelEndsAt) : Date.now() + existingRemaining) : null,
 			levelDurationMs: existing ? Math.max(1, Number(existing.levelDurationMs) || Number(existing.levels?.[existing.currentLevel]?.minutes) * 60_000 || 60_000) : Math.max(1, Number(v.levels[0]?.minutes) || 1) * 60_000,
 			running: Boolean(existing?.running),
 			tournamentStarted: Boolean(existing?.tournamentStarted || existing?.running || (existing?.players ?? v.players).some((/** @type {any} */ p) => p.eliminated)),
@@ -616,9 +604,9 @@ export async function POST({ params, request }) {
 						: { sb, bb, minutes, game: allowedGames.includes(String(item.game)) ? String(item.game) : 'NLH' });
 				}
 				const now = Date.now();
+				ensureTimerAnchor(s, now);
 				const oldIndex = Math.max(0, Math.min(Number(s.currentLevel) || 0, s.levels.length - 1));
-				let remaining = Math.max(0, Number(s.remainingMs) || 0);
-				if (s.running) remaining = Math.max(0, remaining - Math.max(0, now - Number(s.updatedAt || now)));
+				const remaining = Math.max(0, timerRemaining(s, now));
 				const requestedIndex = Number(body.currentLevel);
 				const nextIndex = Number.isInteger(requestedIndex) && requestedIndex >= 0 && requestedIndex < levels.length
 					? requestedIndex
@@ -638,9 +626,10 @@ export async function POST({ params, request }) {
 					? Math.max(0, Math.min(nextDuration, remaining))
 					: Math.max(0, Math.min(nextDuration, Math.round(nextDuration * (1 - progress))));
 				if (s.running && s.remainingMs <= 0) s.running = false;
+				s.levelEndsAt = s.running ? now + s.remainingMs : null;
 				s.updatedAt = now;
 				await persist(params.venueid, s);
-				return json({ ok: true, levels: s.levels, state: s, updatedAt: s.updatedAt });
+				return json({ ok: true, levels: s.levels, state: { ...s, serverNow: now }, updatedAt: s.updatedAt });
 			}
 			if (action === 'saveSettings') {
 				if (!s) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
@@ -716,22 +705,24 @@ export async function POST({ params, request }) {
 				return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 
 			const now = Date.now();
+			ensureTimerAnchor(s, now);
 			let level = Math.max(0, Math.min(Number(s.currentLevel) || 0, s.levels.length - 1));
-			let remaining = Math.max(0, Number(s.remainingMs) || 0);
-			if (s.running) remaining = Math.max(0, remaining - Math.max(0, now - Number(s.updatedAt || now)));
-
+			let remaining = Math.max(0, timerRemaining(s, now));
 			if (action === 'pause') {
 				s.remainingMs = remaining;
 				s.running = false;
+				s.levelEndsAt = null;
 			} else if (action === 'start') {
 				if (!s.running) {
 					if (remaining <= 0) remaining = Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60000;
 					s.remainingMs = remaining;
 					s.running = true;
+					s.levelEndsAt = now + remaining;
 					s.tournamentStarted = true;
 				}
 			} else if (action === 'reset') {
 				s.running = false;
+				s.levelEndsAt = null;
 				s.remainingMs = Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60000;
 			} else if (action === 'nextLevel' || action === 'previousLevel' || action === 'selectLevel') {
 				if (action === 'nextLevel') level = Math.min(s.levels.length - 1, level + 1);
@@ -745,18 +736,19 @@ export async function POST({ params, request }) {
 				s.currentLevel = level;
 				s.levelDurationMs = Math.max(1, Number(s.levels[level]?.minutes) || 1) * 60000;
 				s.remainingMs = s.levelDurationMs;
+				s.levelEndsAt = s.running ? now + s.remainingMs : null;
 				if (s.running) s.tournamentStarted = true;
 			} else {
 				return json({ error: 'Unknown timer action.' }, { status: 400 });
 			}
-
 			s.currentLevel = level;
 			s.updatedAt = now;
-			if (action === 'pause') s.remainingMs = remaining;
-			if (action === 'start' && s.running) s.remainingMs = remaining;
-			if (level === s.levels.length - 1 && s.remainingMs <= 0) s.running = false;
+			if (level === s.levels.length - 1 && s.remainingMs <= 0) {
+				s.running = false;
+				s.levelEndsAt = null;
+			}
 			await persist(params.venueid, s);
-			return json({ ok: true, state: s });
+			return json({ ok: true, state: { ...s, remainingMs: timerRemaining(s, now), levelEndsAt: s.running ? Number(s.levelEndsAt) : null, serverNow: now } });
 		});
 	} catch (e) {
 		console.error('Timer command failed:', e);
