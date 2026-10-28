@@ -563,6 +563,7 @@ export async function POST({ params, request }) {
 				s.levelDurationMs = Math.max(1, Number(s.levels[0]?.minutes) || 1) * 60000;
 				s.remainingMs = s.levelDurationMs;
 				s.running = false;
+				s.levelEndsAt = null;
 				s.tournamentStarted = false;
 				s.eliminationEvent = null;
 				s.announcementEvent = null;
