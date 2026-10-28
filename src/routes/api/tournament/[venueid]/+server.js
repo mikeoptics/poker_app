@@ -11,6 +11,20 @@ async function persist(id, state) {
 	writeVenue(id, state);
 	publishTournamentUpdate(id);
 }
+/**
+ * Advance the timer snapshot before recording an unrelated tournament update.
+ * updatedAt is also the timer's clock anchor, so changing it without reducing
+ * remainingMs would silently give the running level extra time.
+ * @param {any} state
+ */
+function stampNonTimerUpdate(state) {
+	const timestamp = Date.now();
+	if (state?.running) {
+		state.remainingMs = Number(state.remainingMs ?? 0) -
+			Math.max(0, timestamp - Number(state.updatedAt || timestamp));
+	}
+	state.updatedAt = timestamp;
+}
 /** @param {string | number} id */
 async function read(id) {
 	return readVenue(id);
@@ -40,7 +54,7 @@ async function withVenueWriteLock(id, operation) {
 function publicState(s) {
 	if (!s) return null;
 	let i = Math.max(0, Number(s.currentLevel ?? 0));
-	let remaining = Math.max(0, Number(s.remainingMs ?? 0));
+	let remaining = Number(s.remainingMs ?? 0);
 	let displayRunning = Boolean(s.running);
 	const elapsed = displayRunning ? Math.max(0, Date.now() - (s.updatedAt ?? Date.now())) : 0;
 	remaining -= elapsed;
@@ -160,7 +174,7 @@ export async function GET({ params, url }) {
 			const s = await read(params.venueid);
 			if (s?.running && Array.isArray(s.levels) && s.levels.length) {
 				let level = Math.max(0, Math.min(Number(s.currentLevel) || 0, s.levels.length - 1));
-				let remaining = Math.max(0, Number(s.remainingMs) || 0) - Math.max(0, Date.now() - Number(s.updatedAt || Date.now()));
+				let remaining = (Number(s.remainingMs) || 0) - Math.max(0, Date.now() - Number(s.updatedAt || Date.now()));
 				const previousLevel = level;
 				while (remaining <= 0 && level < s.levels.length - 1) {
 					level += 1;
@@ -343,7 +357,7 @@ export async function POST({ params, request }) {
 					}
 				}
 				recalculateRedtoothResults();
-				s.updatedAt = Date.now();
+				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
 				return json({ ok: true, player, players: s.players, redtoothPlayers: s.redtoothPlayers ?? [], eliminationEvent: s.eliminationEvent ?? null, updatedAt: s.updatedAt });
 			}
@@ -382,7 +396,7 @@ export async function POST({ params, request }) {
 				};
 				s.players.push(player);
 				s.nextPlayerId = id + 1;
-				s.updatedAt = Date.now();
+				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
 				return json({ ok: true, player, nextPlayerId: s.nextPlayerId, updatedAt: s.updatedAt });
 			}
@@ -401,7 +415,7 @@ export async function POST({ params, request }) {
 					const seated = remainingActive.filter((/** @type {any} */ item) => Number(item.table) === table).sort((/** @type {any} */ a, /** @type {any} */ b) => Number(a.seat) - Number(b.seat));
 					seated.forEach((/** @type {any} */ item, /** @type {number} */ index) => { item.seat = index + 1; });
 				}
-				s.updatedAt = Date.now();
+				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
 				return json({ ok: true, players: s.players, updatedAt: s.updatedAt });
 			}
@@ -429,7 +443,7 @@ export async function POST({ params, request }) {
 						return json({ error: 'Entry count is out of range.' }, { status: 409 });
 					player[field] = nextValue;
 				}
-				s.updatedAt = Date.now();
+				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
 				return json({ ok: true, player, updatedAt: s.updatedAt });
 			}
@@ -461,7 +475,7 @@ export async function POST({ params, request }) {
 					const pending = pendingByRedtoothId.get(Number(row.redtoothId)) ?? 0;
 					return { ...row, localGames: pendingByRedtoothId.has(Number(row.redtoothId)) ? 1 : 0, localPoints: pending, pendingPoints: pending };
 				});
-				s.updatedAt = Date.now();
+				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
 				return json({ ok: true, players: s.players, redtoothPlayers: s.redtoothPlayers ?? [], updatedAt: s.updatedAt });
 			}
@@ -548,7 +562,7 @@ export async function POST({ params, request }) {
 					if (!name || name === `Table ${table}`) delete s.tableNames[table];
 					else s.tableNames[table] = name;
 				}
-				s.updatedAt = Date.now();
+				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
 				return json({ ok: true, players: s.players, tableNames: s.tableNames ?? {}, tableMoveEvent: s.tableMoveEvent ?? null, updatedAt: s.updatedAt });
 			}
@@ -576,7 +590,7 @@ export async function POST({ params, request }) {
 				s.eliminationEvent = null;
 				s.tableMoveEvent = null;
 				s.announcementEvent = null;
-				s.updatedAt = Date.now();
+				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
 				return json({ ok: true, updatedAt: s.updatedAt });
 			}
@@ -647,7 +661,7 @@ export async function POST({ params, request }) {
 					s.tableNames = Object.fromEntries(Object.entries(settings.tableNames).slice(0, 30).map(([key, value]) => [String(Number(key)), String(value ?? '').trim().slice(0, 32)]).filter(([key, value]) => Number(key) > 0 && value));
 				}
 				if (typeof settings.venueName === 'string') s.venueName = settings.venueName.trim().slice(0, 160);
-				s.updatedAt = Date.now();
+				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
 				return json({ ok: true, settings: { soundEnabled: s.soundEnabled, announcementEnabled: s.announcementEnabled, buyInAmount: s.buyInAmount, maxRebuys: s.maxRebuys, maxTopUps: s.maxTopUps, mixedGames: s.mixedGames, tableNames: s.tableNames ?? {}, venueName: s.venueName ?? '' }, updatedAt: s.updatedAt });
 			}
@@ -694,7 +708,7 @@ export async function POST({ params, request }) {
 						};
 					}).filter((/** @type {any} */ row) => Number.isInteger(row.redtoothId) && row.redtoothId > 0);
 				}
-				s.updatedAt = Date.now();
+				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
 				return json({ ok: true, updatedAt: s.updatedAt });
 			}
