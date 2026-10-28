@@ -27,7 +27,7 @@ function timerRemaining(state, timestamp = Date.now()) {
 	return Number(state.remainingMs ?? 0) - Math.max(0, timestamp - Number(state.updatedAt || timestamp));
 }
 function ensureTimerAnchor(state, timestamp = Date.now()) {
-	if (state?.running && !(Number(state.levelEndsAt) > 0)) state.levelEndsAt = timestamp + Math.max(0, timerRemaining(state, timestamp));
+	if (state?.running && !(Number(state.levelEndsAt) > 0)) state.levelEndsAt = timestamp + timerRemaining(state, timestamp);
 }
 /** @param {string | number} id */
 async function read(id) {
