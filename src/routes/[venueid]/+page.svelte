@@ -555,8 +555,6 @@
 			tournamentStarted = Boolean(state.tournamentStarted || state.running);
 			announcementEvent = state.announcementEvent ?? announcementEvent;
 			levelStartedAt = now() - (levelDurationMs - remainingMs);
-		levelEndsAt = state.running ? Number(state.levelEndsAt) || 0 : 0;
-		if (Number.isFinite(Number(state.serverNow))) serverClockOffsetMs = Number(state.serverNow) - Date.now();
 			tournamentMode = running ? (currentBlinds?.break ? 'break' : 'play') : 'paused';
 			if (previousLevel !== currentLevel && soundEnabled) playAlarm();
 			if (frame !== null) cancelAnimationFrame(frame);
@@ -572,7 +570,7 @@
 
 		// Calculate against the clock baseline rather than decrementing a counter,
 		// avoiding drift while reducing reactive updates from ~60Hz to 4Hz.
-		const nextRemainingMs = Math.max(0, levelEndsAt > 0 ? levelEndsAt - (Date.now() + serverClockOffsetMs) : (levelEndsAt > 0 ? levelEndsAt - (Date.now() + serverClockOffsetMs) : levelStartedAt + levelDurationMs - now()));
+		const nextRemainingMs = Math.max(0, levelEndsAt > 0 ? levelEndsAt - (Date.now() + serverClockOffsetMs) : levelStartedAt + levelDurationMs - now());
 		if (nextRemainingMs <= 0) {
 			remainingMs = 0;
 			lastTimerRenderAt = timestamp;
@@ -1664,6 +1662,8 @@
 					levelDurationMs = result.state.levelDurationMs;
 					remainingMs = result.state.remainingMs;
 					running = Boolean(result.state.running);
+					levelEndsAt = running ? Number(result.state.levelEndsAt) || 0 : 0;
+					if (Number.isFinite(Number(result.state.serverNow))) serverClockOffsetMs = Number(result.state.serverNow) - Date.now();
 					levelStartedAt = now() - (levelDurationMs - remainingMs);
 				}
 			}
@@ -1891,6 +1891,8 @@ function startCasting() {
 						running = Boolean(state.running);
 						tournamentStarted = Boolean(state.tournamentStarted);
 						announcementEvent = state.announcementEvent ?? announcementEvent;
+						levelEndsAt = running ? Number(state.levelEndsAt) || 0 : 0;
+						if (Number.isFinite(Number(state.serverNow))) serverClockOffsetMs = Number(state.serverNow) - Date.now();
 						levelStartedAt = now() - (levelDurationMs - remainingMs);
 						if (frame !== null) cancelAnimationFrame(frame);
 						lastTimerRenderAt = 0;
