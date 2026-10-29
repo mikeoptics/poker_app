@@ -214,6 +214,10 @@
 	let appInstalled = $state(false);
 	let buyInAmount = $state(5);
 	let tournamentStarted = $state(false);
+	let keepScreenAwake = $state(true);
+	/** @type {{ release: () => Promise<void>; addEventListener: (type: string, listener: () => void, options?: { once?: boolean }) => void } | null} */
+	let screenWakeLock = null;
+	let wakeLockRequestPending = false;
 	let mixedGames = $state(false);
 	// timer | tables | setup | blindlevels | payouts
 	let activeTab = $state('timer');
@@ -566,6 +570,44 @@
 			console.warn('Unable to refresh server timer:', error);
 		}
 	}
+
+	function shouldKeepScreenAwake() {
+		return keepScreenAwake && tournamentLoaded && tournamentStarted && players.length > 1 && activePlayerCount > 1;
+	}
+
+	async function updateScreenWakeLock() {
+		if (typeof navigator === 'undefined') return;
+		if (!shouldKeepScreenAwake()) {
+			if (screenWakeLock) {
+				const lock = screenWakeLock;
+				screenWakeLock = null;
+				try { await lock.release(); } catch (error) { console.warn('Unable to release screen wake lock:', error); }
+			}
+			return;
+		}
+		if (document.visibilityState !== 'visible' || screenWakeLock || wakeLockRequestPending) return;
+		const wakeLockApi = /** @type {Navigator & { wakeLock?: { request: (type: 'screen') => Promise<{ release: () => Promise<void>; addEventListener: (type: string, listener: () => void, options?: { once?: boolean }) => void }> }} */ (navigator).wakeLock;
+		if (!wakeLockApi?.request) return;
+		wakeLockRequestPending = true;
+		try {
+			const lock = await wakeLockApi.request('screen');
+			screenWakeLock = lock;
+			lock.addEventListener('release', () => {
+				if (screenWakeLock === lock) screenWakeLock = null;
+			}, { once: true });
+		} catch (error) {
+			// Browsers may deny the lock because of battery saver, permissions or device policy.
+			console.warn('Screen wake lock was not granted:', error);
+		} finally {
+			wakeLockRequestPending = false;
+		}
+	}
+
+	$effect(() => {
+		const shouldHoldLock = keepScreenAwake && tournamentLoaded && tournamentStarted && players.length > 1 && activePlayerCount > 1;
+		void shouldHoldLock;
+		void updateScreenWakeLock();
+	});
 
 	function syncTimer(timestamp = now()) {
 		if (!running) return;
@@ -1835,6 +1877,7 @@ function startCasting() {
 	}
 
 	onMount(() => {
+		keepScreenAwake = window.localStorage.getItem('poker-keep-screen-awake') !== 'false';
 		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 		window.addEventListener('appinstalled', () => {
 			appInstalled = true;
@@ -1917,7 +1960,10 @@ function startCasting() {
 					}
 				}
 			}
-			if (document.visibilityState === 'visible') await refreshServerTimer();
+			if (document.visibilityState === 'visible') {
+				await refreshServerTimer();
+				void updateScreenWakeLock();
+			}
 			saveTournament();
 		};
 		window.addEventListener('keydown', handleKeyboard);
@@ -1928,6 +1974,7 @@ function startCasting() {
 			window.removeEventListener('keydown', handleKeyboard);
 			document.removeEventListener('visibilitychange', handleVisibilityChange);
 			if (syncInterval !== null) clearInterval(syncInterval);
+			if (screenWakeLock) { const lock = screenWakeLock; screenWakeLock = null; void lock.release().catch(() => {}); }
 			tournamentEvents?.close();
 			if (playerSaveTimer !== null) {
 				clearTimeout(playerSaveTimer);
@@ -2470,6 +2517,10 @@ function startCasting() {
 				<div class="settings-option">
 					<div><strong>Voice announcements</strong><span>Announce the next level when blinds change</span></div>
 					<button class:enabled={announcementEnabled} class="settings-switch" type="button" role="switch" aria-label="Voice announcements" aria-checked={announcementEnabled} onclick={() => (announcementEnabled = !announcementEnabled)}><span></span></button>
+				</div>
+				<div class="settings-option">
+					<div><strong>Keep screen awake</strong><span>Prevent your phone screen from sleeping during an active tournament</span></div>
+					<button class:enabled={keepScreenAwake} class="settings-switch" type="button" role="switch" aria-label="Keep screen awake" aria-checked={keepScreenAwake} onclick={() => { keepScreenAwake = !keepScreenAwake; window.localStorage.setItem('poker-keep-screen-awake', String(keepScreenAwake)); void updateScreenWakeLock(); }}><span></span></button>
 				</div>
 
 				<div class="settings-danger">
