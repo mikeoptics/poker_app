@@ -73,6 +73,29 @@ function eliminatedWithPositions(players) {
 			eliminationPosition: activeCount + index + 1
 		}));
 }
+/** @param {any} state */
+function recalculateRedtoothResults(state) {
+	const pointsForPlace = (/** @type {number} */ place) => (/** @type {Record<number, number>} */ ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 }))[place] ?? 10;
+	const eliminated = eliminatedWithPositions(state.players);
+	const results = new Map();
+	for (const item of eliminated) {
+		if (item.guest || item.redtoothId == null) continue;
+		results.set(Number(item.redtoothId), Math.max(0, pointsForPlace(Number(item.eliminationPosition)) - 10));
+	}
+	for (const item of state.players) {
+		const previousPending = Math.max(0, Number(item.redtoothPendingPoints) || 0);
+		const confirmed = Math.max(0, (Number(item.redtoothPoints) || 0) - previousPending);
+		const pending = item.guest || item.redtoothId == null ? 0 : (results.get(Number(item.redtoothId)) ?? 0);
+		item.redtoothPendingPoints = pending;
+		item.redtoothPoints = confirmed + pending;
+	}
+	if (Array.isArray(state.redtoothPlayers)) {
+		state.redtoothPlayers = state.redtoothPlayers.map((/** @type {any} */ row) => {
+			const pending = results.get(Number(row.redtoothId)) ?? 0;
+			return { ...row, localGames: results.has(Number(row.redtoothId)) ? 1 : 0, localPoints: pending, pendingPoints: pending, qualification: results.has(Number(row.redtoothId)) ? null : (row.qualification ?? null) };
+		});
+	}
+}
 /** @param {string | number} id */
 async function read(id) {
 	return readVenue(id);
@@ -354,28 +377,6 @@ export async function POST({ params, request }) {
 				if (!player) return json({ error: 'Player not found.' }, { status: 404 });
 				// Rebuild unpublished local league results from the authoritative finishing order.
 				ensureEliminationTimestamps(s);
-				const recalculateRedtoothResults = () => {
-					const pointsForPlace = (/** @type {number} */ place) => (/** @type {Record<number, number>} */ ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 }))[place] ?? 10;
-					const eliminated = eliminatedWithPositions(s.players);
-					const results = new Map();
-					for (const item of eliminated) {
-						if (item.guest || item.redtoothId == null) continue;
-						results.set(Number(item.redtoothId), Math.max(0, pointsForPlace(Number(item.eliminationPosition)) - 10));
-					}
-					for (const item of s.players) {
-						const previousPending = Math.max(0, Number(item.redtoothPendingPoints) || 0);
-						const confirmed = Math.max(0, (Number(item.redtoothPoints) || 0) - previousPending);
-						const pending = item.guest || item.redtoothId == null ? 0 : (results.get(Number(item.redtoothId)) ?? 0);
-						item.redtoothPendingPoints = pending;
-						item.redtoothPoints = confirmed + pending;
-					}
-					if (Array.isArray(s.redtoothPlayers)) {
-						s.redtoothPlayers = s.redtoothPlayers.map((/** @type {any} */ row) => {
-							const pending = results.get(Number(row.redtoothId)) ?? 0;
-							return { ...row, localGames: results.has(Number(row.redtoothId)) ? 1 : 0, localPoints: pending, pendingPoints: pending, qualification: results.has(Number(row.redtoothId)) ? null : (row.qualification ?? null) };
-						});
-					}
-				};
 				if (action === 'eliminatePlayer') {
 					if (player.eliminated) return json({ error: 'Player is already eliminated.' }, { status: 409 });
 					const latestElimination = Math.max(0, ...s.players.filter((/** @type {any} */ item) => item.eliminated).map((/** @type {any} */ item) => Number(item.eliminatedAt) || 0));
@@ -388,7 +389,7 @@ export async function POST({ params, request }) {
 					player.eliminated = false;
 					player.eliminatedAt = null;
 				}
-				recalculateRedtoothResults();
+				recalculateRedtoothResults(s);
 				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
 				return json({ ok: true, player, players: s.players, redtoothPlayers: s.redtoothPlayers ?? [], eliminationEvent: s.eliminationEvent ?? null, updatedAt: s.updatedAt });
@@ -457,6 +458,7 @@ export async function POST({ params, request }) {
 				if (!player) return json({ error: 'Player not found.' }, { status: 404 });
 				if (player.eliminated) return json({ error: 'Eliminated players cannot be deleted.' }, { status: 409 });
 				s.players = s.players.filter((/** @type {any} */ item) => Number(item.id) !== playerId);
+				recalculateRedtoothResults(s);
 				// Finishing positions are derived from the remaining roster size, so
 				// deleting an active no-show automatically moves eliminated players up.
 				// Compact remaining active seats without moving players between tables.
@@ -508,9 +510,11 @@ export async function POST({ params, request }) {
 				const nextIndex = currentIndex + direction;
 				if (currentIndex < 0) return json({ error: 'Eliminated player not found.' }, { status: 404 });
 				if (nextIndex < 0 || nextIndex >= eliminated.length) return json({ error: 'Player is already at that end of the finishing order.' }, { status: 409 });
-				const firstTimestamp = eliminated[currentIndex].eliminatedAt;
-				eliminated[currentIndex].eliminatedAt = eliminated[nextIndex].eliminatedAt;
-				eliminated[nextIndex].eliminatedAt = firstTimestamp;
+				const firstPlayer = s.players.find((/** @type {any} */ player) => Number(player.id) === playerId);
+				const secondPlayer = s.players.find((/** @type {any} */ player) => Number(player.id) === Number(eliminated[nextIndex].id));
+				const firstTimestamp = firstPlayer.eliminatedAt;
+				firstPlayer.eliminatedAt = secondPlayer.eliminatedAt;
+				secondPlayer.eliminatedAt = firstTimestamp;
 				const reordered = eliminatedWithPositions(s.players);
 				const pointsForPlace = (/** @type {number} */ place) => (/** @type {Record<number, number>} */ ({ 1: 100, 2: 80, 3: 70, 4: 60, 5: 50, 6: 40, 7: 30, 8: 20 }))[place] ?? 10;
 				const pendingByRedtoothId = new Map(reordered.filter((/** @type {any} */ player) => !player.guest && player.redtoothId != null)
