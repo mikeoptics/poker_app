@@ -34,7 +34,7 @@
 		for (const player of players) {
 			const tableNumber = Number(player.table);
 			const seatNumber = Number(player.seat);
-			if (tableNumber <= 0 || seatNumber <= 0) continue;
+			if (!(tableNumber > 0 && seatNumber > 0)) continue;
 
 			let table = grouped.get(tableNumber);
 			if (!table) {
