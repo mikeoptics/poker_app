@@ -28,7 +28,7 @@
 	let shareStatus = $state('');
 
 	const tableGroups = $derived.by(() => {
-		/** @type {Map<number, { number:number, players:any[], activePlayers:any[], seats:Map<number, { number:number, players:any[] }> }>} */
+		/** @type {Map<number, { number:number, activePlayers:any[], seats:Map<number, { number:number, players:any[] }> }>} */
 		const grouped = new Map();
 
 		for (const player of players) {
@@ -38,11 +38,10 @@
 
 			let table = grouped.get(tableNumber);
 			if (!table) {
-				table = { number: tableNumber, players: [], activePlayers: [], seats: new Map() };
+				table = { number: tableNumber, activePlayers: [], seats: new Map() };
 				grouped.set(tableNumber, table);
 			}
 
-			table.players.push(player);
 			if (!player.eliminated) table.activePlayers.push(player);
 
 			let seat = table.seats.get(seatNumber);
