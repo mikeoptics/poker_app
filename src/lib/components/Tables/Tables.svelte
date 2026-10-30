@@ -262,7 +262,7 @@
 						{@const eliminatedPlayer = seatGroup.eliminatedPlayer}
 						<div class="table-list-row" class:eliminated-seat={!seatedPlayer && Boolean(eliminatedPlayer)}>
 							<strong>{seatGroup.number}</strong>
-							<span>{seatRole(seat)}</span>
+							<span>{seatRole(seatGroup.number)}</span>
 							<div class="table-player-name">
 								<div class="seat-player-labels">
 									{#if seatedPlayer}<b>{seatedPlayer.name}</b>{/if}
