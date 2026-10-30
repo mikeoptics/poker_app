@@ -5,8 +5,38 @@ const REDTOOTH_VENUE_SEARCH_URL = 'https://www.redtoothpoker.com/venues/find_aja
 const REDTOOTH_LEAGUE_URL = 'https://www.redtoothpoker.com/league/GetVenueLeagueTable';
 
 const DEFAULT_VENUE_ID = '2555';
-const SEASON = '3';
-const YEAR_ID = '20';
+
+// Redtooth seasons run for 13 weeks (91 days). Season 4, Year 20
+// starts on 19 October 2026. Calculate using the UK calendar date so
+// the season changes on the correct local date regardless of server timezone.
+const SEASON_ANCHOR_DATE = '2026-10-19';
+const SEASON_ANCHOR_NUMBER = 4;
+const YEAR_ANCHOR_ID = 20;
+const DAYS_PER_SEASON = 91;
+
+function getRedtoothSeason(now = new Date(), seasonOffset = 0) {
+	const dateParts = new Intl.DateTimeFormat('en-GB', {
+		timeZone: 'Europe/London',
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit'
+	}).formatToParts(now);
+	const dateValues = Object.fromEntries(dateParts.map((part) => [part.type, part.value]));
+	const todayUtc = Date.UTC(
+		Number(dateValues.year),
+		Number(dateValues.month) - 1,
+		Number(dateValues.day)
+	);
+	const [anchorYear, anchorMonth, anchorDay] = SEASON_ANCHOR_DATE.split('-').map(Number);
+	const anchorUtc = Date.UTC(anchorYear, anchorMonth - 1, anchorDay);
+	const elapsedSeasons = Math.floor((todayUtc - anchorUtc) / (DAYS_PER_SEASON * 24 * 60 * 60 * 1000)) + seasonOffset;
+	const cyclePosition = SEASON_ANCHOR_NUMBER - 1 + elapsedSeasons;
+
+	return {
+		season: ((cyclePosition % 4) + 4) % 4 + 1,
+		yearId: YEAR_ANCHOR_ID + Math.floor(cyclePosition / 4)
+	};
+}
 
 /**
  * @param {unknown} value
@@ -49,7 +79,7 @@ function parseLeagueTable(html) {
 
 		const name = cells[1];
 
-		const onclick = attributes.match(/onclick\s*=\s*["']\s*getGraph\s*\(\s*this\s*,\s*(\d+)\s*,/i);
+		const onclick = `${attributes} ${rowHtml}`.match(/onclick\s*=\s*["'][^"']*getGraph\s*\(\s*this\s*,\s*(\d+)/i);
 
 		const redtoothId = onclick ? Number.parseInt(onclick[1], 10) : null;
 
@@ -197,7 +227,8 @@ async function findVenues(query) {
 /**
  * @param {number|string} venueId
  */
-async function getLeagueTable(venueId) {
+/** @param {number|string} venueId @param {number} season @param {number} yearId */
+async function fetchSeasonTable(venueId, season, yearId) {
 	const response = await fetch(REDTOOTH_LEAGUE_URL, {
 		method: 'POST',
 		headers: {
@@ -206,8 +237,8 @@ async function getLeagueTable(venueId) {
 		},
 		body: new URLSearchParams({
 			venueid: String(venueId),
-			season: SEASON,
-			yearid: YEAR_ID
+			season: String(season),
+			yearid: String(yearId)
 		})
 	});
 
@@ -215,14 +246,40 @@ async function getLeagueTable(venueId) {
 		throw new Error(`Redtooth returned HTTP ${response.status}`);
 	}
 
-	const html = await response.text();
-	const players = parseLeagueTable(html);
+	return parseLeagueTable(await response.text());
+}
+
+/**
+ * Load current-season standings and a player directory that also includes
+ * players from the previous season for start-of-season autocomplete.
+ * Previous-season records are identity-only: their old points are not carried
+ * into the new season.
+ * @param {number|string} venueId
+ */
+async function getLeagueTable(venueId) {
+	const current = getRedtoothSeason();
+	const previous = getRedtoothSeason(new Date(), -1);
+	const [players, previousPlayers] = await Promise.all([
+		fetchSeasonTable(venueId, current.season, current.yearId),
+		fetchSeasonTable(venueId, previous.season, previous.yearId)
+	]);
+
+	const directoryById = new Map();
+	for (const player of previousPlayers) {
+		if (player.redtoothId === null) continue;
+		directoryById.set(player.redtoothId, { ...player, games: 0, points: 0, position: 0, qualification: null, qualificationMarker: null });
+	}
+	for (const player of players) {
+		if (player.redtoothId !== null) directoryById.set(player.redtoothId, player);
+	}
 
 	return {
 		venueId: Number(venueId),
-		season: Number(SEASON),
-		yearId: Number(YEAR_ID),
+		season: current.season,
+		yearId: current.yearId,
 		players,
+		playerDirectory: [...directoryById.values()],
+		previousSeason: previous,
 		fetchedAt: new Date().toISOString()
 	};
 }

@@ -612,3 +612,462 @@
 .eliminated-list-row span {
 	font-weight: 700;
 }
+
+
+/* Simplified seating layout: one clean player list per table. */
+.tables-page { height:100%; min-height:0; }
+.tables-panel { padding:16px; gap:0; }
+.panel-heading { padding:0 2px 12px; margin:0; border-bottom:1px solid #30353a; }
+.panel-heading h2 { margin:0; }
+.table-list-view { flex:1; min-height:0; overflow-y:auto; display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr)); gap:12px; margin:12px 0 0; padding:0 2px 4px 0; align-content:start; }
+.table-list-card, .eliminated-list { min-width:0; overflow:hidden; border:1px solid #30353a; border-radius:10px; background:#202429; color:#e7e9e7; box-shadow:none; }
+.table-list-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px 14px; border:0; border-bottom:1px solid #343a40; background:#252a2f; }
+.table-list-heading strong { color:#f0f1ef; font-size:13px; font-weight:800; }
+.table-list-heading span { color:#929aa1; font-size:11px; font-weight:600; }
+.table-list-header, .table-list-row { display:grid; grid-template-columns:44px 82px minmax(0,1fr); gap:10px; align-items:center; padding:10px 14px; }
+.table-list-header { border:0; border-bottom:1px solid #30353a; background:#1c2024; color:#899198; font-size:9px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+.table-list-row { min-height:42px; border:0; border-bottom:1px solid rgba(255,255,255,.055); }
+.table-list-row:last-child { border-bottom:0; }
+.table-list-row strong { color:#bfc5c9; font-size:12px; font-variant-numeric:tabular-nums; }
+.table-list-row span { color:#969fa6; font-size:11px; }
+.table-list-row b { min-width:0; overflow-wrap:anywhere; color:#f0f1ef; font-size:13px; font-weight:700; }
+.eliminated-list { grid-column:1/-1; }
+.eliminated-list-row { display:grid; grid-template-columns:55px minmax(0,1fr); gap:10px; align-items:center; padding:10px 14px; border-top:1px solid rgba(255,255,255,.055); }
+.eliminated-list-row strong { color:#aeb5ba; font-size:12px; }
+.eliminated-list-row span { color:#e3e6e4; font-size:13px; font-weight:650; }
+@media (max-width:700px) { .tables-panel { padding:12px; border-radius:12px; } .table-list-view { grid-template-columns:minmax(0,1fr); gap:10px; margin-top:10px; } .table-list-header, .table-list-row { grid-template-columns:36px 72px minmax(0,1fr); gap:8px; padding:9px 10px; } }
+
+
+.randomise-seating {
+	margin-top: 10px;
+	align-self: flex-start;
+	padding: 8px 12px;
+	border: 1px solid #454c53;
+	border-radius: 7px;
+	background: #292f34;
+	color: #e7e9e7;
+	font-size: 11px;
+	font-weight: 800;
+	cursor: pointer;
+}
+.randomise-seating:hover {
+	background: #343b41;
+}
+
+
+/* Retain eliminated seats and make replacement actions available in-place. */
+.table-list-row.eliminated-seat {
+	background: rgba(150, 70, 70, 0.08);
+}
+.table-player-name {
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+.table-player-name b {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+.table-player-name b.eliminated-name {
+	color: #92999f;
+	text-decoration: line-through;
+	text-decoration-thickness: 1.5px;
+}
+.replace-seat-button {
+	flex: 0 0 auto;
+	padding: 5px 9px;
+	border: 1px solid #65766b;
+	border-radius: 6px;
+	background: #293a30;
+	color: #d9e8dd;
+	font-size: 10px;
+	font-weight: 800;
+	cursor: pointer;
+}
+.replace-seat-button:hover { background: #354b3d; }
+.replace-modal-backdrop {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+	display: grid;
+	place-items: center;
+	padding: 18px;
+	background: rgba(0, 0, 0, 0.72);
+}
+.replace-modal {
+	width: min(100%, 440px);
+	padding: 22px;
+	border: 1px solid #3a444b;
+	border-radius: 14px;
+	background: #1b2025;
+	color: #edf0ed;
+	box-shadow: 0 22px 70px rgba(0,0,0,.5);
+}
+.replace-modal-heading {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+}
+.replace-modal-eyebrow {
+	color: #93a69a;
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: .1em;
+}
+.replace-modal h2 { margin: 5px 0 0; font-size: 19px; }
+.replace-modal p { margin: 14px 0; color: #aeb7bd; font-size: 13px; line-height: 1.5; }
+.replace-modal label { display: block; margin: 18px 0 7px; color: #c8d0d4; font-size: 11px; font-weight: 800; }
+.replace-modal select {
+	width: 100%;
+	min-height: 42px;
+	padding: 8px 10px;
+	border: 1px solid #46515a;
+	border-radius: 7px;
+	background: #111519;
+	color: #f0f2f1;
+	font: inherit;
+	font-size: 13px;
+}
+.replace-modal-close {
+	width: 30px;
+	height: 30px;
+	border: 0;
+	border-radius: 6px;
+	background: #2b3238;
+	color: #dce1e3;
+	font-size: 22px;
+	cursor: pointer;
+}
+.replace-modal .replace-no-candidates { padding: 12px; border-radius: 8px; background: #292e33; }
+.replace-modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+.replace-modal-actions button {
+	min-height: 38px;
+	padding: 8px 13px;
+	border-radius: 7px;
+	font-size: 12px;
+	font-weight: 800;
+	cursor: pointer;
+}
+.replace-cancel { border: 1px solid #454e55; background: #252b30; color: #d1d7da; }
+.replace-confirm { border: 1px solid #657e6d; background: #31513e; color: #f0f6f1; }
+.replace-confirm:disabled { opacity: .4; cursor: not-allowed; }
+@media (max-width: 700px) {
+	.replace-modal { padding: 18px; }
+	.table-player-name { align-items: flex-start; flex-direction: column; }
+}
+
+
+.seat-player-labels {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+}
+.seat-player-labels small.eliminated-name {
+	color: #92999f;
+	font-size: 10px;
+	font-weight: 650;
+	text-decoration: line-through;
+	text-decoration-thickness: 1.5px;
+}
+
+
+/* Table renaming controls */
+.table-title-group {
+	display: flex;
+	align-items: center;
+	gap: 7px;
+	min-width: 0;
+}
+.table-rename-button {
+	border: 1px solid #3c4742;
+	border-radius: 6px;
+	background: #202824;
+	color: #b9c8be;
+	padding: 4px 7px;
+	font-size: 10px;
+	font-weight: 700;
+	cursor: pointer;
+}
+.table-rename-button:hover { background: #2c3931; color: #fff; }
+.table-rename-form {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	gap: 6px;
+	min-width: 0;
+}
+.table-rename-form input {
+	width: min(190px, 42vw);
+	min-width: 90px;
+	min-height: 32px;
+	padding: 5px 8px;
+	border: 1px solid #52675a;
+	border-radius: 6px;
+	background: #111719;
+	color: #f0f3f1;
+	font: inherit;
+	font-size: 12px;
+}
+.table-rename-form button {
+	min-height: 30px;
+	padding: 5px 8px;
+	border: 1px solid #52675a;
+	border-radius: 6px;
+	background: #365342;
+	color: #f0f6f1;
+	font-size: 10px;
+	font-weight: 700;
+	cursor: pointer;
+}
+.table-rename-form button.table-rename-cancel {
+	border-color: #414a4e;
+	background: #292f32;
+	color: #d5dcda;
+}
+
+
+/* Responsive table cards: keep each table full-width instead of squeezing
+   several tables into narrow columns. The list itself scrolls vertically. */
+.tables-page {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: 100%;
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
+}
+.tables-panel {
+	width: 100%;
+	min-width: 0;
+	min-height: 0;
+	flex: 1 1 auto;
+	box-sizing: border-box;
+}
+.table-list-view {
+	display: flex;
+	flex: 1 1 0;
+	flex-direction: column;
+	align-items: stretch;
+	width: 100%;
+	min-width: 0;
+	min-height: 0;
+	gap: 12px;
+	overflow-x: hidden;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
+}
+.table-list-card {
+	flex: 0 0 auto;
+	width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+}
+.table-list-header,
+.table-list-row {
+	grid-template-columns: 38px 76px minmax(0, 1fr);
+	min-width: 0;
+}
+.table-list-row > *,
+.table-list-header > * {
+	min-width: 0;
+}
+.table-player-name,
+.seat-player-labels {
+	min-width: 0;
+	max-width: 100%;
+}
+.table-player-name b,
+.seat-player-labels b,
+.seat-player-labels small {
+	white-space: normal;
+	overflow-wrap: anywhere;
+	word-break: normal;
+}
+@media (max-width: 700px) {
+	.tables-panel {
+		padding: 10px;
+		border-radius: 10px;
+	}
+	.panel-heading {
+		flex-wrap: wrap;
+		row-gap: 8px;
+	}
+	.table-list-view {
+		gap: 9px;
+		margin-top: 9px;
+		padding-right: 1px;
+	}
+	.table-list-heading {
+		flex-wrap: wrap;
+		padding: 10px;
+	}
+	.table-list-header,
+	.table-list-row {
+		grid-template-columns: 32px 65px minmax(0, 1fr);
+		gap: 6px;
+		padding: 9px 8px;
+	}
+	.table-list-row {
+		min-height: 44px;
+	}
+	.table-list-row b {
+		font-size: 12px;
+	}
+}
+
+
+/* Centre the Tables heading, player count and seating action as a vertical group. */
+.panel-heading {
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 0 2px 14px;
+	text-align: center;
+}
+.panel-heading > div,
+.panel-heading h2 {
+	margin: 0;
+	text-align: center;
+}
+.player-count {
+	text-align: center;
+}
+.randomise-seating {
+	align-self: center;
+	margin-top: 2px;
+}
+
+/* Keep the rename affordance subtle until the table heading is hovered or focused. */
+.table-title-group {
+	position: relative;
+}
+.table-rename-button {
+	display: inline-grid;
+	place-items: center;
+	width: 25px;
+	height: 25px;
+	padding: 4px;
+	border: 0;
+	border-radius: 5px;
+	background: transparent;
+	color: #9ba69f;
+	opacity: 0;
+	cursor: pointer;
+	transition: opacity .15s ease, background .15s ease, color .15s ease;
+}
+.table-list-heading:hover .table-rename-button,
+.table-rename-button:focus-visible {
+	opacity: 1;
+}
+.table-rename-button:hover {
+	background: #354139;
+	color: #f0f5f1;
+}
+.table-rename-button svg {
+	width: 15px;
+	height: 15px;
+	fill: none;
+	stroke: currentColor;
+	stroke-width: 1.8;
+	stroke-linecap: round;
+	stroke-linejoin: round;
+}
+@media (hover: none) {
+	.table-rename-button {
+		opacity: .8;
+	}
+}
+
+
+/* Keep the title, player count and randomise action on one vertically centred row. */
+.panel-heading {
+	flex-direction: row;
+	flex-wrap: nowrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	text-align: left;
+}
+.panel-heading > div {
+	display: flex;
+	align-items: center;
+	flex: 0 0 auto;
+}
+.panel-heading h2 {
+	margin: 0;
+	line-height: 1.2;
+	text-align: left;
+}
+.player-count {
+	flex: 1 1 auto;
+	margin: 0;
+	text-align: center;
+	line-height: 1.2;
+}
+.randomise-seating {
+	flex: 0 0 auto;
+	align-self: center;
+	margin: 0;
+	line-height: 1.2;
+}
+@media (max-width: 520px) {
+	.panel-heading {
+		gap: 7px;
+	}
+	.panel-heading h2 {
+		font-size: 1rem;
+	}
+	.player-count {
+		font-size: .68rem;
+	}
+	.randomise-seating {
+		padding: 7px 8px;
+		font-size: 10px;
+	}
+}
+
+
+/* Seating-plan image sharing */
+.table-heading-actions {
+	display: flex;
+	align-items: center;
+	justify-content: flex-end;
+	gap: 8px;
+	flex: 0 0 auto;
+}
+.share-seating {
+	padding: 8px 12px;
+	border: 1px solid #557663;
+	border-radius: 7px;
+	background: #294536;
+	color: #e7f2ea;
+	font-size: 11px;
+	font-weight: 800;
+	cursor: pointer;
+	white-space: nowrap;
+}
+.share-seating:hover:not(:disabled) { background: #345943; }
+.share-seating:disabled { opacity: .55; cursor: wait; }
+.seating-share-status {
+	margin: 7px 0 0;
+	color: #aab9b0;
+	font-size: 11px;
+	text-align: center;
+}
+@media (max-width: 520px) {
+	.table-heading-actions { gap: 6px; }
+	.share-seating { padding: 7px 8px; font-size: 10px; }
+}
+
+.seating-share-status {
+	flex: 0 0 100%;
+	width: 100%;
+	box-sizing: border-box;
+}
