@@ -859,8 +859,10 @@
 				method: 'POST', headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ action: 'deletePlayer', playerId: id })
 			});
-			if (!response.ok) throw new Error((await response.json()).error || 'Unable to delete player.');
-			players = (await response.json()).players;
+			const result = await response.json();
+			if (!response.ok) throw new Error(result.error || 'Unable to delete player.');
+			players = result.players;
+			redtoothPlayers = result.redtoothPlayers ?? redtoothPlayers;
 			balanceSuggestions = [];
 			balanceMessage = '';
 			rebalanceTables();
