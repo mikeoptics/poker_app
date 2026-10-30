@@ -260,11 +260,15 @@
 	let transitionTimer = null;
 
 
-	const activePlayers = $derived(players.filter((p) => !p.eliminated));
-	const eliminatedPlayers = $derived(players.filter((p) => p.eliminated));
-
-	const redtoothRegisteredPlayers = $derived(players.filter((p) => p.redtoothId !== null));
+	const activePlayers = $derived(players.filter((player) => !player.eliminated));
+	const eliminatedPlayers = $derived(players.filter((player) => player.eliminated));
+	const eliminatedPlayersByPosition = $derived(
+		[...eliminatedPlayers].sort(
+			(a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999)
+		)
+	);
 	const activePlayerCount = $derived(activePlayers.length);
+	const eliminatedCount = $derived(eliminatedPlayers.length);
 	const currentBlinds = $derived(levels[currentLevel]);
 
 	const previousBlinds = $derived(currentLevel > 0 ? levels[currentLevel - 1] : null);
@@ -275,13 +279,11 @@
 		currentBlinds?.break ? 'BREAK' : mixedGames ? (currentBlinds?.game ?? '') : 'POKER'
 	);
 
-	const immediateNextIndex = $derived(Math.min(currentLevel + 1, levels.length - 1));
-
 	const nextGame = $derived(
-		levels[immediateNextIndex]?.break
+		nextBlinds?.break
 			? 'BREAK'
 			: mixedGames
-				? (levels[immediateNextIndex]?.game ?? '')
+				? (nextBlinds?.game ?? '')
 				: 'BLINDS'
 	);
 
@@ -294,7 +296,9 @@
 	const formattedTime = $derived(formatTime(displaySeconds));
 
 	const isFinalTable = $derived(activePlayerCount > 0 && activePlayerCount <= 8);
-	const tableCount = $derived(Math.max(0, ...players.map((player) => Number(player.table) || 0)));
+	const tableCount = $derived(
+		players.reduce((highest, player) => Math.max(highest, Number(player.table) || 0), 0)
+	);
 	const redtoothRegionalPlaces = $derived(
 		redtoothPlayers.filter((row) => row.qualification === 'regional').length
 	);
@@ -474,8 +478,6 @@
 
 
 
-	const averageStack = $derived(0);
-
 	/**
 	 * The payout schedule is expressed as cash amounts for a £5 entry.
 	 * The schedule scales proportionally if the entry price is changed.
@@ -530,6 +532,7 @@
 
 /** @type {{ place: number; amount: number }[]} */
 	const payouts = $derived(calculatePayouts(prizePool));
+	const payoutTotal = $derived(payouts.reduce((sum, payout) => sum + payout.amount, 0));
 
 	/** @param {number} seconds */
 	function formatTime(seconds) {
@@ -912,7 +915,7 @@
 	}
 
 	function distributeAcrossTables() {
-		const active = players.filter((p) => !p.eliminated);
+		const active = activePlayers;
 
 		if (active.length === 0) {
 			return;
@@ -1355,8 +1358,6 @@
 			console.warn('Browser voice announcement failed:', error);
 		}
 	}
-
-	const eliminatedCount = $derived(players.filter((player) => player.eliminated).length);
 
 	function startClock() {
 		if (clockRunning) return;
@@ -2159,7 +2160,7 @@ function startCasting() {
 						<div class="director-empty">No players have been added to this tournament yet.</div>
 					{:else}
 						<div class="director-player-list">
-							{#each [...activePlayers, ...[...eliminatedPlayers].sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999))] as player (player.id)}
+							{#each [...activePlayers, ...eliminatedPlayersByPosition] as player (player.id)}
 								<div
 									class="director-player-swipe"
 									class:dragging={swipedPlayerId === player.id}
@@ -2437,7 +2438,7 @@ function startCasting() {
 						</div>
 
 						<span class="total-percent">
-							£{payouts.reduce((/** @type {number} */ sum, /** @type {{ place: number; amount: number }} */ p) => sum + p.amount, 0).toLocaleString('en-GB')}
+							£{payoutTotal.toLocaleString('en-GB')}
 							/ £{prizePool.toLocaleString('en-GB')}
 						</span>
 					</div>
