@@ -1066,19 +1066,23 @@
 
 	/** @param {number} id */
 	async function removePlayer(id) {
-		const p = players.find((player) => player.id === id);
-		if (!p || p.eliminated) return;
+		const player = players.find((item) => item.id === id);
+		if (!player || player.eliminated) return;
+
 		try {
 			const response = await fetch(`/api/tournament/${venueId}`, {
-				method: 'POST', headers: { 'content-type': 'application/json' },
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
 				body: JSON.stringify({ action: 'eliminatePlayer', playerId: id })
 			});
 			const result = await response.json();
 			if (!response.ok) throw new Error(result.error || 'Unable to eliminate player.');
-			const finishPlace = result.player.eliminationPosition;
-			p.eliminated = true;
-			p.eliminationPosition = finishPlace;
+
+			// The server returns the authoritative, fully updated tournament arrays.
+			players = result.players;
+			redtoothPlayers = result.redtoothPlayers ?? redtoothPlayers;
 			eliminationEvent = result.eliminationEvent;
+
 			const eventId = result.eliminationEvent?.id;
 			if (eventId && eventId !== lastPlayedEliminationEventId) {
 				lastPlayedEliminationEventId = eventId;
@@ -1087,7 +1091,7 @@
 					eliminationSound.play().catch(() => {});
 				}
 			}
-			redtoothPlayers = result.redtoothPlayers ?? redtoothPlayers;
+
 			rebalanceTables();
 		} catch (error) {
 			console.error('Player elimination failed:', error);
@@ -1296,7 +1300,6 @@
 			});
 			const result = await response.json();
 			if (!response.ok) throw new Error(result.error || 'Unable to restore player.');
-			const restoredPosition = originalPlayer.eliminationPosition;
 			players = result.players;
 			const restoredPlayer = players.find((player) => player.id === id);
 			if (!restoredPlayer) return;
