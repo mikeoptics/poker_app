@@ -390,9 +390,7 @@
 	}
 
 	const tournamentRedtoothRows = $derived.by(() => {
-		const active = players
-			.filter((player) => !player.eliminated)
-			.sort((a, b) => {
+		const active = [...activePlayers].sort((a, b) => {
 				const aRow = redtoothLeague.find((/** @type {import('#lib/redtooth.js').RedtoothRow} */ row) => row.redtoothId === a.redtoothId);
 				const bRow = redtoothLeague.find((/** @type {import('#lib/redtooth.js').RedtoothRow} */ row) => row.redtoothId === b.redtoothId);
 
@@ -409,9 +407,7 @@
 				return players.indexOf(a) - players.indexOf(b);
 			});
 
-		const eliminated = players
-			.filter((player) => player.eliminated)
-			.sort((a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999));
+		const eliminated = eliminatedPlayersByPosition;
 
 		return [
 			...active.map((player, index) => ({
