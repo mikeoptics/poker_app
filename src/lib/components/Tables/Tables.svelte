@@ -27,9 +27,47 @@
 	let sharingSeatingPlan = $state(false);
 	let shareStatus = $state('');
 
-	const visibleTableNumbers = $derived(
-		[...new Set(players.filter((player) => Number(player.table) > 0 && Number(player.seat) > 0).map((player) => Number(player.table)))].sort((a, b) => a - b)
-	);
+	const tableGroups = $derived.by(() => {
+		/** @type {Map<number, { number:number, players:any[], activePlayers:any[], seats:Map<number, { number:number, players:any[] }> }>} */
+		const grouped = new Map();
+
+		for (const player of players) {
+			const tableNumber = Number(player.table);
+			const seatNumber = Number(player.seat);
+			if (tableNumber <= 0 || seatNumber <= 0) continue;
+
+			let table = grouped.get(tableNumber);
+			if (!table) {
+				table = { number: tableNumber, players: [], activePlayers: [], seats: new Map() };
+				grouped.set(tableNumber, table);
+			}
+
+			table.players.push(player);
+			if (!player.eliminated) table.activePlayers.push(player);
+
+			let seat = table.seats.get(seatNumber);
+			if (!seat) {
+				seat = { number: seatNumber, players: [] };
+				table.seats.set(seatNumber, seat);
+			}
+			seat.players.push(player);
+		}
+
+		return [...grouped.values()]
+			.sort((a, b) => a.number - b.number)
+			.map((table) => ({
+				...table,
+				activeCount: table.activePlayers.length,
+				activePlayers: table.activePlayers.sort((a, b) => Number(a.seat) - Number(b.seat)),
+				seats: [...table.seats.values()]
+					.sort((a, b) => a.number - b.number)
+					.map((seat) => ({
+						...seat,
+						seatedPlayer: seat.players.find((player) => !player.eliminated),
+						eliminatedPlayer: seat.players.find((player) => player.eliminated)
+					}))
+			})));
+	});
 
 	const replacingPlayer = $derived(
 		players.find((player) => player.id === replacingPlayerId && player.eliminated) ?? null
@@ -75,15 +113,13 @@
 	 */
 	async function shareSeatingPlan() {
 		if (sharingSeatingPlan) return;
-		const tables = visibleTableNumbers
-			.map((number) => ({
-				number,
-				name: tableNames[number] || `Table ${number}`,
-				players: players
-					.filter((player) => !player.eliminated && Number(player.table) === number && Number(player.seat) > 0)
-					.sort((a, b) => Number(a.seat) - Number(b.seat))
-			}))
-			.filter((table) => table.players.length > 0);
+		const tables = tableGroups
+			.filter((table) => table.activePlayers.length > 0)
+			.map((table) => ({
+				number: table.number,
+				name: tableNames[table.number] || `Table ${table.number}`,
+				players: table.activePlayers
+			}));
 		if (!tables.length) {
 			shareStatus = 'There are no seated players to share.';
 			return;
@@ -200,9 +236,8 @@
 		</div>
 
 		<div class="table-list-view">
-			{#each visibleTableNumbers as tableNumber (tableNumber)}
-				{@const tablePlayers = players.filter((player) => player.table === tableNumber && player.seat > 0)}
-				{@const seatNumbers = [...new Set(tablePlayers.map((player) => player.seat))].sort((a, b) => a - b)}
+			{#each tableGroups as tableGroup (tableGroup.number)}
+				{@const tableNumber = tableGroup.number}
 				<section class="table-list-card">
 					<div class="table-list-heading">
 						{#if editingTableNumber === tableNumber}
@@ -217,17 +252,16 @@
 								<button class="table-rename-button" type="button" aria-label={`Rename ${tableNames[tableNumber] || `Table ${tableNumber}`}`} title="Rename table" onclick={() => startRename(tableNumber)}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9" /><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z" /></svg></button>
 							</div>
 						{/if}
-						<span>{tablePlayers.filter((player) => !player.eliminated).length} / 8 players</span>
+						<span>{tableGroup.activeCount} / 8 players</span>
 					</div>
 					<div class="table-list-header">
 						<span>Seat</span><span>Position</span><span>Player</span>
 					</div>
-					{#each seatNumbers as seat}
-						{@const seatPlayers = tablePlayers.filter((player) => player.seat === seat)}
-						{@const seatedPlayer = seatPlayers.find((player) => !player.eliminated)}
-						{@const eliminatedPlayer = seatPlayers.find((player) => player.eliminated)}
+					{#each tableGroup.seats as seatGroup (seatGroup.number)}
+						{@const seatedPlayer = seatGroup.seatedPlayer}
+						{@const eliminatedPlayer = seatGroup.eliminatedPlayer}
 						<div class="table-list-row" class:eliminated-seat={!seatedPlayer && Boolean(eliminatedPlayer)}>
-							<strong>{seat}</strong>
+							<strong>{seatGroup.number}</strong>
 							<span>{seatRole(seat)}</span>
 							<div class="table-player-name">
 								<div class="seat-player-labels">
