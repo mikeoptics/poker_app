@@ -348,6 +348,7 @@ export async function PUT({ params, request }) {
 			venueName: String(existing?.venueName ?? '').slice(0, 160),
 			updatedAt: Date.now()
 		};
+		ensureEliminationTimestamps(s);
 		await persist(params.venueid, s);
 		return json({ ok: true, updatedAt: s.updatedAt });
 		});
@@ -369,6 +370,7 @@ export async function POST({ params, request }) {
 		const action = String(body?.action ?? '');
 		return await withVenueWriteLock(params.venueid, async () => {
 			const s = await read(params.venueid);
+			ensureEliminationTimestamps(s);
 			if (action === 'eliminatePlayer' || action === 'restorePlayer') {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
 				const playerId = Number(body.playerId);
@@ -376,7 +378,6 @@ export async function POST({ params, request }) {
 				const player = s.players.find((/** @type {any} */ item) => Number(item.id) === playerId);
 				if (!player) return json({ error: 'Player not found.' }, { status: 404 });
 				// Rebuild unpublished local league results from the authoritative finishing order.
-				ensureEliminationTimestamps(s);
 				if (action === 'eliminatePlayer') {
 					if (player.eliminated) return json({ error: 'Player is already eliminated.' }, { status: 409 });
 					const latestElimination = Math.max(0, ...s.players.filter((/** @type {any} */ item) => item.eliminated).map((/** @type {any} */ item) => Number(item.eliminatedAt) || 0));
