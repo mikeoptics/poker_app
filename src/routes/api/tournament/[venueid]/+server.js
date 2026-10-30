@@ -471,7 +471,7 @@ export async function POST({ params, request }) {
 				}
 				stampNonTimerUpdate(s);
 				await persist(params.venueid, s);
-				return json({ ok: true, players: s.players, updatedAt: s.updatedAt });
+				return json({ ok: true, players: s.players, redtoothPlayers: s.redtoothPlayers ?? [], updatedAt: s.updatedAt });
 			}
 			if (action === 'setPlayerPaid' || action === 'renamePlayer' || action === 'adjustPlayerEntry') {
 				if (!s || !Array.isArray(s.players)) return json({ error: 'Tournament has not been configured.' }, { status: 404 });
