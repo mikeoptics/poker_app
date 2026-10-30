@@ -22,7 +22,7 @@
 	 * topUps:number;
 	 * paid:boolean;
 	 * eliminated:boolean;
-	 * eliminationPosition:number|null;
+	 * eliminatedAt:number|null;
 	 * redtoothId:number|null;
 	 * redtoothGames:number;
 	 * redtoothPoints:number;
@@ -116,7 +116,7 @@
 			topUps: 0,
 			paid: false,
 			eliminated: false,
-			eliminationPosition: null,
+			eliminatedAt: null,
 			redtoothId: null,
 			redtoothGames: 0,
 			redtoothPoints: 0,
@@ -262,12 +262,15 @@
 
 	const activePlayers = $derived(players.filter((player) => !player.eliminated));
 	const eliminatedPlayers = $derived(players.filter((player) => player.eliminated));
-	const eliminatedPlayersByPosition = $derived(
-		[...eliminatedPlayers].sort(
-			(a, b) => (a.eliminationPosition ?? 999) - (b.eliminationPosition ?? 999)
-		)
-	);
 	const activePlayerCount = $derived(activePlayers.length);
+	const eliminatedPlayersByPosition = $derived(
+		[...eliminatedPlayers]
+			.sort((a, b) => Number(b.eliminatedAt ?? 0) - Number(a.eliminatedAt ?? 0))
+			.map((player, index) => ({
+				...player,
+				eliminationPosition: activePlayerCount + index + 1
+			}))
+	);
 	const eliminatedCount = $derived(eliminatedPlayers.length);
 	const currentBlinds = $derived(levels[currentLevel]);
 
