@@ -1,0 +1,686 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Poker Tournament TV</title>
+
+  <script src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #101214;
+      color: #f4f4f1;
+      font-family: Arial, sans-serif;
+    }
+
+    .screen {
+      min-height: 100vh;
+      padding: 3vh 4vw;
+      display: flex;
+      flex-direction: column;
+      gap: 3vh;
+      background: radial-gradient(circle at top, rgba(255,255,255,.07), transparent 36rem), #101214;
+    }
+
+    header {
+      text-align: center;
+      color: #c4a36a;
+      letter-spacing: .15em;
+    }
+
+    h1 {
+      text-align: center;
+      margin: .3em;
+      font-size: 3vw;
+    }
+
+    .display-layout {
+      flex: 1;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(340px, .85fr);
+      gap: 2vw;
+    }
+
+    .hero {
+      min-height: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #181b1f;
+      border: 1px solid #343a40;
+      border-radius: 24px;
+    }
+
+    .game {
+      font-size: 2.5vw;
+      color: #c4a36a;
+      font-weight: bold;
+    }
+
+    .timer {
+      font-size: 13vw;
+      font-weight: bold;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .blinds { font-size: 4vw; }
+
+    .standings-panel {
+      min-height: 0;
+      overflow: hidden;
+      padding: 2vh 1.8vw;
+      background: #181b1f;
+      border: 1px solid #343a40;
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .standings-heading { color: #c4a36a; font-size: 1.7vw; font-weight: 800; letter-spacing: .12em; }
+    .standings-subheading { color: #8e969d; font-size: 1vw; margin-top: .4vh; }
+    .standings-columns, .standing-row { display: grid; grid-template-columns: 2.5rem minmax(0, 1fr) 3rem 3.5rem; gap: .5rem; align-items: center; }
+    .standings-columns { color: #899198; font-size: .9vw; padding: 1.4vh .4vw .8vh; border-bottom: 1px solid #343a40; }
+    .standings-list { overflow: hidden; flex: 1; padding-top: .5vh; }
+    .standing-row { min-height: 4.4vh; padding: .3vh .4vw; border-bottom: 1px solid rgba(255,255,255,.06); font-size: 1.25vw; }
+    .standing-position { color: #c4a36a; font-weight: 800; }
+    .standing-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .standing-stat { text-align: right; color: #cbd0d4; font-variant-numeric: tabular-nums; }
+    .standing-row.regional .standing-position { color: #79c7a1; }
+    .standing-row.playoff .standing-position { color: #83aef0; }
+    .standing-row.live .standing-stat { color: #62d394; }
+    .standing-row.locked .standing-stat { color: #d8b45b; }
+    .standing-row.absent { color: #858b91; opacity: .62; filter: grayscale(1); }
+    .standing-row.absent .standing-stat,
+    .standing-row.absent .standing-position,
+    .standing-row.absent .standing-name { color: #858b91; }
+    .standings-empty { color: #92999f; text-align: center; padding: 3vh 1vw; font-size: 1.2vw; }
+
+    @media (max-aspect-ratio: 4/3) {
+      .screen { padding: 2vh 2vw; gap: 2vh; }
+      .display-layout { grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); }
+      .timer { font-size: 11vw; }
+      .standings-heading { font-size: 2.2vw; }
+      .standing-row { font-size: 1.6vw; }
+    }
+
+    .announcement-banner {
+      display: none;
+      width: 100%;
+      padding: 18px 24px;
+      border: 2px solid #c4a36a;
+      border-radius: 16px;
+      background: linear-gradient(110deg, #3a3020, #25251f);
+      color: #ffe3a3;
+      font-size: clamp(1.5rem, 3vw, 3rem);
+      font-weight: 900;
+      text-align: center;
+      box-shadow: 0 8px 28px rgba(0,0,0,.3);
+    }
+    .announcement-banner.show { display: block; animation: announcementIn .25s ease-out; }
+    @keyframes announcementIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .next {
+      text-align: center;
+      color: #aeb5bb;
+      font-size: 2vw;
+    }
+
+    .table-move-overlay {
+      display: none;
+      width: 100%;
+      flex: 0 0 auto;
+      padding: 1.4vh 2vw;
+      border: 1px solid #8f784f;
+      border-left: 6px solid #c4a36a;
+      border-radius: 12px;
+      background: #242629;
+      color: #f4f4f1;
+      text-align: left;
+    }
+
+    .table-move-overlay.show {
+      display: block;
+    }
+
+    .table-move-card {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      max-width: 100%;
+    }
+
+    .table-move-heading {
+      flex: 0 0 auto;
+      color: #c4a36a;
+      font-size: clamp(1rem, 1.5vw, 1.5rem);
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      white-space: nowrap;
+    }
+
+    .table-move-message {
+      min-width: 0;
+      color: #ffffff;
+      font-size: clamp(1.25rem, 2.4vw, 2.5rem);
+      font-weight: 700;
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 700px) {
+      .table-move-card { align-items: flex-start; flex-direction: column; gap: .4rem; }
+    }
+
+    .elimination-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.82);
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .elimination-overlay.show {
+      opacity: 1;
+      animation: eliminationDisplay 5s ease forwards;
+    }
+
+    .elimination-card {
+      position: relative;
+      z-index: 1;
+      padding: 45px 5vw;
+      text-align: center;
+      transform: scale(0.65);
+      animation: eliminationSlam 0.55s cubic-bezier(0.16, 1.35, 0.3, 1) forwards;
+    }
+
+    .elimination-top {
+      margin-bottom: 12px;
+      color: #d9d9d9;
+      font-size: clamp(1rem, 2vw, 2rem);
+      font-weight: 800;
+      letter-spacing: 0.3em;
+      animation: eliminationTop 0.4s ease-out 0.15s both;
+    }
+
+    .elimination-name {
+      max-width: 90vw;
+      overflow-wrap: anywhere;
+      color: #ffffff;
+      font-size: clamp(3rem, 8vw, 7rem);
+      font-weight: 950;
+      line-height: 0.95;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(255, 40, 40, 0.8), 0 0 30px rgba(255, 0, 0, 0.6), 0 5px 0 #550000;
+      animation: eliminationName 0.5s cubic-bezier(0.16, 1.35, 0.3, 1) 0.12s both;
+    }
+
+    .elimination-word {
+      margin-top: 18px;
+      color: #ff3030;
+      font-size: clamp(1.8rem, 4vw, 3.5rem);
+      font-weight: 950;
+      letter-spacing: 0.18em;
+      text-shadow: 0 0 8px #ff0000, 0 0 25px rgba(255, 0, 0, 0.8);
+      animation: eliminationWord 0.4s ease-out 0.45s both, eliminationPulse 0.75s ease-in-out 0.9s infinite;
+    }
+
+    .elimination-impact {
+      position: absolute;
+      width: 20vw;
+      height: 20vw;
+      max-width: 350px;
+      max-height: 350px;
+      border-radius: 50%;
+      background: rgba(255, 0, 0, 0.25);
+      transform: scale(0);
+      animation: eliminationShockwave 0.8s ease-out;
+    }
+
+    @keyframes eliminationDisplay {
+      0% { opacity: 0; }
+      4% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+    @keyframes eliminationSlam {
+      0% { transform: scale(0.65); opacity: 0; }
+      55% { transform: scale(1.08); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes eliminationTop {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes eliminationName {
+      0% { opacity: 0; transform: scale(1.5); }
+      65% { opacity: 1; transform: scale(0.96); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes eliminationWord {
+      from { opacity: 0; transform: translateY(25px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes eliminationPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    @keyframes eliminationShockwave {
+      0% { transform: scale(0); opacity: 0.8; }
+      100% { transform: scale(5); opacity: 0; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="screen">
+    <header>LIVE TOURNAMENT</header>
+    <h1 id="venue">Connect from the Poker App</h1>
+
+    <div class="table-move-overlay" id="table-move-overlay" role="status" aria-live="assertive" aria-hidden="true">
+      <div class="table-move-card">
+        <div class="table-move-message" id="table-move-message"></div>
+      </div>
+    </div>
+
+    <div class="display-layout">
+      <main class="hero">
+        <div class="game" id="game">WAITING</div>
+        <div class="timer" id="timer">--:--</div>
+        <div class="blinds" id="blinds">—</div>
+      </main>
+      <aside class="standings-panel">
+        <div class="standings-heading">LEAGUE STANDINGS</div>
+        <div class="standings-subheading">Current season · live table</div>
+        <div class="standings-columns"><span>#</span><span>PLAYER</span><span style="text-align:right">GP</span><span style="text-align:right">PTS</span></div>
+        <div class="standings-list" id="standings-list"><div class="standings-empty">Waiting for league data…</div></div>
+      </aside>
+    </div>
+
+    <div class="next" id="next"></div>
+    <div class="announcement-banner" id="announcement-banner" role="status" aria-live="assertive"></div>
+  </div>
+
+  <div class="elimination-overlay" id="elimination-overlay" aria-hidden="true">
+    <div class="elimination-impact"></div>
+    <div class="elimination-card">
+      <div class="elimination-top">PLAYER ELIMINATED</div>
+      <div class="elimination-name" id="elimination-name"></div>
+      <div class="elimination-word">ELIMINATED</div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const NAMESPACE = 'urn:x-cast:com.miiiike.poker';
+
+      const context = cast.framework.CastReceiverContext.getInstance();
+
+      let venueId = null;
+      let remaining = 0;
+      let updatedAt = 0;
+      let running = false;
+      let refreshInterval = null;
+      let tournamentEvents = null;
+      let screenWakeLock = null;
+      let lastEliminationEventId = null;
+      let hasReceivedInitialState = false;
+      // Events that predate this receiver connection are historical. This
+      // timestamp also protects against an empty first response followed by
+      // a delayed response containing an old persisted elimination event.
+      let receiverConnectedAt = 0;
+      let eliminationHideTimer = null;
+      let lastCurrentLevel = null;
+      let receiverSoundEnabled = true;
+      let receiverAudioContext = null;
+      let lastAnnouncementEventId = null;
+      let hasReceivedInitialAnnouncementState = false;
+      let lastDisplayedAnnouncementEventId = null;
+      let hasReceivedInitialTableMoveState = false;
+      let announcementHideTimer = null;
+      const eliminationSound = new Audio('https://www.myinstants.com/media/sounds/fortnite-death-sound-not-knockout.mp3');
+      eliminationSound.volume = 0.8;
+      const tableMoveSound = new Audio('https://www.myinstants.com/media/sounds/obi-wan-hello-there.mp3');
+      tableMoveSound.volume = 0.8;
+
+      const el = id => document.getElementById(id);
+
+      function playBlindAlarm() {
+        if (!receiverSoundEnabled) return;
+        try {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (!AudioContextClass) return;
+          receiverAudioContext ||= new AudioContextClass();
+          if (receiverAudioContext.state === 'suspended') receiverAudioContext.resume();
+          const start = receiverAudioContext.currentTime;
+          [0, 0.3, 0.6, 0.9].forEach((offset) => {
+            const oscillator = receiverAudioContext.createOscillator();
+            const gain = receiverAudioContext.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(880, start + offset);
+            gain.gain.setValueAtTime(0.0001, start + offset);
+            gain.gain.exponentialRampToValueAtTime(0.22, start + offset + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + offset + 0.22);
+            oscillator.connect(gain);
+            gain.connect(receiverAudioContext.destination);
+            oscillator.start(start + offset);
+            oscillator.stop(start + offset + 0.24);
+          });
+        } catch (error) {
+          console.warn('Blind alarm playback failed:', error);
+        }
+      }
+
+      function showTableMoveAnnouncement(event) {
+        if (!event || typeof event.id !== 'string' || !event.text) return;
+        if (event.id === lastDisplayedAnnouncementEventId) return;
+
+        lastDisplayedAnnouncementEventId = event.id;
+        try {
+          if (venueId) localStorage.setItem('poker-last-table-move-' + venueId, event.id);
+        } catch (error) {
+          console.warn('Unable to persist table-move playback history:', error);
+        }
+        if (receiverSoundEnabled) {
+          tableMoveSound.currentTime = 0;
+          tableMoveSound.play().catch(error => console.warn('Table move sound playback failed:', error));
+        }
+        const overlay = el('table-move-overlay');
+        el('table-move-message').textContent = event.text;
+
+        // Keep the notice in normal page flow at the top of the display so
+        // it remains visible without obscuring the timer or blind levels.
+        if (announcementHideTimer !== null) clearTimeout(announcementHideTimer);
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+
+        announcementHideTimer = setTimeout(() => {
+          overlay.classList.remove('show');
+          overlay.setAttribute('aria-hidden', 'true');
+          announcementHideTimer = null;
+        }, 12000);
+      }
+
+      function speakAnnouncement(event) {
+        if (!hasReceivedInitialAnnouncementState) {
+          hasReceivedInitialAnnouncementState = true;
+          lastAnnouncementEventId = typeof event?.id === 'string' ? event.id : null;
+          return;
+        }
+        if (!event || typeof event.id !== 'string' || event.id === lastAnnouncementEventId) return;
+        lastAnnouncementEventId = event.id;
+        if (!receiverSoundEnabled || !('speechSynthesis' in window) || !event.text) return;
+        try {
+          window.speechSynthesis.cancel();
+          const utterance = new SpeechSynthesisUtterance(event.text);
+          utterance.lang = 'en-GB';
+          utterance.rate = 0.92;
+          utterance.pitch = 0.95;
+          const voices = window.speechSynthesis.getVoices();
+          const britishVoice = voices.find(voice => voice.lang && voice.lang.toLowerCase().startsWith('en-gb'));
+          if (britishVoice) utterance.voice = britishVoice;
+          window.speechSynthesis.speak(utterance);
+        } catch (error) {
+          console.warn('Spoken announcement playback failed:', error);
+        }
+      }
+
+      function renderStandings(rows) {
+        const list = el('standings-list');
+        if (!Array.isArray(rows) || rows.length === 0) {
+          list.innerHTML = '<div class="standings-empty">No league standings available</div>';
+          return;
+        }
+        list.replaceChildren();
+        rows.slice(0, 14).forEach(row => {
+          const item = document.createElement('div');
+          item.className = 'standing-row' +
+            (row.qualification === 'regional' ? ' regional' : row.qualification === 'playoff' ? ' playoff' : '') +
+            (row.attendanceStatus === 'locked' ? ' locked' : row.attendanceStatus === 'live' ? ' live' : ' absent');
+          const position = document.createElement('span');
+          position.className = 'standing-position';
+          position.textContent = String(row.position ?? '—');
+          const name = document.createElement('span');
+          name.className = 'standing-name';
+          name.textContent = row.name || '—';
+          const games = document.createElement('span');
+          games.className = 'standing-stat';
+          games.textContent = String(row.games ?? 0);
+          const points = document.createElement('span');
+          points.className = 'standing-stat';
+          points.textContent = String(row.points ?? 0);
+          item.append(position, name, games, points);
+          list.appendChild(item);
+        });
+      }
+
+      function playEliminationSound() {
+        if (!receiverSoundEnabled) return;
+        eliminationSound.currentTime = 0;
+        eliminationSound.play().catch(error => console.warn('Elimination sound playback failed:', error));
+      }
+
+      function showElimination(event) {
+        const storageKey = venueId ? 'poker-last-elimination-' + venueId : null;
+        if (!hasReceivedInitialState) {
+          hasReceivedInitialState = true;
+          let previouslyPlayedId = null;
+          try {
+            previouslyPlayedId = storageKey ? localStorage.getItem(storageKey) : null;
+          } catch (error) {
+            console.warn('Unable to read elimination playback history:', error);
+          }
+          // Treat the current event as already handled on initial connection.
+          // A previously played ID survives receiver/page refreshes.
+          lastEliminationEventId = previouslyPlayedId || (typeof event?.id === 'string' ? event.id : null);
+          return;
+        }
+
+        if (!event || typeof event.id !== 'string' || event.id === lastEliminationEventId) return;
+
+        const eventCreatedAt = Number(event.createdAt);
+        if (!Number.isFinite(eventCreatedAt) || eventCreatedAt <= receiverConnectedAt) {
+          // A delayed poll may return an event that was already in the server
+          // state before casting began. Mark it handled without showing it.
+          lastEliminationEventId = event.id;
+          return;
+        }
+
+        lastEliminationEventId = event.id;
+        try {
+          if (storageKey) localStorage.setItem(storageKey, event.id);
+        } catch (error) {
+          console.warn('Unable to persist elimination playback history:', error);
+        }
+        el('elimination-name').textContent = event.playerName || 'PLAYER';
+        playEliminationSound();
+        const overlay = el('elimination-overlay');
+
+        if (eliminationHideTimer !== null) clearTimeout(eliminationHideTimer);
+
+        overlay.classList.remove('show');
+        void overlay.offsetWidth;
+        overlay.classList.add('show');
+
+        eliminationHideTimer = setTimeout(() => {
+          overlay.classList.remove('show');
+          eliminationHideTimer = null;
+        }, 5200);
+      }
+
+      function draw(d) {
+        if (!d) return;
+
+        if (lastCurrentLevel === null) {
+          lastCurrentLevel = Number.isFinite(Number(d.currentLevel)) ? Number(d.currentLevel) : 0;
+        } else if (Number.isFinite(Number(d.currentLevel)) && Number(d.currentLevel) !== lastCurrentLevel) {
+          lastCurrentLevel = Number(d.currentLevel);
+          playBlindAlarm();
+        }
+        receiverSoundEnabled = d.soundEnabled !== false;
+
+        el('venue').textContent =
+          d.venueName || ('Venue ' + venueId);
+
+        el('game').textContent = d.currentGame || 'POKER';
+        el('blinds').textContent = d.blinds || '—';
+
+        el('next').textContent =
+          'NEXT: ' + (d.nextGame || '—') +
+          ' · ' + (d.nextBlinds || '—') +
+          ' · PLAYERS: ' + (d.activePlayerCount ?? 0);
+
+        remaining = d.remainingMs || 0;
+        updatedAt = d.updatedAt || Date.now();
+        running = Boolean(d.running);
+        renderStandings(d.standings);
+        showElimination(d.eliminationEvent);
+        if (!hasReceivedInitialTableMoveState) {
+          hasReceivedInitialTableMoveState = true;
+          const event = d.tableMoveEvent;
+          let previouslyPlayedId = null;
+          try {
+            previouslyPlayedId = venueId ? localStorage.getItem('poker-last-table-move-' + venueId) : null;
+          } catch (error) {
+            console.warn('Unable to read table-move playback history:', error);
+          }
+          const isRecent = event?.id && Date.now() - Number(event.createdAt || 0) <= 30000;
+          if (isRecent && event.id !== previouslyPlayedId) showTableMoveAnnouncement(event);
+          else lastDisplayedAnnouncementEventId = typeof event?.id === 'string' ? event.id : null;
+        } else {
+          showTableMoveAnnouncement(d.tableMoveEvent);
+        }
+        speakAnnouncement(d.announcementEvent);
+      }
+
+      async function requestScreenWakeLock() {
+        try {
+          if ('wakeLock' in navigator && !screenWakeLock) {
+            screenWakeLock = await navigator.wakeLock.request('screen');
+            screenWakeLock.addEventListener('release', () => { screenWakeLock = null; });
+          }
+        } catch (error) {
+          console.warn('Screen wake lock is unavailable:', error);
+        }
+      }
+
+      async function refresh() {
+        if (!venueId) return;
+
+        try {
+          const response = await fetch(
+            '/api/tournament/' + venueId + '?public=1',
+            { cache: 'no-store' }
+          );
+
+          if (!response.ok) throw new Error('Tournament refresh returned HTTP ' + response.status);
+          const result = await response.json();
+          if (result.ok && result.state) draw(result.state);
+        } catch (error) {
+          console.error('Tournament refresh error:', error);
+        } finally {
+          // Schedule the next request only after this one completes, avoiding
+          // overlapping requests if the network or server is slow.
+          if (venueId) refreshInterval = setTimeout(refresh, 15000);
+        }
+      }
+
+      function startPolling() {
+        if (refreshInterval !== null) clearTimeout(refreshInterval);
+        refreshInterval = null;
+        if (tournamentEvents) tournamentEvents.close();
+        tournamentEvents = new EventSource('/api/tournament/' + venueId + '/events');
+        tournamentEvents.onmessage = (event) => {
+          try { if (JSON.parse(event.data)?.type !== 'update') return; } catch { return; }
+          if (refreshInterval !== null) clearTimeout(refreshInterval);
+          refreshInterval = null;
+          refresh();
+        };
+        requestScreenWakeLock();
+        refresh();
+      }
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          requestScreenWakeLock();
+          if (venueId) {
+            if (refreshInterval !== null) clearTimeout(refreshInterval);
+            refreshInterval = null;
+            refresh();
+          }
+        }
+      });
+
+      function tick() {
+        const ms = running
+          ? Math.max(0, remaining - (Date.now() - updatedAt))
+          : remaining;
+
+        const seconds = Math.ceil(ms / 1000);
+
+        el('timer').textContent =
+          String(Math.floor(seconds / 60)).padStart(2, '0') +
+          ':' +
+          String(seconds % 60).padStart(2, '0');
+      }
+
+      context.addCustomMessageListener(
+        NAMESPACE,
+        event => {
+          const incomingVenueId = String(
+            event.data?.venueId || ''
+          );
+
+          if (!/^\d{1,12}$/.test(incomingVenueId)) {
+            console.error('Invalid venue ID received:', incomingVenueId);
+            return;
+          }
+
+          console.log('Poker receiver connected to venue:', incomingVenueId);
+
+          venueId = incomingVenueId;
+          receiverConnectedAt = Date.now();
+          hasReceivedInitialState = false;
+          lastEliminationEventId = null;
+          startPolling();
+        }
+      );
+
+      context.addEventListener(
+        cast.framework.system.EventType.READY,
+        () => console.log('Poker receiver ready')
+      );
+
+      context.addEventListener(
+        cast.framework.system.EventType.SHUTDOWN,
+        () => { if (tournamentEvents) tournamentEvents.close(); if (refreshInterval !== null) clearTimeout(refreshInterval); console.log('Poker receiver shutting down'); }
+      );
+
+      context.addEventListener(
+        cast.framework.system.EventType.ERROR,
+        event => console.error('Poker receiver error:', event)
+      );
+
+      // This is a non-media receiver. Keep the TV display running even
+      // after the sender becomes idle or disconnects.
+      const receiverOptions = new cast.framework.CastReceiverOptions();
+      receiverOptions.disableIdleTimeout = true;
+      context.start(receiverOptions);
+
+      setInterval(tick, 250);
+    })();
+  </script>
+</body>
+</html>
