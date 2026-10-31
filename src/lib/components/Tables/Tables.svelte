@@ -65,7 +65,7 @@
 						seatedPlayer: seat.players.find((player) => !player.eliminated),
 						eliminatedPlayer: seat.players.find((player) => player.eliminated)
 					}))
-			})));
+			}));
 	});
 
 	const replacingPlayer = $derived(
