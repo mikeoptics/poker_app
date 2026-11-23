@@ -68,7 +68,7 @@
 	{:else}
 		<div class="table-wrap"><table><thead><tr><th>Venue</th><th>Event day</th><th>ID</th><th>Latest upload</th><th>Status</th></tr></thead><tbody>
 			{#each filteredVenues as venue (venue.venueId)}
-				<tr><td><a href={'/admin/' + venue.venueId}>{venue.venueName}</a></td><td>{venue.eventDay}</td><td class="number">{venue.venueId}</td><td class="number">{venue.latestWeek === null ? 'Unknown' : 'Week ' + venue.latestWeek + ' / ' + scan.currentWeek}</td><td><span class="status" class:current={venue.uploadStatus === 'current'} class:behind={venue.uploadStatus === 'behind'}>{venue.uploadStatus === 'current' ? 'Up to date' : venue.uploadStatus === 'behind' ? 'Behind' : 'Unknown'}</span></td></tr>
+				<tr><td><a href={'/admin/' + venue.venueId}>{venue.venueName}</a></td><td>{venue.eventDay}</td><td class="number">{venue.venueId}</td><td class="number">{venue.latestWeek === null ? 'Unknown' : 'Week ' + venue.latestWeek + ' / ' + scan.currentWeek}</td><td><span class="status" class:current={venue.uploadStatus === 'current'} class:behind={venue.uploadStatus === 'behind'} class:ahead={venue.uploadStatus === 'ahead'}>{venue.uploadStatus === 'current' ? 'Up to date' : venue.uploadStatus === 'behind' ? 'Behind' : venue.uploadStatus === 'ahead' ? 'Ahead of calendar' : 'Unknown'}</span></td></tr>
 			{/each}
 		</tbody></table></div>
 	{/if}
@@ -85,7 +85,7 @@
 	.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:28px 0}.stats>div{padding:18px;border:1px solid #30363c;border-radius:12px;background:#191d21}.stats span,.stats strong{display:block}.stats span{color:#9ca4ab;font-size:.8rem}.stats strong{font-size:1.7rem;margin-top:7px}.gold{color:#c5a15a}
 	.table-heading{margin:32px 0 14px}.table-heading h2{margin:0;font-size:1.15rem}input{width:min(320px,100%);padding:11px 13px;border:1px solid #414950;border-radius:8px;background:#191d21;color:#fff;font:inherit}
 	.table-wrap{overflow:auto;border:1px solid #30363c;border-radius:12px}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:left;padding:14px 16px;border-bottom:1px solid #2b3035}th{font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:#929ba3;background:#191d21}tbody tr:last-child td{border-bottom:0}tbody tr:hover{background:#1b2024}td a{color:#f4f4f1;text-decoration:none;font-weight:650}td a:hover{color:#c5a15a}.number{font-variant-numeric:tabular-nums}
-	.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#343a40;color:#c4cbd0;font-size:.76rem}.status.current{background:#18352a;color:#8ed0aa}.status.behind{background:#402323;color:#edaaaa}
+	.status{display:inline-block;padding:5px 9px;border-radius:20px;background:#343a40;color:#c4cbd0;font-size:.76rem}.status.current{background:#18352a;color:#8ed0aa}.status.behind{background:#402323;color:#edaaaa}.status.ahead{background:#33304a;color:#c6b8ef}
 	.empty{padding:36px;text-align:center;color:#aeb5bb;border:1px dashed #3b4249;border-radius:12px}.error,.warning{padding:12px 14px;border-radius:8px;background:#3c2525;color:#f0b4b4}.warning{background:#3c3423;color:#e4ca8b}footer{margin-top:20px;font-size:.8rem}
 	@media(max-width:650px){header,.table-heading{align-items:flex-start;flex-direction:column}.stats{gap:8px}.stats>div{padding:12px}.stats strong{font-size:1.35rem}.table-heading input{width:100%}}
 </style>
