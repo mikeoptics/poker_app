@@ -73,7 +73,7 @@ function extractVenueName(html) {
 }
 
 function extractEventDay(html) {
-	return extractField(html, ['Poker Night', 'Game Night', 'Gamenight', 'Event Day', 'Night']);
+	return extractField(html, ['Poker Night', 'Game Night', 'Gamenight', 'Event Day']);
 }
 
 function extractLatestWeek(html) {
@@ -171,7 +171,7 @@ async function runScan() {
 					eventDay: result.eventDay || 'Not listed',
 					latestWeek: result.latestWeek,
 					currentWeek: scan.currentWeek,
-					uploadStatus: result.latestWeek === null ? 'unknown' : result.latestWeek >= scan.currentWeek ? 'current' : 'behind'
+					uploadStatus: result.latestWeek === null ? 'unknown' : result.latestWeek === scan.currentWeek ? 'current' : result.latestWeek < scan.currentWeek ? 'behind' : 'ahead'
 				});
 				consecutiveInvalid = 0;
 			} else {
