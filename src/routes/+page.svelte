@@ -50,18 +50,17 @@
 </script>
 
 <svelte:head
-	><title>Select venue · Mike's Poker App</title><meta
+	><title>Select venue · Stacks</title><meta
 		name="description"
 		content="Choose a Redtooth venue to open its poker tournament."
 	/></svelte:head
 >
 <div class="setup-page">
 	<div class="setup-card">
-		<p class="eyebrow">MIKE'S POKER APP</p>
+		<p class="eyebrow">STACKS</p>
 		<h1>Select your venue</h1>
 		<p class="intro">
-			Choose the Redtooth venue hosting this tournament. Each venue has its own timer, players and
-			TV display.
+			Choose the Redtooth venue hosting this tournament. You'll then add that venue's app to your Home Screen. Each venue has its own timer, players and TV display.
 		</p>
 		<label for="venue-search">Venue, town or postcode</label><input
 			id="venue-search"
