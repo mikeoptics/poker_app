@@ -9,7 +9,7 @@ function getRedtoothSeason(now = new Date()) {
 }
 
 const LEAGUE_URL = 'https://www.redtoothpoker.com/league/GetVenueLeagueTable';
-const MAX_VENUE_ID = 10000;
+const MAX_VENUE_ID = 100000;
 const BATCH_SIZE = 8;
 const CONSECUTIVE_FAILURE_LIMIT = 1;
 const CACHE_TTL = 15 * 60 * 1000;
