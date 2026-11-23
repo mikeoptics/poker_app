@@ -1,6 +1,7 @@
 <script>
 	import { onMount } from 'svelte';
 	let { data } = $props();
+	/** @type {any} */
 	let dashboard = $state(null);
 	let loading = $state(true);
 	let error = $state('');
