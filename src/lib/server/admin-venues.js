@@ -204,3 +204,7 @@ export function getAdminVenueScan(force = false) {
 	}
 	return { ...scan, scanning: Boolean(scanPromise) };
 }
+
+export function getAdminVenueById(venueId) {
+	return scan.venues.find((venue) => venue.venueId === Number(venueId)) ?? null;
+}
