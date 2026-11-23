@@ -2053,7 +2053,8 @@ function startCasting() {
 				<button class="install-gate-primary" type="button" onclick={confirmHomeScreenInstall}>I've added it — continue</button>
 			{:else}
 				<p class="install-gate-copy">Use your browser's menu and choose <strong>Install app</strong> or <strong>Add to Home Screen</strong>.</p>
-				<button class="install-gate-primary" type="button" onclick={installApp}>How to install</button>
+				<button class="install-gate-primary" type="button" onclick={installApp}>Show install instructions</button>
+				<button class="install-gate-secondary" type="button" onclick={confirmHomeScreenInstall}>I've installed it — continue</button>
 			{/if}
 			{#if installStatus}<p class="install-gate-status" role="status">{installStatus}</p>{/if}
 			<a class="install-gate-back" href="/">Choose a different venue</a>
@@ -2631,6 +2632,7 @@ function startCasting() {
 	.install-gate-copy { color:#aeb5bb; line-height:1.6; }
 	.install-gate-steps { display:grid; gap:12px; margin:24px 0; padding-left:22px; color:#c4cbd1; line-height:1.5; }
 	.install-gate-primary { width:100%; min-height:48px; margin-top:18px; padding:12px 18px; border:0; border-radius:9px; background:#c4a36a; color:#101214; font-weight:800; cursor:pointer; }
+	.install-gate-secondary { width:100%; min-height:44px; margin-top:10px; padding:10px 16px; border:1px solid #454c53; border-radius:9px; background:transparent; color:#c4cbd1; font-weight:700; cursor:pointer; }
 	.install-gate-status { color:#c4a36a; font-size:.9rem; line-height:1.5; }
 	.install-gate-back { display:block; margin-top:24px; color:#929aa1; font-size:.85rem; text-align:center; text-decoration:none; }
 	:global(*) {
