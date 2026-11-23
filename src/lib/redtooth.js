@@ -81,7 +81,7 @@ export function searchRedtoothPlayers(rows, query) {
  * @returns {RedtoothRow[]}
  */
 export function applyLocalResult(rows, player, finishPlace) {
-	const nextPoints = pointsForPlace(finishPlace);
+	const nextPoints = Math.max(0, pointsForPlace(finishPlace) - 10);
 
 	return rows.map((row) => {
 		if (!player.redtoothId || row.redtoothId !== player.redtoothId) {
