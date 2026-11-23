@@ -69,7 +69,9 @@ function extractVenueName(html) {
 		if (value && !/league|table|standings/i.test(value)) return value;
 	}
 	const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
-	return title ? stripHtml(title).replace(/\s*[|·-]\s*(?:Redtooth.*|League.*)$/i, '').trim() : '';
+	if (!title) return '';
+	const titleText = stripHtml(title).replace(/\s*[|·-]\s*(?:Redtooth.*|League.*)$/i, '').trim();
+	return /redtooth|league|standings|poker/i.test(titleText) ? '' : titleText;
 }
 
 function extractEventDay(html) {
