@@ -1,4 +1,12 @@
-import { getRedtoothSeason } from '#lib/server/redtooth-season.js';
+function getRedtoothSeason(now = new Date()) {
+	const dateParts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(now);
+	const values = Object.fromEntries(dateParts.map((part) => [part.type, part.value]));
+	const today = Date.UTC(Number(values.year), Number(values.month) - 1, Number(values.day));
+	const anchor = Date.UTC(2026, 9, 19);
+	const elapsed = Math.floor((today - anchor) / (91 * 86400000));
+	const cycle = 3 + elapsed;
+	return { season: ((cycle % 4) + 4) % 4 + 1, yearId: 20 + Math.floor(cycle / 4) };
+}
 
 const LEAGUE_URL = 'https://www.redtoothpoker.com/league/GetVenueLeagueTable';
 const MAX_VENUE_ID = 10000;
@@ -177,7 +185,6 @@ async function runScan() {
 	}
 	scan.status = 'complete';
 	scan.completedAt = new Date().toISOString();
-	scan.nextId = nextId + scan.checked;
 	lastScanAt = Date.now();
 }
 
