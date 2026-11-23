@@ -31,7 +31,7 @@ export function loginAdmin(password, cookies) {
 	const valid = timingSafeEqual(Buffer.from(password), Buffer.from(expected));
 	if (!valid) return false;
 	cookies.set(COOKIE_NAME, sessionToken(), {
-		path: '/admin',
+		path: '/',
 		httpOnly: true,
 		secure: process.env.NODE_ENV === 'production',
 		sameSite: 'strict',
@@ -42,7 +42,7 @@ export function loginAdmin(password, cookies) {
 
 /** @param {import('@sveltejs/kit').Cookies} cookies */
 export function logoutAdmin(cookies) {
-	cookies.delete(COOKIE_NAME, { path: '/admin' });
+	cookies.delete(COOKIE_NAME, { path: '/' });
 }
 
 export const ADMIN_SESSION_MAX_AGE = SESSION_MAX_AGE;
