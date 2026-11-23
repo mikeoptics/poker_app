@@ -15,8 +15,8 @@ function getSeason(offset = 0) {
 
 function parseTable(html) {
 	const rows = [];
-	for (const match of html.matchAll(/<tr\\b([^>]*)>([\\s\\S]*?)<\\/tr>/gi)) {
-		const cells = [...match[2].matchAll(/<td\\b[^>]*>([\\s\\S]*?)<\\/td>/gi)].map((cell) =>
+	for (const match of html.matchAll(/<tr\b([^>]*)>([\s\S]*?)<\/tr>/gi)) {
+		const cells = [...match[2].matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((cell) =>
 			cell[1].replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&').replace(/&#39;/g, "'").trim()
 		);
 		if (cells.length < 4) continue;
@@ -24,7 +24,7 @@ function parseTable(html) {
 		const games = Number.parseInt(cells[2], 10);
 		const points = Number.parseInt(cells[3], 10);
 		if (!Number.isFinite(position) || !Number.isFinite(games) || !Number.isFinite(points)) continue;
-		const onclick = `${match[1]} ${match[2]}`.match(/onclick\\s*=\\s*["'][^"']*getGraph\\s*\\(\\s*this\\s*,\\s*(\\d+)/i);
+		const onclick = `${match[1]} ${match[2]}`.match(/onclick\s*=\s*["'][^"']*getGraph\s*\(\s*this\s*,\s*(\d+)/i);
 		rows.push({ position, name: cells[1], games, points, redtoothId: onclick ? Number.parseInt(onclick[1], 10) : null });
 	}
 	return rows;
@@ -49,7 +49,7 @@ function currentWeek() {
 
 export async function GET({ params, cookies }) {
 	if (!isAdminRequest(cookies)) return json({ ok: false, error: 'Unauthorised.' }, { status: 401 });
-	if (!/^\\d{1,12}$/.test(params.venueid)) return json({ ok: false, error: 'Invalid venue ID.' }, { status: 400 });
+	if (!/^\d{1,12}$/.test(params.venueid)) return json({ ok: false, error: 'Invalid venue ID.' }, { status: 400 });
 	try {
 		const currentSeason = getSeason();
 		const previousSeason = getSeason(-1);
