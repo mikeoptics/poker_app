@@ -1,10 +1,11 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { ADMIN_PASSWORD } from '$app/env/private';
 
 const COOKIE_NAME = 'stacks_admin';
 const SESSION_MAX_AGE = 60 * 60 * 12;
 
 function configuredPassword() {
-	return process.env.ADMIN_PASSWORD ?? '';
+	return ADMIN_PASSWORD ?? '';
 }
 
 function sessionToken() {
