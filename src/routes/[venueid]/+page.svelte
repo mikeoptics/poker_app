@@ -212,6 +212,8 @@
 	let installPrompt = $state(null);
 	let installStatus = $state('');
 	let appInstalled = $state(false);
+	let installStateChecked = $state(false);
+	let installGateComplete = $state(false);
 	let buyInAmount = $state(5);
 	let tournamentStarted = $state(false);
 	let keepScreenAwake = $state(true);
@@ -1852,15 +1854,26 @@ function startCasting() {
 
 	async function installApp() {
 		if (installPrompt) {
-			installPrompt.prompt();
-			const choice = await installPrompt.userChoice;
-			installStatus = choice?.outcome === 'accepted' ? 'App installed.' : '';
+			const promptEvent = installPrompt;
 			installPrompt = null;
+			await promptEvent.prompt();
+			const choice = await promptEvent.userChoice;
+			if (choice?.outcome === 'accepted') {
+				installStatus = 'Installation started. Open the venue app from your Home Screen when it is ready.';
+				installGateComplete = true;
+			} else {
+				installStatus = 'Installation was cancelled. Install the venue app to continue.';
+			}
 			return;
 		}
 		installStatus = /iphone|ipad|ipod/i.test(navigator.userAgent)
-			? 'To install: tap Share, then Add to Home Screen.'
-			: 'Use your browser menu and select Install app or Add to Home Screen.';
+			? 'In Safari, tap Share, choose Add to Home Screen, then open the new venue icon.'
+			: 'Open your browser menu and choose Install app or Add to Home Screen.';
+	}
+
+	function confirmHomeScreenInstall() {
+		// iOS does not expose a reliable event confirming a Home Screen shortcut.
+		installGateComplete = true;
 	}
 
 	/** @param {Event} event */
@@ -1886,10 +1899,13 @@ function startCasting() {
 		window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
 		window.addEventListener('appinstalled', () => {
 			appInstalled = true;
+			installGateComplete = true;
 			installPrompt = null;
 			installStatus = 'App installed.';
 		});
 		appInstalled = window.matchMedia('(display-mode: standalone)').matches || /** @type {Navigator & { standalone?: boolean }} */ (window.navigator).standalone === true;
+		installGateComplete = appInstalled;
+		installStateChecked = true;
 		navigator.serviceWorker?.register('/service-worker.js').catch((error) => {
 			console.error('Service worker registration failed:', error);
 		});
@@ -2011,15 +2027,39 @@ function startCasting() {
 	<meta name="theme-color" content="#101214" />
 	<link rel="manifest" href={`/${venueId}/manifest.webmanifest?name=${encodeURIComponent(venueName)}`} />
 	<link rel="icon" href="/poker-app-icon.svg" type="image/svg+xml" />
+	<link rel="apple-touch-icon" href="/poker-app-icon.svg" />
+	<meta name="apple-mobile-web-app-capable" content="yes" />
+	<meta name="apple-mobile-web-app-title" content={venueName} />
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 </svelte:head>
 
-<div
-	class="app"
-	class:mode-play={running && !currentBlinds?.break}
-	class:mode-break={running && currentBlinds?.break}
-	class:mode-paused={!running}
->
-	{#if !tournamentLoaded}
+{#if !installStateChecked}
+	<div class="install-gate-loading" role="status">Preparing {venueName}…</div>
+{:else if !installGateComplete}
+	<main class="install-gate">
+		<section class="install-gate-card">
+			<p class="install-gate-brand">STACKS</p>
+			<p class="install-gate-label">YOUR VENUE APP</p>
+			<h1>{venueName}</h1>
+			<p class="install-gate-copy">Add this venue's poker app to your Home Screen for quick access. It will open directly to {venueName}.</p>
+			{#if installPrompt}
+				<button class="install-gate-primary" type="button" onclick={installApp}>Install {venueName}</button>
+			{:else if /iphone|ipad|ipod/i.test(typeof navigator !== 'undefined' ? navigator.userAgent : '')}
+				<ol class="install-gate-steps">
+					<li>Open this page in <strong>Safari</strong>.</li>
+					<li>Tap the <strong>Share</strong> button.</li>
+					<li>Choose <strong>Add to Home Screen</strong>, then tap Add.</li>
+				</ol>
+				<button class="install-gate-primary" type="button" onclick={confirmHomeScreenInstall}>I've added it — continue</button>
+			{:else}
+				<p class="install-gate-copy">Use your browser's menu and choose <strong>Install app</strong> or <strong>Add to Home Screen</strong>.</p>
+				<button class="install-gate-primary" type="button" onclick={installApp}>How to install</button>
+			{/if}
+			{#if installStatus}<p class="install-gate-status" role="status">{installStatus}</p>{/if}
+			<a class="install-gate-back" href="/">Choose a different venue</a>
+		</section>
+	</main>
+{:else if !tournamentLoaded}
 		<div class="tournament-loading" role="status" aria-live="polite">
 			<div class="loading-spinner" aria-hidden="true"></div>
 			<strong>{tournamentLoadError ? 'Unable to load tournament' : 'Loading tournament'}</strong>
@@ -2579,7 +2619,19 @@ function startCasting() {
 	{/if}
 </div>
 
-<style>:global(*) {
+<style>
+	.install-gate-loading { min-height:100dvh; display:grid; place-items:center; padding:24px; background:#101214; color:#aeb5bb; }
+	.install-gate { min-height:100dvh; display:grid; place-items:center; padding:24px; background:radial-gradient(circle at top, rgba(255,255,255,.055), transparent 32rem),#101214; color:#f4f4f1; }
+	.install-gate-card { width:min(520px,100%); padding:clamp(26px,6vw,44px); border:1px solid #343a40; border-radius:18px; background:#181b1f; box-shadow:0 24px 70px #0005; }
+	.install-gate-brand { margin:0 0 34px; color:#c4a36a; font-size:.75rem; font-weight:850; letter-spacing:.2em; }
+	.install-gate-label { margin:0 0 8px; color:#929aa1; font-size:.68rem; font-weight:800; letter-spacing:.14em; }
+	.install-gate h1 { margin:0 0 14px; font-size:clamp(2rem,8vw,3rem); line-height:1.05; letter-spacing:-.045em; overflow-wrap:anywhere; }
+	.install-gate-copy { color:#aeb5bb; line-height:1.6; }
+	.install-gate-steps { display:grid; gap:12px; margin:24px 0; padding-left:22px; color:#c4cbd1; line-height:1.5; }
+	.install-gate-primary { width:100%; min-height:48px; margin-top:18px; padding:12px 18px; border:0; border-radius:9px; background:#c4a36a; color:#101214; font-weight:800; cursor:pointer; }
+	.install-gate-status { color:#c4a36a; font-size:.9rem; line-height:1.5; }
+	.install-gate-back { display:block; margin-top:24px; color:#929aa1; font-size:.85rem; text-align:center; text-decoration:none; }
+	:global(*) {
 		box-sizing: border-box;
 	}:global(body) {
 		margin: 0;
