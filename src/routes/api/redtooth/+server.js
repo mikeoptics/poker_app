@@ -14,7 +14,7 @@ const SEASON_ANCHOR_NUMBER = 4;
 const YEAR_ANCHOR_ID = 20;
 const DAYS_PER_SEASON = 91;
 
-export function getRedtoothSeason(now = new Date(), seasonOffset = 0) {
+function getRedtoothSeason(now = new Date(), seasonOffset = 0) {
 	const dateParts = new Intl.DateTimeFormat('en-GB', {
 		timeZone: 'Europe/London',
 		year: 'numeric',
@@ -54,7 +54,7 @@ function cleanText(value) {
 /**
  * @param {string} html
  */
-export function parseLeagueTable(html) {
+function parseLeagueTable(html) {
 	const rows = [];
 	const rowRegex = /<tr\b([^>]*)>([\s\S]*?)<\/tr>/gi;
 	let match;
@@ -228,7 +228,7 @@ async function findVenues(query) {
  * @param {number|string} venueId
  */
 /** @param {number|string} venueId @param {number} season @param {number} yearId */
-export async function fetchSeasonTable(venueId, season, yearId) {
+async function fetchSeasonTable(venueId, season, yearId) {
 	const response = await fetch(REDTOOTH_LEAGUE_URL, {
 		method: 'POST',
 		headers: {
