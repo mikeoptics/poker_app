@@ -2059,7 +2059,9 @@ function startCasting() {
 			<a class="install-gate-back" href="/">Choose a different venue</a>
 		</section>
 	</main>
-{:else if !tournamentLoaded}
+{:else}
+<div class="app" class:mode-play={running && !currentBlinds?.break} class:mode-break={running && currentBlinds?.break} class:mode-paused={!running}>
+	{#if !tournamentLoaded}
 		<div class="tournament-loading" role="status" aria-live="polite">
 			<div class="loading-spinner" aria-hidden="true"></div>
 			<strong>{tournamentLoadError ? 'Unable to load tournament' : 'Loading tournament'}</strong>
@@ -2616,8 +2618,8 @@ function startCasting() {
 			</div>
 		</div>
 	{/if}
-	{/if}
 </div>
+{/if}
 
 <style>
 	.install-gate-loading { min-height:100dvh; display:grid; place-items:center; padding:24px; background:#101214; color:#aeb5bb; }
