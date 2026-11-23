@@ -1,10 +1,12 @@
 <script>
 	import { onMount } from 'svelte';
+	/** @type {any} */
 	let scan = $state({ status: 'idle', venues: [], checked: 0, nextId: 1, currentWeek: 1, scanning: false, lastError: '' });
 	let loading = $state(true);
 	let error = $state('');
 	let refreshing = $state(false);
 	let search = $state('');
+	/** @type {ReturnType<typeof setInterval> | undefined} */
 	let pollTimer;
 
 	async function loadScan(force = false) {
